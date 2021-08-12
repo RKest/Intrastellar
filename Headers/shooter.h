@@ -6,6 +6,7 @@
 #include "Core/camera.h"
 #include "Core/mesh.h"
 #include "Core/text.h"
+#include "Core/timer.h"
 #include "enemy.h"
 
 #include <execution>
@@ -14,7 +15,7 @@
 class Shooter
 {
 public:
-	Shooter(const UntexturedMeshParams &pcParams, Shader &shader, Camera &camera, Text &text, UntexturedInstancedMesh &projectileMesh, 
+	Shooter(const UntexturedMeshParams &pcParams, Shader &shader, Camera &camera, Text &text, Timer &timer, UntexturedInstancedMesh &projectileMesh, 
 	EnemyManager &enemyManager, const ui maxProjectileAmount = 10);
 
 	void Reset();
@@ -30,6 +31,7 @@ private:
 	Shader &shader;
 	Camera &camera;
 	Text &text;
+	Timer &timer;
 	Transform blankTransform;
 	EnemyManager &enemyManager;
 
@@ -37,6 +39,7 @@ private:
 	std::vector<glm::mat4> projectileInstanceTransforms;
 
 	glm::mat4 perFrameProjectileTransform;
+	db perFrameProjectileTravel;
 
 	ui maxProjectileAmount;
 	ui oldestProjectileIndex = 0;

@@ -34,12 +34,13 @@ int main(int argc, char **argv)
 	Transform pcTransform;
 	Transform blankTransform;
 
-	EnemyManager enemyManager(enemyShader, camera, enemyMeshParams, CUSTOM_RAND_SEED, MAX_NO_ENEMIES);
 	Text text(textShader, "./Resources/Fonts/slkscr.ttf", SCREEN_WIDTH, SCREEN_HEIGHT);
-	Shooter shooter(pcParams, projectileShader, camera, text, projectileMesh, enemyManager, MAX_NO_SHOOTER_PROJECTILES);
+	Timer timer(text, ENEMY_SPAWN_FREQUENCY, SHOOTER_FREQUENCY);
+	EnemyManager enemyManager(enemyShader, camera, timer, enemyMeshParams, CUSTOM_RAND_SEED, MAX_NO_ENEMIES);
+	Shooter shooter(pcParams, projectileShader, camera, text, timer, projectileMesh, enemyManager, MAX_NO_SHOOTER_PROJECTILES);
 
 	pcTransform.Scale() *= 0.05;
-	Controler controler(display, camera, pcTransform);
+	Controler controler(display, camera, timer, pcTransform);
 
 	projectileShader.Bind();
 	for (ui i = 0; i < colours.size(); ++i)
@@ -58,31 +59,33 @@ int main(int argc, char **argv)
 		pcShader.Bind();
 		pcShader.Update(pcTransform, camera);
 		pcMesh.Draw();
+		timer.RenderFPS();
 	};
 
 	while (!display.IsClosed())
 	{
+		timer.RecordFrame();
 		pcModel = pcTransform.Model();
 
 		controler.CaptureKeyboardPresses(isPcAlive);
 		controler.CaptureMouseMovement();
 
 		enemyManager.UpdateBehaviour(pcModel);
-		if (!(counter % 25))
+		if (timer.IsItTimeForSpawn())
 			enemyManager.Spawn(pcModel);
 
 		render();
-		
-		if (!(counter % 10))
+
+		if (timer.IsItTimeForShot())
 			shooter.Shoot(pcModel);
 		shooter.Update(pcModel, isPcAlive);
-		
 
 		display.Update();
 		counter++;
-
+		
 		while (!isPcAlive && !display.IsClosed())
 		{
+			timer.RecordFrame();
 			render();
 
 			text.Render("GAME OVER!", (static_cast<ft>(SCREEN_WIDTH) / 2.0f) - 300.0f, (static_cast<ft>(SCREEN_HEIGHT) / 2.0f), 2.0f, glm::vec3(1));

@@ -6,6 +6,7 @@
 #include "Core/mesh.h"
 #include "Core/random.h"
 #include "Core/shader.h"
+#include "Core/timer.h"
 
 #include <vector>
 #include <execution>
@@ -57,7 +58,7 @@ private:
 class EnemyManager
 {
 public:
-	EnemyManager(Shader &enemyShader, Camera &camera, const UntexturedMeshParams &params, ui seed, ui maxNoEnemies);
+	EnemyManager(Shader &enemyShader, Camera &camera, Timer &timer, const UntexturedMeshParams &params, ui seed, ui maxNoEnemies);
 
 	//Called outside
 	void Reset();
@@ -75,6 +76,7 @@ public:
 private:
 	Shader &enemyShader;
 	Camera &camera;
+	Timer &timer;
 
 	Transform enemyTransform;
 	Transform blankTransform;
@@ -86,7 +88,8 @@ private:
 	std::vector<glm::mat4> enemyInstanceTransforms;
 
 	const ui maxNoEnemies;
-	const ft enemyPerFrameDistance = 0.05f;
+	const db enemyPerFrameDistance = 0.005;
+	db scaledPerFrameTravelDistance;
 
 	void scale2dVec(glm::vec2 &vecToScale, const ft scaleToLength);
 };

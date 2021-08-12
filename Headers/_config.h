@@ -32,10 +32,15 @@
 #define MAX_NO_SHOOTER_PROJECTILES 10
 #define MAX_NO_ENEMIES 10
 
+//Timer frequences (kHz)
+#define SHOOTER_FREQUENCY 150.0
+#define ENEMY_SPAWN_FREQUENCY 400.0
+
 typedef unsigned long long u64; 
 typedef unsigned int ui;
 typedef unsigned char uc;
 typedef float ft;
+typedef double db;
 
 static size_t _dummy_size_t;
 static bool _dummy_bool;

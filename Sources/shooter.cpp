@@ -2,12 +2,12 @@
 #include "glm/gtx/string_cast.hpp"
 #include <iostream>
 
-Shooter::Shooter(const UntexturedMeshParams &pcParams, Shader &shader, Camera &camera, Text &text, UntexturedInstancedMesh &projectileMesh, 
-	EnemyManager &enemyManager, const ui maxProjectileAmount)
+Shooter::Shooter(const UntexturedMeshParams &pcParams, Shader &shader, Camera &camera, Text &text, Timer &timer, 
+	UntexturedInstancedMesh &projectileMesh, EnemyManager &enemyManager, const ui maxProjectileAmount)
 	: pcParams(pcParams), projectileMesh(projectileMesh), maxProjectileAmount(maxProjectileAmount), shader(shader), camera(camera), text(text),
-	enemyManager(enemyManager)
+	enemyManager(enemyManager), timer(timer)
 {
-	perFrameProjectileTransform = glm::translate(glm::vec3(0, 0.5, 0));
+	perFrameProjectileTravel = 0.05;
 }
 
 void Shooter::Reset()
@@ -39,6 +39,7 @@ void Shooter::RenderScore()
 
 void Shooter::Update(const glm::mat4 pcModel, bool &isPcAlive)
 {
+	perFrameProjectileTransform = glm::translate(glm::vec3(0.0f, timer.Scale(perFrameProjectileTravel), 0.0f));
 	std::for_each
 	(
 		std::execution::par_unseq, 

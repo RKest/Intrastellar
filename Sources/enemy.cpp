@@ -54,8 +54,9 @@ Enemy::~Enemy()
 {
 }
 
-EnemyManager::EnemyManager(Shader &enemyShader, Camera &camera, const UntexturedMeshParams &params, ui seed, ui maxNoEnemies)
- : enemyShader(enemyShader), camera(camera), enemyMesh(params, maxNoEnemies, 4), customRand(seed), params(params), maxNoEnemies(maxNoEnemies)
+EnemyManager::EnemyManager(Shader &enemyShader, Camera &camera, Timer &timer, const UntexturedMeshParams &params, ui seed, ui maxNoEnemies)
+ : enemyShader(enemyShader), camera(camera), enemyMesh(params, maxNoEnemies, 4), 
+ 	customRand(seed), params(params), maxNoEnemies(maxNoEnemies), timer(timer)
 {
 	enemyTransform.Scale() *= 0.05;
 }
@@ -117,12 +118,12 @@ void EnemyManager::Draw()
 void EnemyManager::UpdateBehaviour(const glm::mat4 &pcModel)
 {
 	const glm::vec2 pcPos = pcModel * glm::vec4(0, 0, 0, 1);
-
+	scaledPerFrameTravelDistance = timer.Scale(enemyPerFrameDistance);
 	for (ui i = 0; i < enemies.size(); ++i)
 	{
 		const glm::vec2 enemyPos = enemyInstanceTransforms[i] * glm::vec4(0, 0, 0, 1);
 		glm::vec2 vecToPc = pcPos - enemyPos;
-		scale2dVec(vecToPc, enemyPerFrameDistance);
+		scale2dVec(vecToPc, scaledPerFrameTravelDistance);
 
 		const glm::mat4 localTransform = glm::translate(glm::vec3(vecToPc, 0));
 		enemyInstanceTransforms[i] *= localTransform;
