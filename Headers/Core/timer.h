@@ -11,31 +11,50 @@ using _clock = std::chrono::steady_clock;
 using milliDuration = std::chrono::duration<db, std::milli>;
 using timePt = _clock::time_point;
 
+class Clock
+{
+public:
+	Clock(const db clockDelay, timePt &latestFrameTimePoint);
+	bool IsItTime();
+private:
+	const milliDuration clockDelay;
+	timePt &latestFrameTimePoint;
+	timePt lastRecordedPoint;
+};
+
 class Timer
 {
 public:
 	Timer(Text &text, const db enemySpawnFrequency, const db shootingFrequency);
+	enum ClocksEnum : ui
+	{
+		SHOT_CLOCK,
+		SPAWN_CLOCK,
+		NO_CLOCKS
+	};
+
+	void InitHeapClock(ui &heapClockId, const db clockDelay);
+	void DestroyHeapClock(const ui clockId);
+	bool HeapIsItTime(const ui heapClockId);
+
 	void RenderFPS();
 	void RecordFrame();
-	bool IsItTimeForShot();
-	bool IsItTimeForSpawn();
+	bool IsItTime(ClocksEnum onWhichClock);
 	db Scale(db number);
-
 	~Timer();
 
 protected:
 private:
 	Text &text;
 
-	const milliDuration enemySpawnFrequency;
-	const milliDuration shootingFrequency;
-
 	timePt lastFramePt;
 	milliDuration lastFrameDuration;
-	
-	timePt lastShotPt;
-	timePt lastSpawnPt;
 
+	std::vector<Clock> clocks;
+	ui newestHeapClockId = 0;
+	std::vector<Clock *> heapClocks;
+
+	//FPS
 	milliDuration fpsDuration = milliDuration(0.0);
 	std::list<ui> pastFPSValues;
 	ui framesThisSecond = 0;

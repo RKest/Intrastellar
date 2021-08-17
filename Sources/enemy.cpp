@@ -1,5 +1,4 @@
 #include "enemy.h"
-#include <iostream>
 
 bool BoundingBox::IsThereAnIntersection(const glm::vec2 &vec) const
 {
@@ -50,12 +49,9 @@ void Enemy::UpdateBehaviour(const glm::mat4 &instanceTransform)
 	boundingBox.topRightPosRel = instanceTransform * glm::vec4(boundingBox.topRightPos, 0, 1);
 }
 
-Enemy::~Enemy()
-{
-}
-
-EnemyManager::EnemyManager(Shader &enemyShader, Camera &camera, Timer &timer, const UntexturedMeshParams &params, ui seed, ui maxNoEnemies)
- : enemyShader(enemyShader), camera(camera), enemyMesh(params, maxNoEnemies, 4), 
+EnemyManager::EnemyManager(Shader &enemyShader, Camera &camera, Timer &timer, ExpManager &expManager, 
+	const UntexturedMeshParams &params, ui seed, ui maxNoEnemies)
+ : enemyShader(enemyShader), camera(camera), expManager(expManager), enemyMesh(params, maxNoEnemies, 4), 
  	customRand(seed), params(params), maxNoEnemies(maxNoEnemies), timer(timer)
 {
 	enemyTransform.Scale() *= 0.05;
@@ -76,6 +72,7 @@ void EnemyManager::RecordCollisions(const std::vector<glm::vec2> &projectilePosi
 			{
 				projectileHitCallback(i);
 				ui enemyIndex = enemyPtr->managerIndex;
+				expManager.CreateExpParticles(enemyInstanceTransforms[enemyIndex], 3);
 				Despawn(enemyIndex);
 				break;
 			}
@@ -121,9 +118,9 @@ void EnemyManager::UpdateBehaviour(const glm::mat4 &pcModel)
 	scaledPerFrameTravelDistance = timer.Scale(enemyPerFrameDistance);
 	for (ui i = 0; i < enemies.size(); ++i)
 	{
-		const glm::vec2 enemyPos = enemyInstanceTransforms[i] * glm::vec4(0, 0, 0, 1);
+		const glm::vec2 enemyPos = glm::vec2(enemyInstanceTransforms[i] * glm::vec4(0, 0, 0, 1));
 		glm::vec2 vecToPc = pcPos - enemyPos;
-		scale2dVec(vecToPc, scaledPerFrameTravelDistance);
+		helpers::scale2dVec(vecToPc, scaledPerFrameTravelDistance);
 
 		const glm::mat4 localTransform = glm::translate(glm::vec3(vecToPc, 0));
 		enemyInstanceTransforms[i] *= localTransform;
@@ -138,8 +135,8 @@ void EnemyManager::Spawn(const glm::mat4 &pcModel)
 
 	glm::vec2 pcPos = pcModel * glm::vec4(0,0,0,1);
 	pcPos *= 20;
-	const ft enemyX = customRand.NextUi() % 2 ? customRand.NextFloat(pcPos.x - 3.0f,  pcPos.x - 5.0f) : customRand.NextFloat(pcPos.x + 3.0f, pcPos.x + 5.0f);
-	const ft enemyY = customRand.NextUi() % 2 ? customRand.NextFloat(pcPos.y - 3.0f,  pcPos.y - 5.0f) : customRand.NextFloat(pcPos.y + 3.0f, pcPos.y + 5.0f);
+	const ft enemyX = customRand.NextUi() % 2 ? customRand.NextFloat(pcPos.x - 9.0f,  pcPos.x - 11.0f) : customRand.NextFloat(pcPos.x + 9.0f, pcPos.x + 11.0f);
+	const ft enemyY = customRand.NextUi() % 2 ? customRand.NextFloat(pcPos.y - 9.0f,  pcPos.y - 11.0f) : customRand.NextFloat(pcPos.y + 9.0f, pcPos.y + 11.0f);
 
 	glm::mat4 instanceTransform = enemyTransform.Model() * glm::translate(glm::vec3(enemyX, enemyY, 0));
 	Enemy *enemyPtr = new Enemy(params.positions, instanceTransform, params.noVertices, this);
@@ -165,11 +162,4 @@ void EnemyManager::Despawn(const ui enemyIndex)
 
 EnemyManager::~EnemyManager()
 {
-}
-
-void EnemyManager::scale2dVec(glm::vec2 &vecToScale, const ft scaleToLength)
-{
-	ft h = hypot(vecToScale.x, vecToScale.y);
-	vecToScale.x = scaleToLength * (vecToScale.x / h);
-	vecToScale.y = scaleToLength * (vecToScale.y / h);
 }

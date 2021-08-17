@@ -7,6 +7,9 @@
 #include "Core/random.h"
 #include "Core/shader.h"
 #include "Core/timer.h"
+#include "Core/helpers.h"
+
+#include "expmanager.h"
 
 #include <vector>
 #include <execution>
@@ -34,8 +37,6 @@ public:
 	void UpdateBehaviour(const glm::mat4 &instanceTransform);
 	inline void SetManagerIndex(const ui arg) { managerIndex = arg; }
 
-	~Enemy();
-
 	ui managerIndex;
 	enum CollisionCheckEnum
 	{
@@ -58,7 +59,7 @@ private:
 class EnemyManager
 {
 public:
-	EnemyManager(Shader &enemyShader, Camera &camera, Timer &timer, const UntexturedMeshParams &params, ui seed, ui maxNoEnemies);
+	EnemyManager(Shader &enemyShader, Camera &camera, Timer &timer, ExpManager &expManager,const UntexturedMeshParams &params, ui seed, ui maxNoEnemies);
 
 	//Called outside
 	void Reset();
@@ -77,6 +78,7 @@ private:
 	Shader &enemyShader;
 	Camera &camera;
 	Timer &timer;
+	ExpManager &expManager;
 
 	Transform enemyTransform;
 	Transform blankTransform;
@@ -88,10 +90,9 @@ private:
 	std::vector<glm::mat4> enemyInstanceTransforms;
 
 	const ui maxNoEnemies;
-	const db enemyPerFrameDistance = 0.005;
+	const db enemyPerFrameDistance = 0.01;
 	db scaledPerFrameTravelDistance;
 
-	void scale2dVec(glm::vec2 &vecToScale, const ft scaleToLength);
 };
 
 #endif

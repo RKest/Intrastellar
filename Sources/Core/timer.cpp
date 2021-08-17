@@ -1,12 +1,33 @@
 #include "Core/timer.h"
 
+Clock::Clock(const db clockDelay, timePt &latestFrameTimePoint)
+ : clockDelay(clockDelay), latestFrameTimePoint(latestFrameTimePoint), lastRecordedPoint(latestFrameTimePoint)
+{
+}
+
+bool Clock::IsItTime()
+{
+	if(std::chrono::duration_cast<std::chrono::milliseconds>(latestFrameTimePoint - lastRecordedPoint) > clockDelay)
+	{
+		lastRecordedPoint = latestFrameTimePoint;
+		return true;
+	}
+	else
+		return false;
+}
+
 Timer::Timer(Text &text, const db enemySpawnFrequency, const db shootingFrequency) 
-	: enemySpawnFrequency(enemySpawnFrequency), shootingFrequency(shootingFrequency), text(text)
+	: text(text)
 {
 	lastFramePt = _clock::now();
-	lastShotPt = lastFramePt;
-	lastSpawnPt = lastFramePt;
-};
+	clocks.push_back(Clock(shootingFrequency, lastFramePt));
+	clocks.push_back(Clock(enemySpawnFrequency, lastFramePt));
+}
+
+bool Timer::IsItTime(ClocksEnum onWhichClock)
+{
+	return clocks[onWhichClock].IsItTime();
+}
 
 void Timer::RenderFPS()
 {
@@ -38,33 +59,33 @@ void Timer::RecordFrame()
 }
 
 
-bool Timer::IsItTimeForShot()
-{
-	if(std::chrono::duration_cast<std::chrono::milliseconds>(lastFramePt - lastShotPt) > shootingFrequency)
-	{
-		lastShotPt = _clock::now();
-		return true;
-	}
-	else
-		return false;
-}
-
-bool Timer::IsItTimeForSpawn()
-{
-	if(std::chrono::duration_cast<std::chrono::milliseconds>(lastFramePt - lastSpawnPt) > enemySpawnFrequency)
-	{
-		lastSpawnPt = _clock::now();
-		return true;
-	}
-	else
-		return false;
-}
 
 db Timer::Scale(db number)
 {
 	return number * lastFrameDuration.count();
 }
 
+void Timer::InitHeapClock(ui &heapClockId, const db clockDelay)
+{
+	heapClockId = newestHeapClockId++;
+	heapClocks.push_back(new Clock(clockDelay, lastFramePt));
+}
+
+void Timer::DestroyHeapClock(const ui heapClockId)
+{
+	delete heapClocks[heapClockId];
+	heapClocks[heapClockId] = nullptr;
+}
+
+bool Timer::HeapIsItTime(const ui heapClockId)
+{
+	assert(heapClocks.size() >= heapClockId && heapClocks[heapClockId] != nullptr);
+	return heapClocks[heapClockId]->IsItTime();
+}
+
 Timer::~Timer()
 {
+	for (auto cl : heapClocks)
+		delete cl;
+	heapClocks.clear();
 }

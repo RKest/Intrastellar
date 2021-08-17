@@ -2,6 +2,7 @@
 
 #include "Core/controler.h"
 #include "shooter.h"
+#include "expmanager.h"
 
 #include "glm/gtx/string_cast.hpp"
 
@@ -16,6 +17,7 @@ int main(int argc, char **argv)
 	Shader projectileShader("./Shaders/Projectile", PROJECTILE_PARAMS, PROJECTILE_PARAMS_NO, UNIFORMS, UNIFORMS_NO);
 	Shader enemyShader("./Shaders/Enemy", PROJECTILE_PARAMS, PROJECTILE_PARAMS_NO, UNIFORMS, UNIFORMS_NO);
 	Shader textShader("./Shaders/Text", TEXT_PARAMS, TEXT_PARAMS_NO, {}, {});
+	Shader expShader("./Shaders/Exp", EXP_PARAMS, EXP_PARAMS_NO, UNIFORMS, UNIFORMS_NO);
 
 	const glm::vec3 pcVertices[] = {{0, 0.5, 0}, {-0.5, -0.5, 0}, {0.5, -0.5, 0}};
 	const ui pcIndices[] = {0, 1, 2};
@@ -23,10 +25,13 @@ int main(int argc, char **argv)
 	const ui projectileIndices[] = {0, 1, 2, 3, 1, 2};
 	const glm::vec3 enemyVertices[] = {{1, 0, 0}, {1, 1, 0}, {0, 1, 0}, {0, 0, 0}};
 	const ui enemyIndices[] = {0, 1, 2, 2, 3, 0};
+	const glm::vec3 expVertices[] = {{0.1, 0, 0}, {0.1, 0.1, 0}, {0, 0.1, 0}, {0, 0, 0}};
+	const ui expIndices[] = {0, 1, 2, 2, 3, 0};
 
 	UntexturedMeshParams pcParams = {pcVertices, pcIndices, ARR_SIZE(pcVertices), ARR_SIZE(pcIndices)};
 	UntexturedMeshParams enemyMeshParams = {enemyVertices, enemyIndices, ARR_SIZE(enemyVertices), ARR_SIZE(enemyIndices)};
 	UntexturedMeshParams projectileParams = {projectileVertices, projectileIndices, ARR_SIZE(projectileVertices), ARR_SIZE(projectileIndices)};
+	UntexturedMeshParams expParams = {expVertices, expIndices, ARR_SIZE(expVertices), ARR_SIZE(expIndices)};
 
 	UntexturedMesh pcMesh(pcParams);
 	UntexturedInstancedMesh projectileMesh(projectileParams);
@@ -36,7 +41,8 @@ int main(int argc, char **argv)
 
 	Text text(textShader, "./Resources/Fonts/slkscr.ttf", SCREEN_WIDTH, SCREEN_HEIGHT);
 	Timer timer(text, ENEMY_SPAWN_FREQUENCY, SHOOTER_FREQUENCY);
-	EnemyManager enemyManager(enemyShader, camera, timer, enemyMeshParams, CUSTOM_RAND_SEED, MAX_NO_ENEMIES);
+	ExpManager expManager(expShader, camera, timer, expParams, CUSTOM_RAND_SEED, 50);
+	EnemyManager enemyManager(enemyShader, camera, timer, expManager, enemyMeshParams, CUSTOM_RAND_SEED, MAX_NO_ENEMIES);
 	Shooter shooter(pcParams, projectileShader, camera, text, timer, projectileMesh, enemyManager, MAX_NO_SHOOTER_PROJECTILES);
 
 	pcTransform.Scale() *= 0.05;
@@ -51,7 +57,7 @@ int main(int argc, char **argv)
 
 	bool isPcAlive = true;
 
-	auto render = [&]()
+	auto render = [&]
 	{
 		display.Clear(0.1, 0.1, 0.2, 1.0);
 		enemyManager.Draw();
@@ -71,18 +77,19 @@ int main(int argc, char **argv)
 		controler.CaptureMouseMovement();
 
 		enemyManager.UpdateBehaviour(pcModel);
-		if (timer.IsItTimeForSpawn())
+		if (timer.IsItTime(Timer::ClocksEnum::SPAWN_CLOCK))
 			enemyManager.Spawn(pcModel);
 
 		render();
 
-		if (timer.IsItTimeForShot())
+		if (timer.IsItTime(Timer::ClocksEnum::SHOT_CLOCK))
 			shooter.Shoot(pcModel);
 		shooter.Update(pcModel, isPcAlive);
+		expManager.UpdateExpParticles(pcModel);
 
 		display.Update();
 		counter++;
-		
+
 		while (!isPcAlive && !display.IsClosed())
 		{
 			timer.RecordFrame();
@@ -94,15 +101,17 @@ int main(int argc, char **argv)
 			display.Update();
 			controler.CaptureKeyboardPresses(isPcAlive);
 
-			if(isPcAlive)
+			if (isPcAlive)
 			{
+				expManager.Reset();
 				enemyManager.Reset();
 				shooter.Reset();
 				pcTransform.Pos().x = 0;
 				pcTransform.Pos().y = 0;
+				camera.Pos().x = 0;
+				camera.Pos().y = 0;
 			}
 		}
-
 	}
 
 	return 0;

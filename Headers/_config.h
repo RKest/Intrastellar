@@ -25,6 +25,9 @@
 #define TEXT_PARAMS {"vertex"}
 #define TEXT_PARAMS_NO 1
 
+#define EXP_PARAMS {"position", "instanceTransform"}
+#define EXP_PARAMS_NO 2
+
 #define UNIFORMS {"transform", "projection"}
 #define UNIFORMS_NO 2
 
@@ -34,7 +37,7 @@
 
 //Timer frequences (kHz)
 #define SHOOTER_FREQUENCY 150.0
-#define ENEMY_SPAWN_FREQUENCY 400.0
+#define ENEMY_SPAWN_FREQUENCY 200.0
 
 typedef unsigned long long u64; 
 typedef unsigned int ui;
