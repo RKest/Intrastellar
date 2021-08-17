@@ -22,6 +22,6 @@ ui CustomRand::NextUi()
 }
 uint64_t CustomRand::Next()
 {
-    g_lehmer64_state *= 0xda942042e4dd58b5;
+    g_lehmer64_state *= LEHMER_M;
     return g_lehmer64_state >> 64;
 }

@@ -13,7 +13,7 @@ void Controler::CaptureMouseMovement()
     const ft yPcCoord = -(yCoord - halfDisplayHeight) / halfDisplayHeight;
 
     const glm::mat4 cameraProjectionInverse = glm::inverse(camera.ViewProjection()); 
-    const glm::vec2 mousePos = cameraProjectionInverse * glm::vec4(xPcCoord, yPcCoord, 0.0f, 0.0f);
+    const glm::vec2 mousePos = glm::vec2(cameraProjectionInverse * glm::vec4(xPcCoord, yPcCoord, 0.0f, 0.0f));
     const glm::vec2 pcPos = glm::vec2(0);
     const glm::vec2 vecToMouse = glm::normalize(pcPos - mousePos);
 

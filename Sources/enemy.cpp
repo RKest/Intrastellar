@@ -22,8 +22,8 @@ Enemy::Enemy(const glm::vec3 *positions, const glm::mat4 &instanceTransform, con
 
 	const glm::vec2 minDimentions = glm::vec2(minX, minY);
 	const glm::vec2 maxDimentions = glm::vec2(maxX, maxY);
-	const glm::vec2 minCoords = instanceTransform * glm::vec4(minDimentions, 0, 1);
-	const glm::vec2 maxCoords = instanceTransform * glm::vec4(maxDimentions, 0, 1);
+	const glm::vec2 minCoords = glm::vec2(instanceTransform * glm::vec4(minDimentions, 0, 1));
+	const glm::vec2 maxCoords = glm::vec2(instanceTransform * glm::vec4(maxDimentions, 0, 1));
 
 	boundingBox = BoundingBox{minDimentions, maxDimentions, minCoords, maxCoords};
 }
@@ -114,7 +114,7 @@ void EnemyManager::Draw()
 
 void EnemyManager::UpdateBehaviour(const glm::mat4 &pcModel)
 {
-	const glm::vec2 pcPos = pcModel * glm::vec4(0, 0, 0, 1);
+	const glm::vec2 pcPos = glm::vec2(pcModel * glm::vec4(0, 0, 0, 1));
 	scaledPerFrameTravelDistance = timer.Scale(enemyPerFrameDistance);
 	for (ui i = 0; i < enemies.size(); ++i)
 	{
@@ -133,7 +133,7 @@ void EnemyManager::Spawn(const glm::mat4 &pcModel)
 	if(enemies.size() >= maxNoEnemies)
 		return;
 
-	glm::vec2 pcPos = pcModel * glm::vec4(0,0,0,1);
+	glm::vec2 pcPos = glm::vec2(pcModel * glm::vec4(0,0,0,1));
 	pcPos *= 20;
 	const ft enemyX = customRand.NextUi() % 2 ? customRand.NextFloat(pcPos.x - 9.0f,  pcPos.x - 11.0f) : customRand.NextFloat(pcPos.x + 9.0f, pcPos.x + 11.0f);
 	const ft enemyY = customRand.NextUi() % 2 ? customRand.NextFloat(pcPos.y - 9.0f,  pcPos.y - 11.0f) : customRand.NextFloat(pcPos.y + 9.0f, pcPos.y + 11.0f);

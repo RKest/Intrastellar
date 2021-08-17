@@ -3,6 +3,22 @@
 #include "_config.h"
 #include <cstdint>
 
+#ifdef __GNUC__
+#define LEHMER_MAX_VAL 0xFFFFFFFFFFFFFFFF
+#define LEHMER_M 0xda942042e4dd58b5
+#define LEHMER_MOD 64 
+typedef __uint128_t lehmerState;
+typedef uint64_t next;
+
+#else
+#define LEHMER_MAX_VAL 0x7FFFFFFF
+#define LEHMER_M 0x41A7
+#define LEHMER_MOD 32
+typedef uint64_t lehmerState;
+typedef uint32_t next;
+#endif
+
+
 class CustomRand
 {
 public:
@@ -14,9 +30,9 @@ public:
 
 protected:
 private:
-	__uint128_t g_lehmer64_state;
-	uint64_t Next();
-	uint64_t procGen;
+	lehmerState g_lehmer64_state;
+	next Next();
+	next procGen;
 };
 
 #endif
