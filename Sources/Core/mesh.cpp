@@ -6,7 +6,7 @@ VAB::VAB(GLuint *vertexArrayBuffers)
 }
 
 template <typename T>
-void VAB::Init(const T *bufferDataPtr, ui noBufferElements, ui bufferPos, GLenum type)
+void VAB::Init(const T *bufferDataPtr, ui noBufferElements, ui bufferPos, GLenum mode, GLenum type)
 {
     glBindBuffer(GL_ARRAY_BUFFER, vertexArrayBuffers[bufferPos]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(bufferDataPtr[0]) * noBufferElements, bufferDataPtr, GL_STATIC_DRAW);
@@ -86,9 +86,30 @@ UntexturedMesh::UntexturedMesh(const UntexturedMeshParams &params)
     glBindVertexArray(0);
 }
 
-UntexturedInstancedMesh::UntexturedInstancedMesh(const UntexturedMeshParams &params, ui maxNoInstances, ui transformMatSize)
+UntexturedDynamicMesh::UntexturedDynamicMesh(const UntexturedMeshParams &params)
     : vab(vertexArrayBuffers)
 {
+    SetDrawCount(params.noIndices);
+    glGenBuffers(NO_BUFFERS, vertexArrayBuffers);
+
+    vab.Init(params.positions, params.noVertices, POSITION_VB, GL_DYNAMIC_DRAW);
+    vab.Index(params.indices, params.noIndices, INDEX_VB);
+
+    glBindVertexArray(0);
+}
+
+void UntexturedDynamicMesh::Update(const glm::vec3 *positions, const ui noPositions)
+{
+    glBindVertexArray(vertexArrayObject);
+    const size_t sz = sizeof(positions[0]) * noPositions;
+    glBindBuffer(GL_ARRAY_BUFFER, vertexArrayBuffers[POSITION_VB]);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sz, positions);
+    glBindVertexArray(0);
+}
+
+UntexturedInstancedMesh::UntexturedInstancedMesh(const UntexturedMeshParams &params, ui maxNoInstances, ui transformMatSize)
+    : vab(vertexArrayBuffers)
+{    
     SetDrawCount(params.noIndices);
     glGenBuffers(NO_BUFFERS, vertexArrayBuffers);
 

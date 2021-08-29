@@ -1,7 +1,7 @@
 #include "Core/timer.h"
 
-Clock::Clock(const db clockDelay, timePt &latestFrameTimePoint)
- : clockDelay(clockDelay), latestFrameTimePoint(latestFrameTimePoint), lastRecordedPoint(latestFrameTimePoint)
+Clock::Clock(db &clockDelay, timePt &latestFrameTimePoint)
+ : clockDelayDB(clockDelay), clockDelay(clockDelay), latestFrameTimePoint(latestFrameTimePoint), lastRecordedPoint(latestFrameTimePoint)
 {
 }
 
@@ -9,6 +9,7 @@ bool Clock::IsItTime()
 {
 	if(std::chrono::duration_cast<std::chrono::milliseconds>(latestFrameTimePoint - lastRecordedPoint) > clockDelay)
 	{
+		clockDelay = static_cast<milliDuration>(clockDelayDB);
 		lastRecordedPoint = latestFrameTimePoint;
 		return true;
 	}
@@ -16,12 +17,12 @@ bool Clock::IsItTime()
 		return false;
 }
 
-Timer::Timer(Text &text, const db enemySpawnFrequency, const db shootingFrequency) 
+Timer::Timer(Text &text, Stats &stats)
 	: text(text)
 {
 	lastFramePt = _clock::now();
-	clocks.push_back(Clock(shootingFrequency, lastFramePt));
-	clocks.push_back(Clock(enemySpawnFrequency, lastFramePt));
+	clocks.push_back(Clock(stats.shotDelay, lastFramePt));
+	clocks.push_back(Clock(stats.enemySpawnRate, lastFramePt));
 }
 
 bool Timer::IsItTime(ClocksEnum onWhichClock)
@@ -65,7 +66,7 @@ db Timer::Scale(db number)
 	return number * lastFrameDuration.count();
 }
 
-void Timer::InitHeapClock(ui &heapClockId, const db clockDelay)
+void Timer::InitHeapClock(ui &heapClockId, db &clockDelay)
 {
 	heapClockId = newestHeapClockId++;
 	heapClocks.push_back(new Clock(clockDelay, lastFramePt));

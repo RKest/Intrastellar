@@ -25,7 +25,12 @@ Display::Display(int _width, int _height, const std::string &title)
     window = SDL_CreateWindow(title.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, _width, _height, SDL_WINDOW_OPENGL);
     glContext = SDL_GL_CreateContext(window);
 
-    glEnable(GL_DEPTH_TEST);
+#ifdef _WIN32
+    SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+    glewInit();
+#endif
+
+    // glEnable(GL_DEPTH_TEST);
     // glEnable(GL_CULL_FACE);
     // glCullFace(GL_BACK);
     // glEnable(GL_TEXTURE_CUBE_MAP);

@@ -3,49 +3,42 @@
 
 #include <cstddef>
 #include <iostream>
+#include <string>
+#include <array>
 #include "glm/gtx/string_cast.hpp"
 
-#ifndef ARR_SIZE
-#define ARR_SIZE(x) (sizeof(x) / sizeof(x[0]))
+typedef unsigned long long u64; 
+typedef unsigned int ui;
+typedef int si;
+typedef unsigned char uc;
+typedef float ft;
+typedef double db;
+
+template <typename T, size_t N>
+constexpr size_t ARR_SIZE(T (&)[N]) {
+    return N;
+}
+
+#ifndef MESH_PARAMS_FROM_PATH
+#define MESH_PARAMS_FROM_PATH(path, params)\
+	const auto model = OBJModel(path).ToIndexedModel(); \
+	const UntexturedMeshParams params = {model.positions.data(), model.indices.data(), static_cast<ui>(model.positions.size()), static_cast<ui>(model.indices.size())};
 #endif
 
-#define CUSTOM_RAND_SEED 982347557
+constexpr ui CUSTOM_RAND_SEED = 982347557;
+constexpr ui SCREEN_WIDTH = 960;
+constexpr ui SCREEN_HEIGHT = 540;
+constexpr ft SCREEN_ASPECT = static_cast<ft>(SCREEN_WIDTH) / static_cast<ft>(SCREEN_HEIGHT);
 
-
-#define SCREEN_WIDTH 960 
-#define SCREEN_HEIGHT 540
-
-//Shader Params
-#define PC_PARAMS {"position"}
-#define PC_PARAMS_NO 1
-
-#define PROJECTILE_PARAMS {"position", "instanceTransform"}
-#define PROJECTILE_PARAMS_NO 2
-
-#define TEXT_PARAMS {"vertex"}
-#define TEXT_PARAMS_NO 1
-
-#define EXP_PARAMS {"position", "instanceTransform"}
-#define EXP_PARAMS_NO 2
-
-#define UNIFORMS {"transform", "projection"}
-#define UNIFORMS_NO 2
+constexpr std::array UNIFORMS = {"transform", "projection"};
 
 //Shooter 
 #define MAX_NO_SHOOTER_PROJECTILES 10
 #define MAX_NO_ENEMIES 10
 
-//Timer frequences (kHz)
-#define SHOOTER_FREQUENCY 150.0
-#define ENEMY_SPAWN_FREQUENCY 200.0
 
-typedef unsigned long long u64; 
-typedef unsigned int ui;
-typedef unsigned char uc;
-typedef float ft;
-typedef double db;
-
-static size_t _dummy_size_t;
-static bool _dummy_bool;
+inline size_t _dummy_size_t;
+inline bool _dummy_bool;
+inline const glm::mat4 _blankTransform = glm::mat4(1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1);
 
 #endif

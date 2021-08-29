@@ -1,96 +1,112 @@
 #include "_config.h"
 
 #include "Core/controler.h"
-#include "shooter.h"
-#include "expmanager.h"
+#include "player_character.h"
+#include "exp_manager.h"
+#include "enemy.h"
+#include "card_deck.h"
 
 #include "glm/gtx/string_cast.hpp"
 
 int main(int argc, char **argv)
 {
-	const std::vector<glm::vec3> colours = {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
-
 	Display display(SCREEN_WIDTH, SCREEN_HEIGHT, "Intrastellar");
-	Camera camera(glm::vec3(0, 0, -1), 70.0f, display.Aspect(), 0.01f, 1000.0f);
+	Camera camera(glm::vec3(0, 0, -20), 70.0f, display.Aspect(), 0.01f, 1000.0f);
 
-	Shader pcShader("./Shaders/PC", PC_PARAMS, PC_PARAMS_NO, UNIFORMS, UNIFORMS_NO);
-	Shader projectileShader("./Shaders/Projectile", PROJECTILE_PARAMS, PROJECTILE_PARAMS_NO, UNIFORMS, UNIFORMS_NO);
-	Shader enemyShader("./Shaders/Enemy", PROJECTILE_PARAMS, PROJECTILE_PARAMS_NO, UNIFORMS, UNIFORMS_NO);
-	Shader textShader("./Shaders/Text", TEXT_PARAMS, TEXT_PARAMS_NO, {}, {});
-	Shader expShader("./Shaders/Exp", EXP_PARAMS, EXP_PARAMS_NO, UNIFORMS, UNIFORMS_NO);
+	Shader pcShader("./Shaders/PC", UNIFORMS);
+	Shader projectileShader("./Shaders/Projectile", UNIFORMS);
+	Shader enemyShader("./Shaders/Enemy", UNIFORMS);
+	Shader textShader("./Shaders/Text", UNIFORMS);
+	Shader pcCardShader("./Shaders/PC_Card", UNIFORMS);
 
 	const glm::vec3 pcVertices[] = {{0, 0.5, 0}, {-0.5, -0.5, 0}, {0.5, -0.5, 0}};
-	const ui pcIndices[] = {0, 1, 2};
+	const ui pcIndices[] = {2, 1, 0};
 	const glm::vec3 projectileVertices[] = {{-0.1, 0, 0}, {0.1, 0, 0}, {-0.1, 0.3, 0}, {0.1, 0.3, 0}};
-	const ui projectileIndices[] = {0, 1, 2, 3, 1, 2};
-	const glm::vec3 enemyVertices[] = {{1, 0, 0}, {1, 1, 0}, {0, 1, 0}, {0, 0, 0}};
-	const ui enemyIndices[] = {0, 1, 2, 2, 3, 0};
+	const ui projectileIndices[] = {2, 1, 0, 3, 1, 2};
+	const glm::vec3 enemyVertices[] = {{0.5, -0.5, 0}, {0.5, 0.5, 0}, {-0.5, 0.5, 0}, {-0.5, -0.5, 0}};
+	const ui enemyIndices[] = {2, 1, 0, 0, 3, 2};
 	const glm::vec3 expVertices[] = {{0.1, 0, 0}, {0.1, 0.1, 0}, {0, 0.1, 0}, {0, 0, 0}};
-	const ui expIndices[] = {0, 1, 2, 2, 3, 0};
+	const ui expIndices[] = {2, 1, 0, 0, 3, 2};
+	const glm::vec3 overlayVertices[] = {{100, -100, 0}, {100, 100, 0}, {-100, 100, 0}, {-100, -100, 0}};
+	const ui overlayIndices[] = {0, 1, 2, 2, 3, 0};
+	const glm::vec3 expBarVertices[] = {{0,0,0}, {0,1,0}, {1,0,0}, {1,1,0}};
+	const ui expBarIndices[] = {0, 2, 1, 2, 3, 1};
 
-	UntexturedMeshParams pcParams = {pcVertices, pcIndices, ARR_SIZE(pcVertices), ARR_SIZE(pcIndices)};
-	UntexturedMeshParams enemyMeshParams = {enemyVertices, enemyIndices, ARR_SIZE(enemyVertices), ARR_SIZE(enemyIndices)};
-	UntexturedMeshParams projectileParams = {projectileVertices, projectileIndices, ARR_SIZE(projectileVertices), ARR_SIZE(projectileIndices)};
-	UntexturedMeshParams expParams = {expVertices, expIndices, ARR_SIZE(expVertices), ARR_SIZE(expIndices)};
+	const UntexturedMeshParams pcParams = {pcVertices, pcIndices, ARR_SIZE(pcVertices), ARR_SIZE(pcIndices)};
+	const UntexturedMeshParams enemyMeshParams = {enemyVertices, enemyIndices, ARR_SIZE(enemyVertices), ARR_SIZE(enemyIndices)};
+	const UntexturedMeshParams projectileParams = {projectileVertices, projectileIndices, ARR_SIZE(projectileVertices), ARR_SIZE(projectileIndices)};
+	const UntexturedMeshParams expParams = {expVertices, expIndices, ARR_SIZE(expVertices), ARR_SIZE(expIndices)};
+	const UntexturedMeshParams overlayParams = {overlayVertices, overlayIndices, ARR_SIZE(overlayVertices), ARR_SIZE(overlayIndices)};
+	MESH_PARAMS_FROM_PATH("./Resources/OBJs/card-border-1.obj", cardBorderParams);
+	const UntexturedMeshParams expBarParams = {expBarVertices, expBarIndices, ARR_SIZE(expBarVertices), ARR_SIZE(expBarIndices)};
 
-	UntexturedMesh pcMesh(pcParams);
-	UntexturedInstancedMesh projectileMesh(projectileParams);
-
-	Transform pcTransform;
-	Transform blankTransform;
-
+	Stats playerStats = defaultStats;
 	Text text(textShader, "./Resources/Fonts/slkscr.ttf", SCREEN_WIDTH, SCREEN_HEIGHT);
-	Timer timer(text, ENEMY_SPAWN_FREQUENCY, SHOOTER_FREQUENCY);
-	ExpManager expManager(expShader, camera, timer, expParams, CUSTOM_RAND_SEED, 50);
-	EnemyManager enemyManager(enemyShader, camera, timer, expManager, enemyMeshParams, CUSTOM_RAND_SEED, MAX_NO_ENEMIES);
-	Shooter shooter(pcParams, projectileShader, camera, text, timer, projectileMesh, enemyManager, MAX_NO_SHOOTER_PROJECTILES);
+	Timer timer(text, playerStats);
+	ExpManager expManager(camera, timer, expParams, expBarParams, CUSTOM_RAND_SEED, 50);
+	EnemyManager enemyManager(enemyShader, camera, timer, enemyMeshParams, CUSTOM_RAND_SEED, MAX_NO_ENEMIES);
+	PlayerCharacter playerCharacter(pcShader, projectileShader, pcParams, projectileParams, camera, text, timer, MAX_NO_SHOOTER_PROJECTILES);
+	Controler controler(display, camera, timer, playerCharacter.PcTransform());
+	CardDeck cardDeck(pcCardShader, projectileShader, enemyShader, text, timer, playerStats, pcParams, projectileParams, 
+		overlayParams, cardBorderParams, enemyMeshParams);
 
-	pcTransform.Scale() *= 0.05;
-	Controler controler(display, camera, timer, pcTransform);
+	ui counter = 1;
 
-	projectileShader.Bind();
-	for (ui i = 0; i < colours.size(); ++i)
-		projectileShader.SetVec3("colours[" + std::to_string(i) + ']', colours[i]);
+	Shader testShader("./Shaders/ExpBar", UNIFORMS);
+	UntexturedDynamicMesh testMesh(expBarParams);
+	std::array<glm::vec3, 4> testPositions{{glm::vec3(), glm::vec3(0,1,0), glm::vec3(10,0,0), glm::vec3(10,1,0)}};
 
-	ui counter = 0;
-	glm::mat4 pcModel;
-
-	bool isPcAlive = true;
-
-	auto render = [&]
+	const auto render = [&]
 	{
 		display.Clear(0.1, 0.1, 0.2, 1.0);
 		enemyManager.Draw();
-		shooter.RenderScore();
-		pcShader.Bind();
-		pcShader.Update(pcTransform, camera);
-		pcMesh.Draw();
+		playerCharacter.RenderScore();
+		playerCharacter.Draw();
 		timer.RenderFPS();
+		// testShader.Bind();
+		// testShader.Update(_blankTransform, camera.ViewProjection());
+		// testPositions[2] = glm::vec3(counter / 10000, 0, 0);
+		// testPositions[3] = glm::vec3(counter / 10000, 1, 0);
+		// testMesh.Update(testPositions.data(), testPositions.size());
+		// testMesh.Draw();
 	};
 
 	while (!display.IsClosed())
 	{
 		timer.RecordFrame();
-		pcModel = pcTransform.Model();
-
-		controler.CaptureKeyboardPresses(isPcAlive);
+		glm::mat4 pcModel = playerCharacter.PcTransform().Model();
+		controler.CaptureKeyboardPresses(playerCharacter.IsAlive());
 		controler.CaptureMouseMovement();
 
 		enemyManager.UpdateBehaviour(pcModel);
 		if (timer.IsItTime(Timer::ClocksEnum::SPAWN_CLOCK))
 			enemyManager.Spawn(pcModel);
 
-		render();
-
 		if (timer.IsItTime(Timer::ClocksEnum::SHOT_CLOCK))
-			shooter.Shoot(pcModel);
-		shooter.Update(pcModel, isPcAlive);
+			playerCharacter.Shoot(pcModel);
+		playerCharacter.Update();
+		enemyManager.RecordCollisions(playerCharacter.ProjectileTransforms(),
+									  playerCharacter.ProjectileHitCallback(), expManager.CreateExpParticlesCallable());
+		enemyManager.RecordPCIntersection(helpers::transformStdVector(pcParams, pcModel), playerCharacter.PlayerCharacterHitCallback());
+
+		render();
 		expManager.UpdateExpParticles(pcModel);
+		if(expManager.HasThereBeenLevelUp())
+			cardDeck.AreCarsDrawn() = true;
 
 		display.Update();
 		counter++;
 
-		while (!isPcAlive && !display.IsClosed())
+		while (cardDeck.AreCarsDrawn() && !display.IsClosed())
+		{
+			timer.RecordFrame();
+			render();
+			cardDeck.DrawCards();
+			display.Update();
+			counter++;
+		}
+
+		while (!playerCharacter.IsAlive() && !display.IsClosed())
 		{
 			timer.RecordFrame();
 			render();
@@ -99,15 +115,15 @@ int main(int argc, char **argv)
 			text.Render("Space to restart", (static_cast<ft>(SCREEN_WIDTH) / 2.0f) - 120.0f, (static_cast<ft>(SCREEN_HEIGHT) / 2.0f) - 60.0f, 0.5f, glm::vec3(1));
 
 			display.Update();
-			controler.CaptureKeyboardPresses(isPcAlive);
+			controler.CaptureKeyboardPresses(playerCharacter.IsAlive());
 
-			if (isPcAlive)
+			if (playerCharacter.IsAlive())
 			{
 				expManager.Reset();
 				enemyManager.Reset();
-				shooter.Reset();
-				pcTransform.Pos().x = 0;
-				pcTransform.Pos().y = 0;
+				playerCharacter.Reset();
+				playerCharacter.PcTransform().Pos().x = 0;
+				playerCharacter.PcTransform().Pos().y = 0;
 				camera.Pos().x = 0;
 				camera.Pos().y = 0;
 			}

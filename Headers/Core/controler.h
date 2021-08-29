@@ -1,3 +1,5 @@
+#ifndef CONTROLER_H
+#define CONTROLER_H
 #include "_config.h"
 #include "Core/transform.h"
 #include "Core/display.h"
@@ -23,7 +25,8 @@ private:
     Transform &transform;
 
     SDL_Scancode *codes = display.KeyScancodeMap();
-    db defaultMovementAmount = 0.001f;
+    db defaultMovementAmount = 0.02f;
 
     ft det(const glm::vec2 &vec1, const glm::vec2 &vec2);
 };
+#endif

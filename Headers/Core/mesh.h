@@ -1,6 +1,7 @@
 #ifndef MESH_H
 #define MESH_H
 
+#include <memory>
 #include <glm/glm.hpp>
 #include <glm/gtx/transform.hpp>
 #include <GL/glew.h>
@@ -26,7 +27,7 @@ class VAB
 public:
     VAB(GLuint *vertexArrayBuffers);
     template <typename T>
-    void Init(const T *bufferDataPtr, ui noBufferElements, ui bufferPosition, GLenum type = GL_FLOAT);
+    void Init(const T *bufferDataPtr, ui noBufferElements, ui bufferPosition, GLenum mode = GL_STATIC_DRAW, GLenum type = GL_FLOAT);
     void Index(const ui *indicesPtr, ui noIndices, ui bufferPos);
     void Instance(GLuint *vertexArrayBuffers, ui startingBufferPos, ui size = 4, ui maxNoInstances = 10);
 
@@ -83,6 +84,25 @@ private:
     GLuint vertexArrayBuffers[NO_BUFFERS];
 };
 
+class UntexturedDynamicMesh : public Mesh
+{
+public:
+    UntexturedDynamicMesh(const UntexturedMeshParams &params);
+    void Update(const glm::vec3 *positions, const ui noPositions);
+
+private:
+    VAB vab;
+    enum
+    {
+        POSITION_VB,
+        INDEX_VB,
+
+        NO_BUFFERS
+    };
+
+    GLuint vertexArrayBuffers[NO_BUFFERS];
+};
+
 class UntexturedInstancedMesh : public InstancedMesh
 {
 public:
@@ -102,5 +122,6 @@ private:
 
     GLuint vertexArrayBuffers[NO_BUFFERS];
 };
+
 
 #endif //MESH_H

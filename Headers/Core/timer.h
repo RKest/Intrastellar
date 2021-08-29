@@ -2,6 +2,7 @@
 #define TIMER_H
 #include "_config.h"
 #include "Core/text.h"
+#include "Core/stats.h"
 #include <chrono>
 #include <ratio>
 #include <list>
@@ -14,10 +15,11 @@ using timePt = _clock::time_point;
 class Clock
 {
 public:
-	Clock(const db clockDelay, timePt &latestFrameTimePoint);
+	Clock(db &clockDelay, timePt &latestFrameTimePoint);
 	bool IsItTime();
 private:
-	const milliDuration clockDelay;
+	db &clockDelayDB;
+	milliDuration clockDelay;
 	timePt &latestFrameTimePoint;
 	timePt lastRecordedPoint;
 };
@@ -25,7 +27,7 @@ private:
 class Timer
 {
 public:
-	Timer(Text &text, const db enemySpawnFrequency, const db shootingFrequency);
+	Timer(Text &text, Stats &stats);
 	enum ClocksEnum : ui
 	{
 		SHOT_CLOCK,
@@ -33,7 +35,7 @@ public:
 		NO_CLOCKS
 	};
 
-	void InitHeapClock(ui &heapClockId, const db clockDelay);
+	void InitHeapClock(ui &heapClockId, db &clockDelay);
 	void DestroyHeapClock(const ui clockId);
 	bool HeapIsItTime(const ui heapClockId);
 

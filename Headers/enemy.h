@@ -9,8 +9,6 @@
 #include "Core/timer.h"
 #include "Core/helpers.h"
 
-#include "expmanager.h"
-
 #include <vector>
 #include <execution>
 #include <algorithm>
@@ -20,19 +18,10 @@
 
 class EnemyManager;
 
-struct BoundingBox
-{
-	glm::vec2 botLeftPos;
-	glm::vec2 topRightPos;
-	glm::vec2 botLeftPosRel;
-	glm::vec2 topRightPosRel;
-	bool IsThereAnIntersection(const glm::vec2&) const;
-};
-
 class Enemy
 {
 public:
-	Enemy(const glm::vec3 *positions, const glm::mat4 &instanceTransform, const ui noVertices, EnemyManager *manager);
+	Enemy(const UntexturedMeshParams &params, const glm::mat4 &instanceTransform, EnemyManager *manager);
 
 	void UpdateBehaviour(const glm::mat4 &instanceTransform);
 	inline void SetManagerIndex(const ui arg) { managerIndex = arg; }
@@ -46,12 +35,12 @@ public:
 	};
 
 	CollisionCheckEnum CheckForProjectileCollision(const glm::vec2 &projectilePos, const ui projectileDamage = 100);
-	inline BoundingBox &EnemyBoundingBox() const { return const_cast<BoundingBox&>(boundingBox); }
+	inline helpers::BoundingBox &EnemyBoundingBox() const { return const_cast<helpers::BoundingBox&>(boundingBox); }
 
 protected:
 private:
 	EnemyManager *manager;
-	BoundingBox boundingBox;
+	helpers::BoundingBox boundingBox;
 
 	ui health;
 };
@@ -59,39 +48,36 @@ private:
 class EnemyManager
 {
 public:
-	EnemyManager(Shader &enemyShader, Camera &camera, Timer &timer, ExpManager &expManager,const UntexturedMeshParams &params, ui seed, ui maxNoEnemies);
+	EnemyManager(Shader &enemyShader, Camera &camera, Timer &timer, const UntexturedMeshParams &params, ui seed, ui maxNoEnemies);
 
 	//Called outside
 	void Reset();
 	void Draw();
 	void Spawn(const glm::mat4 &pcModel);
-	void RecordCollisions(const std::vector<glm::vec2> &projectilePositions, const std::function<void(ui)> projectileHitCallback);
+	void RecordCollisions(const std::vector<glm::mat4> &projectileTransforms, 
+		const std::function<void(ui)> projectileHitCallback, std::function<void(const glm::mat4&, const ui)> fatalityCallback);
 	void RecordPCIntersection(const std::vector<glm::vec2> &pcPositions, const std::function<void()> intersectionCallback);
 	void UpdateBehaviour(const glm::mat4 &pcModel);
 
 	//Called by the enemy class
 	void Despawn(const ui enemyIndex);
-	
-	~EnemyManager();
 
 private:
-	Shader &enemyShader;
-	Camera &camera;
-	Timer &timer;
-	ExpManager &expManager;
+	Shader &_enemyShader;
+	Camera &_camera;
+	Timer &_timer;
 
-	Transform enemyTransform;
-	Transform blankTransform;
-	UntexturedInstancedMesh enemyMesh;
-	CustomRand customRand;
-	const UntexturedMeshParams params;
+	Transform _enemyTransform;
+	UntexturedInstancedMesh _enemyMesh;
+	CustomRand _customRand;
+	const UntexturedMeshParams _enemyMeshParams;
 
-	std::vector<Enemy*> enemies;
-	std::vector<glm::mat4> enemyInstanceTransforms;
+	std::vector<Enemy*> _enemies;
+	std::vector<glm::mat4> _enemyInstanceTransforms;
 
-	const ui maxNoEnemies;
-	const db enemyPerFrameDistance = 0.01;
-	db scaledPerFrameTravelDistance;
+	const ui _maxNoEnemies;
+	const db _enemyPerFrameDistance = 0.01;
+	db _scaledPerFrameTravelDistance;
 
 };
 

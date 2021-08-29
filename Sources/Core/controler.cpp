@@ -25,7 +25,7 @@ void Controler::CaptureKeyboardPresses(bool &isPcAlive)
 {
     if (isPcAlive)
     {
-        db movementAmount = timer.Scale(defaultMovementAmount);
+        const ft movementAmount = static_cast<ft>(timer.Scale(defaultMovementAmount));
         if (display.ReadKeyboardState(codes[display.W]))
             transform.Pos().y += movementAmount,
             camera.Pos().y += movementAmount;

@@ -69,6 +69,7 @@ void Text::Render(const std::string &text, ft x, const ft y, const ft scale, con
 			{xpos + width, ypos,          1.0f, 1.0f},
 			{xpos + width, ypos + height, 1.0f, 0.0f}
 		};
+
 		glBindTexture(GL_TEXTURE_2D, character->texId);
 		glBindBuffer(GL_ARRAY_BUFFER, vertexArrayBuffer);
 		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
