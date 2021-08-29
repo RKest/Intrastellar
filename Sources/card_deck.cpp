@@ -11,10 +11,21 @@ void CardDeck::DrawCards()
 	//Translate projectiles
 	std::for_each(std::execution::par_unseq, _projectileInstanceTransforms.begin(), _projectileInstanceTransforms.end(),
 		[&perFrameProjectileTransform](auto &mat){ mat *= perFrameProjectileTransform; });
-	//Remove all projectiles that hit a target
-	std::remove_if(_projectileInstanceTransforms.begin(), _projectileInstanceTransforms.end(), 
-		[this](const glm::mat4 &mat){ return std::any_of(_targetBoundingBoxes.begin(), _targetBoundingBoxes.end(), 
-		[projPos = glm::vec2(mat * glm::vec4(0,0,0,1))](const helpers::BoundingBox &box){ return box.IsThereAnIntersection(projPos); }); });
+	//Remove all projectiles that hit a target (no STL didn't do a good job)
+	std::vector<glm::mat4>::iterator i = _projectileInstanceTransforms.begin();
+	while(i != _projectileInstanceTransforms.end())
+	{
+		glm::vec2 projectilePosition = glm::vec2(*i * glm::vec4(0,0,0,1));
+		for(ui j = 0; j < 3; ++j)
+		{
+			if(_targetBoundingBoxes[j].IsThereAnIntersection(projectilePosition))
+			{
+				_projectileInstanceTransforms.erase(i);
+				break;
+			}
+		}
+		++i;
+	}
 
 	for (ui i = 0; i < _noCards; ++i)
 	{

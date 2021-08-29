@@ -59,7 +59,6 @@ private:
     std::vector<glm::mat4> _projectileInstanceTransforms;
     std::vector<glm::mat4> _cardBorderInstanceTransforms;
     std::vector<glm::mat4> _targetInstanceTransforms;
-    std::vector<glm::vec2> _projectilePositions;
     std::vector<ui> _cardClockIds = std::vector<ui>(3);
     std::vector<db> _cardShotDelays = { 100.0, 150.0, 300.0 };
     std::vector<helpers::BoundingBox> _cardBoundingBoxes = std::vector<helpers::BoundingBox>(3);
