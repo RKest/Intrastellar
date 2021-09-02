@@ -2,7 +2,7 @@
 
 ExpManager::ExpManager(Camera &camera, Timer &timer, const UntexturedMeshParams &expMeshParams, 
 	const UntexturedMeshParams &expBarMeshParams, const ui customRandSeed, const ui maxNoExpParticles)
-	: _expParticleShader("./Shaders/Exp", UNIFORMS), _expBarShader("./Shaders/ExpBar", UNIFORMS), _timer(timer), _camera(camera), 
+	: _expParticleShader("./Shaders/Exp"), _expBarShader("./Shaders/ExpBar"), _timer(timer), _camera(camera), 
 	_expMesh(expMeshParams, maxNoExpParticles), _customRand(customRandSeed), _maxNoExpParticles(maxNoExpParticles), _expBarMesh(expMeshParams)
 {
 }

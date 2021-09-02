@@ -19,7 +19,7 @@ class Shader
 {
 public:
     template <size_t SZ>
-    Shader(const std::string &filePath, const std::array<const char *, SZ> &uniformNames, bool hasGeometryShader = false)
+    Shader(const std::string &filePath, const std::array<const char *, SZ> &uniformNames = UNIFORMS, bool hasGeometryShader = false)
     {
         program = glCreateProgram();
         shaders.push_back(CreateShader(LoadShader(filePath + "/VS.glsl"), GL_VERTEX_SHADER));

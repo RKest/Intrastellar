@@ -33,8 +33,11 @@ constexpr ft SCREEN_ASPECT = static_cast<ft>(SCREEN_WIDTH) / static_cast<ft>(SCR
 constexpr std::array UNIFORMS = {"transform", "projection"};
 
 //Shooter 
-#define MAX_NO_SHOOTER_PROJECTILES 10
-#define MAX_NO_ENEMIES 10
+constexpr ui MAX_PROJ_AMOUNT = 10;
+constexpr ui MAX_NO_ENEMIES = 10;
+
+constexpr ui CARD_MAX_PROJ_COUNT = 90;
+constexpr ui NO_CARDS = 3;
 
 
 inline size_t _dummy_size_t;

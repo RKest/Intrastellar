@@ -13,11 +13,9 @@ int main(int argc, char **argv)
 	Display display(SCREEN_WIDTH, SCREEN_HEIGHT, "Intrastellar");
 	Camera camera(glm::vec3(0, 0, -20), 70.0f, display.Aspect(), 0.01f, 1000.0f);
 
-	Shader pcShader("./Shaders/PC", UNIFORMS);
-	Shader projectileShader("./Shaders/Projectile", UNIFORMS);
-	Shader enemyShader("./Shaders/Enemy", UNIFORMS);
-	Shader textShader("./Shaders/Text", UNIFORMS);
-	Shader pcCardShader("./Shaders/PC_Card", UNIFORMS);
+	Shader projectileShader("./Shaders/Projectile");
+	Shader enemyShader("./Shaders/Enemy");
+	Shader textShader("./Shaders/Text");
 
 	const glm::vec3 pcVertices[] = {{0, 0.5, 0}, {-0.5, -0.5, 0}, {0.5, -0.5, 0}};
 	const ui pcIndices[] = {2, 1, 0};
@@ -45,16 +43,12 @@ int main(int argc, char **argv)
 	Timer timer(text, playerStats);
 	ExpManager expManager(camera, timer, expParams, expBarParams, CUSTOM_RAND_SEED, 50);
 	EnemyManager enemyManager(enemyShader, camera, timer, enemyMeshParams, CUSTOM_RAND_SEED, MAX_NO_ENEMIES);
-	PlayerCharacter playerCharacter(pcShader, projectileShader, pcParams, projectileParams, camera, text, timer, MAX_NO_SHOOTER_PROJECTILES);
+	PlayerCharacter playerCharacter(pcParams, projectileParams, camera, text, timer, MAX_NO_SHOOTER_PROJECTILES);
 	Controler controler(display, camera, timer, playerCharacter.PcTransform());
-	CardDeck cardDeck(pcCardShader, projectileShader, enemyShader, text, timer, playerStats, pcParams, projectileParams, 
-		overlayParams, cardBorderParams, enemyMeshParams);
+	CardDeck cardDeck(enemyShader, text, timer, playerStats, pcParams, projectileParams, 
+		overlayParams, cardBorderParams, enemyMeshParams, playerCharacter.ExternDrawCb());
 
 	ui counter = 1;
-
-	Shader testShader("./Shaders/ExpBar", UNIFORMS);
-	UntexturedDynamicMesh testMesh(expBarParams);
-	std::array<glm::vec3, 4> testPositions{{glm::vec3(), glm::vec3(0,1,0), glm::vec3(10,0,0), glm::vec3(10,1,0)}};
 
 	const auto render = [&]
 	{
@@ -63,12 +57,6 @@ int main(int argc, char **argv)
 		playerCharacter.RenderScore();
 		playerCharacter.Draw();
 		timer.RenderFPS();
-		// testShader.Bind();
-		// testShader.Update(_blankTransform, camera.ViewProjection());
-		// testPositions[2] = glm::vec3(counter / 10000, 0, 0);
-		// testPositions[3] = glm::vec3(counter / 10000, 1, 0);
-		// testMesh.Update(testPositions.data(), testPositions.size());
-		// testMesh.Draw();
 	};
 
 	while (!display.IsClosed())
@@ -85,9 +73,8 @@ int main(int argc, char **argv)
 		if (timer.IsItTime(Timer::ClocksEnum::SHOT_CLOCK))
 			playerCharacter.Shoot(pcModel);
 		playerCharacter.Update();
-		enemyManager.RecordCollisions(playerCharacter.ProjectileTransforms(),
-									  playerCharacter.ProjectileHitCallback(), expManager.CreateExpParticlesCallable());
-		enemyManager.RecordPCIntersection(helpers::transformStdVector(pcParams, pcModel), playerCharacter.PlayerCharacterHitCallback());
+		enemyManager.RecordCollisions(playerCharacter.ProjTransforms(), playerCharacter.ProjHitCallback(), expManager.CreateExpParticlesCb());
+		enemyManager.RecordPCIntersection(helpers::transformStdVector(pcParams, pcModel), playerCharacter.PCHitCallback());
 
 		render();
 		expManager.UpdateExpParticles(pcModel);
