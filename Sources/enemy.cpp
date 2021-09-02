@@ -1,29 +1,5 @@
 #include "enemy.h"
 
-Enemy::Enemy(const UntexturedMeshParams &params, const glm::mat4 &instanceTransform, EnemyManager *manager)
-: manager(manager), health(100)
-{
-	boundingBox = helpers::BoundingBox(params, instanceTransform);
-}
-
-Enemy::CollisionCheckEnum Enemy::CheckForProjectileCollision(const glm::vec2 &projectilePos, const ui projectileDamage)
-{
-	if(boundingBox.IsThereAnIntersection(projectilePos))
-	{
-		health -= projectileDamage;
-		if(!health)
-			return FATALITY;
-		return COLLISION;
-	}
-	return NO_COLLISION;
-}
-
-void Enemy::UpdateBehaviour(const glm::mat4 &instanceTransform)
-{
-	boundingBox.minCoords = instanceTransform * glm::vec4(boundingBox.minDimentions,  0, 1);
-	boundingBox.maxCoords = instanceTransform * glm::vec4(boundingBox.maxDimentions, 0, 1);
-}
-
 EnemyManager::EnemyManager(Shader &enemyShader, Camera &camera, Timer &timer, Stats &pcStats,
 	const UntexturedMeshParams &params, ui seed, ui maxNoEnemies)
  : _enemyShader(enemyShader), _camera(camera), _enemyMesh(params, maxNoEnemies, 4), _pcStats(pcStats),
@@ -34,23 +10,17 @@ EnemyManager::EnemyManager(Shader &enemyShader, Camera &camera, Timer &timer, St
 void EnemyManager::RecordCollisions(const std::vector<glm::mat4> &projectileTransforms,
 	const std::function<void(ui)> projectileHitCallback, std::function<void(const glm::mat4&, const ui)> fatalityCallback)
 {
-	for (ui i = 0; i < projectileTransforms.size(); ++i) 
+	ui collisionIndex;
+	for(ui i = 0; i < _enemyBoundingBoxes.size(); ++i)
 	{
-		const glm::vec2 projectilePosition = glm::vec2(projectileTransforms[i] * glm::vec4(0,0,0,1));
-		for (Enemy *enemyPtr : _enemies)
+		if(_enemyBoundingBoxes[i].IsThereAnIntersection(projectileTransforms), collisionIndex)
 		{
-			Enemy::CollisionCheckEnum collisionStatus = enemyPtr->CheckForProjectileCollision(projectilePosition, _pcStats.Damage());
-			if(collisionStatus == Enemy::CollisionCheckEnum::COLLISION)
+			projectileHitCallback(collisionIndex);
+			_enemyHealths[i] -= _pcStats.Damage();
+			if(_enemyHealths[i] < 0)
 			{
-				projectileHitCallback(i);
-				break;
-			}
-			if(collisionStatus == Enemy::CollisionCheckEnum::FATALITY)
-			{
-				projectileHitCallback(i);
-				fatalityCallback(_enemyInstanceTransforms[enemyPtr->managerIndex], 3);
-				Despawn(enemyPtr->managerIndex);
-				break;
+				fatalityCallback(i);
+				Despawn(i);
 			}
 		}
 	}
@@ -58,9 +28,9 @@ void EnemyManager::RecordCollisions(const std::vector<glm::mat4> &projectileTran
 
 void EnemyManager::RecordPCIntersection(const std::vector<glm::vec2> &pcPositions, const std::function<void()> intersectionCallback)
 {
-	for (Enemy *enemyPtr : _enemies)
+	for (auto &enemyBoundingBox : _enemyBoundingBoxes)
 	{
-		if(enemyPtr->EnemyBoundingBox().IsThereAnIntersection(pcPositions, _pcStats.Damage()))
+		if(enemyBoundingBox.IsThereAnIntersection(pcPositions, _pcStats.Damage()))
 		{
 			intersectionCallback();
 			break;
@@ -72,20 +42,21 @@ void EnemyManager::Reset()
 {
 	for(auto p : _enemies)
 		delete p;
-	_enemies.clear();
 	_enemyInstanceTransforms.clear();
+	_enemyBoundingBoxes.clear();
+	_enemyHealths.clear();
 }
 
 void EnemyManager::Draw()
 {
-	helpers::render(_enemyShader, _enemyMesh, _enemyInstanceTransforms.data(), _enemies.size(), _blankTransform, _camera.ViewProjection());
+	helpers::render(_enemyShader, _enemyMesh, _enemyInstanceTransforms.data(), _enemyInstanceTransforms.size(), _blankTransform, _camera.ViewProjection());
 }
 
 void EnemyManager::UpdateBehaviour(const glm::mat4 &pcModel)
 {
 	const glm::vec2 pcPos = glm::vec2(pcModel * glm::vec4(0, 0, 0, 1));
 	_scaledPerFrameTravelDistance = _timer.Scale(_enemyPerFrameDistance);
-	for (ui i = 0; i < _enemies.size(); ++i)
+	for (ui i = 0; i < _enemyInstanceTransforms.size(); ++i)
 	{
 		const glm::vec2 enemyPos = glm::vec2(_enemyInstanceTransforms[i] * glm::vec4(0, 0, 0, 1));
 		glm::vec2 vecToPc = pcPos - enemyPos;
@@ -93,7 +64,8 @@ void EnemyManager::UpdateBehaviour(const glm::mat4 &pcModel)
 
 		const glm::mat4 localTransform = glm::translate(glm::vec3(vecToPc, 0));
 		_enemyInstanceTransforms[i] *= localTransform;
-		_enemies[i]->UpdateBehaviour(_enemyInstanceTransforms[i]);
+		_enemyBoundingBoxes[i].minCoords = glm::vec2(_enemyInstanceTransforms[i] * glm::vec4(_enemyBoundingBoxes.minDimentions, 0, 1));
+		_enemyBoundingBoxes[i].maxCoords = glm::vec2(_enemyInstanceTransforms[i] * glm::vec4(_enemyBoundingBoxes.maxDimentions, 0, 1));
 	}
 }
 
@@ -107,23 +79,23 @@ void EnemyManager::Spawn(const glm::mat4 &pcModel)
 	const ft enemyY = _customRand.NextUi() % 2 ? _customRand.NextFloat(pcPos.y - 9.0f,  pcPos.y - 11.0f) : _customRand.NextFloat(pcPos.y + 9.0f, pcPos.y + 11.0f);
 
 	glm::mat4 instanceTransform = _enemyTransform.Model() * glm::translate(glm::vec3(enemyX, enemyY, 0));
-	Enemy *enemyPtr = new Enemy(_enemyMeshParams, instanceTransform, this);
+	_enemyHealths.push_back(100);
+	_enemyBoundingBoxes.push_back(helpers::BoundingBox(_enemyMeshParams, instanceTransform));
 
-	enemyPtr->SetManagerIndex(_enemies.size());
-	_enemies.push_back(enemyPtr);
 	_enemyInstanceTransforms.push_back(instanceTransform);
+	_enemyBoundingBoxes.push_back()
 } 
 
 void EnemyManager::Despawn(const ui enemyIndex)
 {
-	ui enemiesSize = _enemies.size();
-	delete _enemies[enemyIndex];
+	ui enemiesSize = _enemyInstanceTransforms.size();
 	for (ui i = enemyIndex + 1; i < enemiesSize; ++i)
 	{
-		_enemies[i]->managerIndex--;
-		_enemies[i-1] = _enemies[i];
 		_enemyInstanceTransforms[i-1] = _enemyInstanceTransforms[i];
+		_enemyBoundingBoxes[i-1] = _enemyBoundingBoxes[i];
+		_enemyHealths[i-1] = _enemyHealths[i];
 	}
-	_enemies.pop_back();
 	_enemyInstanceTransforms.pop_back();
+	_enemyHealths.pop_back();
+	_enemyBoundingBoxes.pop_back();
 }

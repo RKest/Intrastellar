@@ -9,6 +9,8 @@
 #include "Core/shader.h"
 
 #include <vector>
+#include <algorithm>
+#include <iterator>
 
 namespace helpers
 {
@@ -26,8 +28,7 @@ namespace helpers
         glm::vec2 maxCoords;
         bool IsThereAnIntersection(const glm::vec2&) const;
         bool IsThereAnIntersection(const std::vector<glm::vec2>&) const;
-        template <typename V>
-        bool IsThereAnIntersection(const std::vector<V> &)
+        bool IsThereAnIntersection(const std::vector<glm::mat4> &transforms, ui &intersectionIndex) const;
     };
     glm::vec2 mouseCoordsTransformed(const glm::mat4 &transform);
     bool IsLBMPressed();

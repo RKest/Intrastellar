@@ -16,35 +16,6 @@
 
 #include "glm/gtx/matrix_transform_2d.hpp"
 
-class EnemyManager;
-
-class Enemy
-{
-public:
-	Enemy(const UntexturedMeshParams &params, const glm::mat4 &instanceTransform, EnemyManager *manager);
-
-	void UpdateBehaviour(const glm::mat4 &instanceTransform);
-	inline void SetManagerIndex(const ui arg) { managerIndex = arg; }
-
-	ui managerIndex;
-	enum CollisionCheckEnum
-	{
-		NO_COLLISION,
-		COLLISION,
-		FATALITY
-	};
-
-	CollisionCheckEnum CheckForProjectileCollision(const glm::vec2 &projectilePos, const ui projectileDamage = 100);
-	inline helpers::BoundingBox &EnemyBoundingBox() const { return const_cast<helpers::BoundingBox&>(boundingBox); }
-
-protected:
-private:
-	EnemyManager *manager;
-	helpers::BoundingBox boundingBox;
-
-	ui health;
-};
-
 class EnemyManager
 {
 public:
@@ -73,8 +44,9 @@ private:
 	CustomRand _customRand;
 	const UntexturedMeshParams _enemyMeshParams;
 
-	std::vector<Enemy*> _enemies;
 	std::vector<glm::mat4> _enemyInstanceTransforms;
+	std::vector<helpers::BoundingBox> _enemyBoundingBoxes;
+	std::vector<ui> _enemyHealths;
 
 	const ui _maxNoEnemies;
 	const db _enemyPerFrameDistance = 0.01;
