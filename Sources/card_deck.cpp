@@ -57,7 +57,7 @@ CardDeck::CardDeck(Shader &targetShader, Text &text, Timer &timer, Stats &stats,
 		_targetBoundingBoxes[i]		  = helpers::BoundingBox(_targetParams, 	_targetInstanceTransforms[i]);
         _cardWeightSum += _cards[i].weight;
         _cardStats[i] = &(_cards[i].statAltarations);
-		_timer.InitHeapClock(_clockIds[i], _stats.shotDelay + _cardStats[i]->shotDelay * _cardStats[i]->shotDelayMultiplayar);
+		_timer.InitHeapClock(_clockIds[i], _stats.Delay() + _cardStats[i].Delay());
 	}
     //	for(ui i = 0; i < 1; ++i)
     // {

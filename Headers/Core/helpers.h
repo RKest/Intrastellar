@@ -26,6 +26,8 @@ namespace helpers
         glm::vec2 maxCoords;
         bool IsThereAnIntersection(const glm::vec2&) const;
         bool IsThereAnIntersection(const std::vector<glm::vec2>&) const;
+        template <typename V>
+        bool IsThereAnIntersection(const std::vector<V> &)
     };
     glm::vec2 mouseCoordsTransformed(const glm::mat4 &transform);
     bool IsLBMPressed();

@@ -1,6 +1,6 @@
 #include "Core/text.h"
 
-Text::Text(Shader &shader, const std::string &fontPath, const ui screenWidth, const ui screenHieght) : shader(shader)
+Text::Text(const std::string &fontPath, const ui screenWidth, const ui screenHieght) : shader("Shaders/Text")
 {
 	if (FT_Init_FreeType(&ftl))
 		std::cerr << "ERROR:FREETYPE: Failed to initialize freetype" << std::endl;

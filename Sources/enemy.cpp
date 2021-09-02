@@ -39,7 +39,7 @@ void EnemyManager::RecordCollisions(const std::vector<glm::mat4> &projectileTran
 		const glm::vec2 projectilePosition = glm::vec2(projectileTransforms[i] * glm::vec4(0,0,0,1));
 		for (Enemy *enemyPtr : _enemies)
 		{
-			Enemy::CollisionCheckEnum collisionStatus = enemyPtr->CheckForProjectileCollision(projectilePosition);
+			Enemy::CollisionCheckEnum collisionStatus = enemyPtr->CheckForProjectileCollision(projectilePosition, _pcStats.Damage());
 			if(collisionStatus == Enemy::CollisionCheckEnum::COLLISION)
 			{
 				projectileHitCallback(i);
@@ -60,7 +60,7 @@ void EnemyManager::RecordPCIntersection(const std::vector<glm::vec2> &pcPosition
 {
 	for (Enemy *enemyPtr : _enemies)
 	{
-		if(enemyPtr->EnemyBoundingBox().IsThereAnIntersection(pcPositions, _pcStats.))
+		if(enemyPtr->EnemyBoundingBox().IsThereAnIntersection(pcPositions, _pcStats.Damage()))
 		{
 			intersectionCallback();
 			break;

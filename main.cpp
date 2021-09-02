@@ -13,9 +13,7 @@ int main(int argc, char **argv)
 	Display display(SCREEN_WIDTH, SCREEN_HEIGHT, "Intrastellar");
 	Camera camera(glm::vec3(0, 0, -20), 70.0f, display.Aspect(), 0.01f, 1000.0f);
 
-	Shader projectileShader("./Shaders/Projectile");
 	Shader enemyShader("./Shaders/Enemy");
-	Shader textShader("./Shaders/Text");
 
 	const glm::vec3 pcVertices[] = {{0, 0.5, 0}, {-0.5, -0.5, 0}, {0.5, -0.5, 0}};
 	const ui pcIndices[] = {2, 1, 0};
@@ -39,10 +37,10 @@ int main(int argc, char **argv)
 	const UntexturedMeshParams expBarParams = {expBarVertices, expBarIndices, ARR_SIZE(expBarVertices), ARR_SIZE(expBarIndices)};
 
 	Stats playerStats = defaultStats;
-	Text text(textShader, "./Resources/Fonts/slkscr.ttf", SCREEN_WIDTH, SCREEN_HEIGHT);
+	Text text("./Resources/Fonts/slkscr.ttf", SCREEN_WIDTH, SCREEN_HEIGHT);
 	Timer timer(text, playerStats);
 	ExpManager expManager(camera, timer, expParams, expBarParams, CUSTOM_RAND_SEED, 50);
-	EnemyManager enemyManager(enemyShader, camera, timer, enemyMeshParams, CUSTOM_RAND_SEED, MAX_NO_ENEMIES);
+	EnemyManager enemyManager(enemyShader, camera, timer, playerStats, enemyMeshParams, CUSTOM_RAND_SEED, MAX_NO_ENEMIES);
 	PlayerCharacter playerCharacter(pcParams, projectileParams, camera, text, timer, MAX_NO_SHOOTER_PROJECTILES);
 	Controler controler(display, camera, timer, playerCharacter.PcTransform());
 	CardDeck cardDeck(enemyShader, text, timer, playerStats, pcParams, projectileParams, 

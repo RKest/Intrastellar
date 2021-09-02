@@ -21,7 +21,7 @@ struct Character
 class Text
 {
 public:
-	Text(Shader &shader, const std::string &fontPath, const ui screenWidth, const ui screenHeihgt);
+	Text(const std::string &fontPath, const ui screenWidth, const ui screenHeihgt);
 	void Render(const std::string &text, ft x, const ft y, const ft scale, const glm::vec3 &colour);
 	~Text();
 
