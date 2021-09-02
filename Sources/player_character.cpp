@@ -5,11 +5,15 @@
 PlayerCharacter::PlayerCharacter(const UntexturedMeshParams &pcParams, const UntexturedMeshParams &projParams, Stats &pcStats, 
     Camera &camera, Text &text, Timer &timer)
 	: _pcShader("./Shaders/PC"), _projectileShader("./Shaders/Projectile"), _pcCardShader("./Shaders/PC_Card"),
-		_pcMesh(pcParams), _projMesh(projParams), _maxProjectileAmount(maxProjectileAmount), _camera(camera), _text(text), _timer(timer), 
+		_pcMesh(pcParams), _projMesh(projParams), _camera(camera), _text(text), _timer(timer), _pcStats(pcStats),
 		_pcCardMesh(pcParams, NO_CARDS, 4), _projCardMesh(projParams, CARD_MAX_PROJ_COUNT, 4)
 {
-	_perFrameProjectileTravel = 0.05;
-	_pcIntersectionCallback = [this]{ _isAlive = false; };
+	_pcIntersectionCallback = [this]
+	{
+		_pcStats.currHP -= 1;
+		if(!_pcStats.currHP)
+			_isAlive = false; 
+	};
 	_projHitCallback  = [this](ui projectileIndex)
 	{
 		_projInstanceTransforms[projectileIndex] = _projInstanceTransforms.back();
@@ -71,10 +75,10 @@ void PlayerCharacter::ExternDraw(const std::vector<glm::mat4> &pcTransforms, std
 {
 	for(auto i = projTransforms.begin(); i != projTransforms.end(); ++i)
 	{
-		glm::vec2 projectilePosition = glm::vec2(*i * glm::vec4(0,0,0,1));
+		glm::vec2 projPos = glm::vec2(*i * glm::vec4(0,0,0,1));
 		for(ui j = 0; j < targetBoundingBoxes.size(); ++j)
 		{
-			if(targetBoundingBoxes[j].IsThereAnIntersection(projectilePosition))
+			if(targetBoundingBoxes[j].IsThereAnIntersection(projPos))
 			{
 				projTransforms.erase(i);
 				break;

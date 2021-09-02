@@ -20,6 +20,8 @@ struct Stats
 
     Stats operator+(const Stats& lval) const;
     void operator+=(const Stats& lval);
+    inline ft Damage(){ return shotDamage * shotDanageMultiplayer; }
+    inline db Delay() { return shotDelay * static_cast<db>(shotDanageMultiplayer); }
 };
 
 static const Stats defaultStats = 

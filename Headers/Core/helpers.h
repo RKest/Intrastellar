@@ -25,6 +25,7 @@ namespace helpers
         glm::vec2 minCoords;
         glm::vec2 maxCoords;
         bool IsThereAnIntersection(const glm::vec2&) const;
+        bool IsThereAnIntersection(const std::vector<glm::vec2>&) const;
     };
     glm::vec2 mouseCoordsTransformed(const glm::mat4 &transform);
     bool IsLBMPressed();
@@ -32,6 +33,17 @@ namespace helpers
     void render(Shader &shader, Mesh &mesh, const glm::mat4 &transfor, const glm::mat4 &projection);
     void render(Shader &shader, UntexturedInstancedMesh &mesh, const glm::mat4 *instanceTransforms, ui noInstances, const glm::mat4 &transform, const glm::mat4 &projection);
     ui squishedIntToScreenWidth(ui minValue, ui maxValue, ui value);
+    template<typename T>
+    void pushToCappedVector(std::vector<T> &cappedVec, const T &el, ui &oldestElIndex const ui cap)
+    {
+        if (cappedVec.size() == cap)
+		{
+			cappedVec[oldestElIndex] = el;
+			oldestElIndex = (oldestElIndex + 1) % cap;
+		}
+		else
+			cappedVec.push_back(el);
+    }
 }
 
 #endif

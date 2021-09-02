@@ -57,6 +57,11 @@ bool helpers::BoundingBox::IsThereAnIntersection(const glm::vec2 &vec) const
 	vec.y <= maxCoords.y;
 }
 
+bool helpers::BoundingBox::IsThereAnIntersection(const std::vector<glm::vec2> &vecs) const
+{
+	return std::any_of(vecs.begin(), vecs.end(), [this](auto &vec){ return IsThereAnIntersection(vec); });
+}
+
 glm::vec2 helpers::mouseCoordsTransformed(const glm::mat4 &transform)
 {
 	int x, y;

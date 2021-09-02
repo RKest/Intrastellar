@@ -24,9 +24,9 @@ void Enemy::UpdateBehaviour(const glm::mat4 &instanceTransform)
 	boundingBox.maxCoords = instanceTransform * glm::vec4(boundingBox.maxDimentions, 0, 1);
 }
 
-EnemyManager::EnemyManager(Shader &enemyShader, Camera &camera, Timer &timer, 
+EnemyManager::EnemyManager(Shader &enemyShader, Camera &camera, Timer &timer, Stats &pcStats,
 	const UntexturedMeshParams &params, ui seed, ui maxNoEnemies)
- : _enemyShader(enemyShader), _camera(camera), _enemyMesh(params, maxNoEnemies, 4), 
+ : _enemyShader(enemyShader), _camera(camera), _enemyMesh(params, maxNoEnemies, 4), _pcStats(pcStats),
  	_customRand(seed), _enemyMeshParams(params), _maxNoEnemies(maxNoEnemies), _timer(timer)
 {
 }
@@ -60,10 +60,7 @@ void EnemyManager::RecordPCIntersection(const std::vector<glm::vec2> &pcPosition
 {
 	for (Enemy *enemyPtr : _enemies)
 	{
-		const helpers::BoundingBox &enemyBoundingBox = enemyPtr->EnemyBoundingBox();
-		bool isThereAnIntersection = std::any_of(pcPositions.begin(), pcPositions.end(), 
-		[&enemyBoundingBox](auto &vec){ return enemyBoundingBox.IsThereAnIntersection(vec); });
-		if(isThereAnIntersection)
+		if(enemyPtr->EnemyBoundingBox().IsThereAnIntersection(pcPositions, _pcStats.))
 		{
 			intersectionCallback();
 			break;

@@ -48,7 +48,7 @@ private:
 class EnemyManager
 {
 public:
-	EnemyManager(Shader &enemyShader, Camera &camera, Timer &timer, const UntexturedMeshParams &params, ui seed, ui maxNoEnemies);
+	EnemyManager(Shader &enemyShader, Camera &camera, Timer &timer, Stats &pcStats, const UntexturedMeshParams &params, ui seed, ui maxNoEnemies);
 
 	//Called outside
 	void Reset();
@@ -66,6 +66,7 @@ private:
 	Shader &_enemyShader;
 	Camera &_camera;
 	Timer &_timer;
+	Stats &_pcStats;
 
 	Transform _enemyTransform;
 	UntexturedInstancedMesh _enemyMesh;
