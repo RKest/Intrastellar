@@ -79,11 +79,9 @@ void EnemyManager::Spawn(const glm::mat4 &pcModel)
 	const ft enemyY = _customRand.NextUi() % 2 ? _customRand.NextFloat(pcPos.y - 9.0f,  pcPos.y - 11.0f) : _customRand.NextFloat(pcPos.y + 9.0f, pcPos.y + 11.0f);
 
 	glm::mat4 instanceTransform = _enemyTransform.Model() * glm::translate(glm::vec3(enemyX, enemyY, 0));
-	_enemyHealths.push_back(100);
 	_enemyBoundingBoxes.push_back(helpers::BoundingBox(_enemyMeshParams, instanceTransform));
-
 	_enemyInstanceTransforms.push_back(instanceTransform);
-	_enemyBoundingBoxes.push_back()
+	_enemyHealths.push_back(100);
 } 
 
 void EnemyManager::Despawn(const ui enemyIndex)

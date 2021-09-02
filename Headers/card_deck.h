@@ -62,8 +62,6 @@ private:
     glm::mat4 _cardProjection;
     glm::mat4 _inverseFlippedCardBorderProjection; //Kinda just stumbeled myself upon that one, by all metrics it shouldn't work but it does
 
-	const db _perFrameProjectileTravel = 0.02;
-
     //Drawing player Characters --- Delegated to a callable in the PlayerCharacter class --- parameters in order listet below
     const pcDrawFunc _pcDrawFunction;
     std::vector<glm::mat4> _pcInstanceTransforms;

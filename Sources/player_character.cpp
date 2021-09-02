@@ -73,18 +73,10 @@ void PlayerCharacter::Draw()
 void PlayerCharacter::ExternDraw(const std::vector<glm::mat4> &pcTransforms, std::vector<glm::mat4> &projTransforms, const std::vector<ui> &clockIds, 
 	const std::vector<helpers::BoundingBox> &targetBoundingBoxes, const std::vector<Stats> &pcStats, const glm::mat4 &projection, ui &oldestProjIndex)
 {
-	for(auto i = projTransforms.begin(); i != projTransforms.end(); ++i)
-	{
-		glm::vec2 projPos = glm::vec2(*i * glm::vec4(0,0,0,1));
-		for(ui j = 0; j < targetBoundingBoxes.size(); ++j)
-		{
-			if(targetBoundingBoxes[j].IsThereAnIntersection(projPos))
-			{
-				projTransforms.erase(i);
-				break;
-			}
-		}
-	}
+	ui projIndex;
+	for(auto &targetBoundingBox : targetBoundingBoxes)
+		if(targetBoundingBox.IsThereAnIntersection(projTransforms, projIndex))
+			projTransforms.erase(projIndex);
 
 	for (ui i = 0; i < clockIds.size(); ++i)
 	{

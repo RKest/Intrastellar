@@ -54,11 +54,15 @@ CardDeck::CardDeck(Shader &targetShader, Text &text, Timer &timer, Stats &stats,
 		_cardBorderInstanceTransforms.push_back(_cardBorderTransform.Model());
 		_targetInstanceTransforms	 .push_back(targetInstanceTransform);
 		_cardBoundingBoxes  [i] 	  = helpers::BoundingBox(_cardBorderParams, _cardBorderInstanceTransforms[i]);
-		_targetBoundingBoxes[i]		  = helpers::BoundingBox(_targetParams, 	_targetInstanceTransforms[i]);
+		_targetBoundingBoxes[i]		  = helpers::BoundingBox(_targetParams, targetInstanceTransform);
+	}
+
+	for(ui i = 0; i < _card.size(); ++i)
+	{
         _cardWeightSum += _cards[i].weight;
         _cardStats[i] = &(_cards[i].statAltarations);
-		_timer.InitHeapClock(_clockIds[i], _stats.Delay() + _cardStats[i].Delay());
 	}
+
     //	for(ui i = 0; i < 1; ++i)
     // {
 	// 	_rollCards();
@@ -74,33 +78,35 @@ CardDeck::CardDeck(Shader &targetShader, Text &text, Timer &timer, Stats &stats,
 
 void CardDeck::_rollCards()
 {
-    _chosenCardIndices[0] = 0;    
-    _chosenCardIndices[1] = 1;
-    _chosenCardIndices[2] = 2;
-
-//	_chosenCardIndices[0] = 9999;
-//	_chosenCardIndices[1] = 9999;
-//	_chosenCardIndices[2] = 9999;
-//	ui rolledCards = 0;
-//	ui rAcc = 0;
-//	while (rolledCards < _noCards)
-//	{
-//		const auto r = _customRand.NextU32(0, _cardWeightSum);
-//		for(ui i = 0; i < _cards.size(); ++i)
-//		{
-//			rAcc += _cards[i].weight;
-//			if(rAcc > r)
-//			{
-//				if(std::find(_chosenCardIndices.begin(), _chosenCardIndices.end(), i) == _chosenCardIndices.end())
-//					_chosenCardIndices[rolledCards++] = i;
-//				break;
-//			}
-//		}
-//	}
+	_chosenCardIndices[0] = 9999;
+	_chosenCardIndices[1] = 9999;
+	_chosenCardIndices[2] = 9999;
+	ui rolledCards = 0;
+	ui rAcc = 0;
+	while (rolledCards < _noCards)
+	{
+		const auto r = _customRand.NextU32(0, _cardWeightSum);
+		for(ui i = 0; i < _cards.size(); ++i)
+		{
+			rAcc += _cards[i].weight;
+			if(rAcc > r)
+			{
+				if(std::find(_chosenCardIndices.begin(), _chosenCardIndices.end(), i) == _chosenCardIndices.end())
+				{
+					_timer.InitHeapClock(_clockIds[rolledCards], _stats.Delay() + _cardStats[i].Delay());
+					_chosenCardIndices[rolledCards++] = i;
+				}
+				break;
+			}
+		}
+	}
 }
 
 void CardDeck::_choseCards(const ui cardIndex)
 {
 	_isLBMPressed = false;
 	_areCardsDrawn = false;
+	_stats += _cards[_chosenCardIndices[cardIndex]].statAltarations;
+	for(auto i : _clockIds)
+		timer.DestroyHeapClock(i);
 }
