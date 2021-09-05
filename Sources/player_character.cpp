@@ -76,20 +76,18 @@ void PlayerCharacter::ExternDraw(const std::vector<glm::mat4> &pcTransforms, std
 	ui projIndex;
 	for(auto &targetBoundingBox : targetBoundingBoxes)
 		if(targetBoundingBox.IsThereAnIntersection(projTransforms, projIndex))
-			projTransforms.erase(projIndex);
+			projTransforms.erase(projTransforms.begin() + projIndex);
+
+	glm::mat4 perFrameProjectileTransform = glm::translate(glm::vec3(0, _timer.Scale(0.05f), 0));
+	std::for_each(std::execution::par_unseq, projTransforms.begin(), projTransforms.end(),
+		[&perFrameProjectileTransform](auto &mat){ mat *= perFrameProjectileTransform; });
 
 	for (ui i = 0; i < clockIds.size(); ++i)
-	{
-		glm::mat4 perFrameProjectileTransform = glm::translate(glm::vec3(0, _timer.Scale(pcStats[i].shotSpeed), 0));
-		std::for_each(std::execution::par_unseq, projTransforms.begin(), projTransforms.end(),
-			[&perFrameProjectileTransform](auto &mat){ mat *= perFrameProjectileTransform; });
-
 		if (_timer.HeapIsItTime(clockIds[i]))
             helpers::pushToCappedVector(projTransforms, pcTransforms[i], oldestProjIndex, CARD_MAX_PROJ_COUNT);
-	}
 
 	helpers::render(_projectileShader, _projCardMesh, projTransforms.data(), projTransforms.size(), _blankTransform, projection);
-	helpers::render(_pcCardShader, _pcCardMesh, projTransforms.data(), projTransforms.size(), _blankTransform, projection);
+	helpers::render(_pcCardShader, _pcCardMesh, pcTransforms.data(), pcTransforms.size(), _blankTransform, projection);
 }
 
 void PlayerCharacter::Shoot(const glm::mat4 &originTransform)

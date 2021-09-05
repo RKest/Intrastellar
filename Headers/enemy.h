@@ -46,7 +46,7 @@ private:
 
 	std::vector<glm::mat4> _enemyInstanceTransforms;
 	std::vector<helpers::BoundingBox> _enemyBoundingBoxes;
-	std::vector<ui> _enemyHealths;
+	std::vector<si> _enemyHealths;
 
 	const ui _maxNoEnemies;
 	const db _enemyPerFrameDistance = 0.01;

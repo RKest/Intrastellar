@@ -18,7 +18,7 @@ static GLuint CreateShader(const std::string &text, GLenum shaderType);
 class Shader
 {
 public:
-    template <size_t SZ>
+    template <size_t SZ = UNIFORMS.size()>
     Shader(const std::string &filePath, const std::array<const char *, SZ> &uniformNames = UNIFORMS, bool hasGeometryShader = false)
     {
         program = glCreateProgram();

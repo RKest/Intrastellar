@@ -29,7 +29,7 @@ public:
 	void Draw();
 	void Shoot(const glm::mat4 &originTransform);
 	void ExternDraw(const std::vector<glm::mat4> &pcTransforms, std::vector<glm::mat4> &projTransforms, const std::vector<ui> &clockIds, 
-	const std::vector<helpers::BoundingBox> &targetBoundingBoxes, const std::vector<Stats*> &pcStats, const glm::mat4 &projection, ui &oldestProjIndex);
+	const std::vector<helpers::BoundingBox> &targetBoundingBoxes, const std::vector<Stats> &pcStats, const glm::mat4 &projection, ui &oldestProjIndex);
 
 	inline Transform &PcTransform() { return _pcTransform; }
 	inline bool &IsAlive() { return _isAlive; }

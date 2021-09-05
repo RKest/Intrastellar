@@ -37,7 +37,7 @@ namespace helpers
     void render(Shader &shader, UntexturedInstancedMesh &mesh, const glm::mat4 *instanceTransforms, ui noInstances, const glm::mat4 &transform, const glm::mat4 &projection);
     ui squishedIntToScreenWidth(ui minValue, ui maxValue, ui value);
     template<typename T>
-    void pushToCappedVector(std::vector<T> &cappedVec, const T &el, ui &oldestElIndex const ui cap)
+    constexpr void pushToCappedVector(std::vector<T> &cappedVec, const T &el, ui &oldestElIndex, const ui cap)
     {
         if (cappedVec.size() == cap)
 		{

@@ -13,13 +13,13 @@ void EnemyManager::RecordCollisions(const std::vector<glm::mat4> &projectileTran
 	ui collisionIndex;
 	for(ui i = 0; i < _enemyBoundingBoxes.size(); ++i)
 	{
-		if(_enemyBoundingBoxes[i].IsThereAnIntersection(projectileTransforms), collisionIndex)
+		if(_enemyBoundingBoxes[i].IsThereAnIntersection(projectileTransforms, collisionIndex))
 		{
 			projectileHitCallback(collisionIndex);
-			_enemyHealths[i] -= _pcStats.Damage();
-			if(_enemyHealths[i] < 0)
+			_enemyHealths[i] -= _pcStats.actualDamage;
+			if(_enemyHealths[i] <= 0)
 			{
-				fatalityCallback(i);
+				fatalityCallback(_enemyInstanceTransforms[i], 3);
 				Despawn(i);
 			}
 		}
@@ -30,7 +30,7 @@ void EnemyManager::RecordPCIntersection(const std::vector<glm::vec2> &pcPosition
 {
 	for (auto &enemyBoundingBox : _enemyBoundingBoxes)
 	{
-		if(enemyBoundingBox.IsThereAnIntersection(pcPositions, _pcStats.Damage()))
+		if(enemyBoundingBox.IsThereAnIntersection(pcPositions))
 		{
 			intersectionCallback();
 			break;
@@ -40,8 +40,6 @@ void EnemyManager::RecordPCIntersection(const std::vector<glm::vec2> &pcPosition
 
 void EnemyManager::Reset()
 {
-	for(auto p : _enemies)
-		delete p;
 	_enemyInstanceTransforms.clear();
 	_enemyBoundingBoxes.clear();
 	_enemyHealths.clear();
@@ -64,14 +62,14 @@ void EnemyManager::UpdateBehaviour(const glm::mat4 &pcModel)
 
 		const glm::mat4 localTransform = glm::translate(glm::vec3(vecToPc, 0));
 		_enemyInstanceTransforms[i] *= localTransform;
-		_enemyBoundingBoxes[i].minCoords = glm::vec2(_enemyInstanceTransforms[i] * glm::vec4(_enemyBoundingBoxes.minDimentions, 0, 1));
-		_enemyBoundingBoxes[i].maxCoords = glm::vec2(_enemyInstanceTransforms[i] * glm::vec4(_enemyBoundingBoxes.maxDimentions, 0, 1));
+		_enemyBoundingBoxes[i].minCoords = glm::vec2(_enemyInstanceTransforms[i] * glm::vec4(_enemyBoundingBoxes[i].minDimentions, 0, 1));
+		_enemyBoundingBoxes[i].maxCoords = glm::vec2(_enemyInstanceTransforms[i] * glm::vec4(_enemyBoundingBoxes[i].maxDimentions, 0, 1));
 	}
 }
 
 void EnemyManager::Spawn(const glm::mat4 &pcModel)
 {
-	if(_enemies.size() >= _maxNoEnemies)
+	if(_enemyInstanceTransforms.size() >= _maxNoEnemies)
 		return;
 
 	glm::vec2 pcPos = glm::vec2(pcModel * glm::vec4(0,0,0,1));

@@ -1,43 +1,42 @@
 #include "card_deck.h"
 
 Card::Card(const std::string &cardText, const ui weight, const std::vector<Stats> &statAltarationList)
-	: _cardText(cardText), weight(weight)
+	: cardText(cardText), weight(weight), statAltarations(std::accumulate(statAltarationList.begin(), statAltarationList.end(), Stats()))
 {
-	for (auto stat : statAltarationList)
-		statAltarations += stat;
 }
 
 void CardDeck::DrawCards()
 {
-	for (ui i = 0; i < _noCards; ++i)
+	helpers::render(_overlayShader, _overlayMesh);
+    _pcDrawFunction(_pcInstanceTransforms, _projInstanceTransforms, _clockIds, _targetBoundingBoxes, _cardStatsToChose, _cardProjection, 
+        _oldestProjectileIndex);
+	helpers::render(_cardBorderShader, _cardBorderMesh, _cardBorderInstanceTransforms.data(), NO_CARDS, _blankTransform, _cardProjection);
+	helpers::render(_targetShader, _targetMesh, _targetInstanceTransforms.data(), NO_CARDS, _blankTransform, _cardProjection);
+
+	for (ui i = 0; i < NO_CARDS; ++i)
 	{
 		if(_cardBoundingBoxes[i].IsThereAnIntersection(helpers::mouseCoordsTransformed(_inverseFlippedCardBorderProjection)))
 		{
 			bool tempIsLBMPressed = helpers::IsLBMPressed();
+			_text.Render(_cards[_chosenCardIndices[i]].cardText, 100.0f, 100.0f, 0.5f, glm::vec3(1));
 			if(_isLBMPressed && !tempIsLBMPressed)
 				_choseCards(i);
 			else
 				_isLBMPressed = tempIsLBMPressed;
 		}
 	}
-
-	helpers::render(_overlayShader, _overlayMesh);
-    _pcDrawFunction(_pcInstanceTransforms, _projInstanceTransforms, _clockIds, _targetBoundingBoxes, _cardStats, _cardProjection, 
-        _oldestProjectileIndex);
-	helpers::render(_cardBorderShader, _cardBorderMesh, _cardBorderInstanceTransforms.data(), _noCards, _blankTransform, _cardProjection);
-	helpers::render(_targetShader, _targetMesh, _targetInstanceTransforms.data(), _noCards, _blankTransform, _cardProjection);
 }
 
-CardDeck::CardDeck(Shader &targetShader, Text &text, Timer &timer, Stats &stats, 
-	const UntexturedMeshParams &overlayParams, const UntexturedMeshParams &cardBorderParams, 
-	const UntexturedMeshParams &targetMeshParams, const pcDrawFunc &drawPcCb)
+CardDeck::CardDeck(Shader &targetShader, Text &text, Timer &timer, Stats &stats,
+	    const UntexturedMeshParams &overlayParams, const UntexturedMeshParams &cardBorderParams, 
+	    const UntexturedMeshParams &targetMeshParams, const pcDrawFunc &drawPcCb)
 	:  _targetShader(targetShader), _text(text), _timer(timer), _stats(stats), _overlayMesh(overlayParams), 
 	  _overlayShader("./Shaders/Overlay"), _cardBorderShader("./Shaders/CardBorder"), _customRand(CUSTOM_RAND_SEED),
 	  _cardBorderParams(cardBorderParams), _cardBorderMesh(cardBorderParams, NO_CARDS, 4),
 	  _targetParams(targetMeshParams), _targetMesh(targetMeshParams, NO_CARDS, 4), _pcDrawFunction(drawPcCb)
 {
 	_pcTransform.SetRotAngle(-25.0f);
-	_cardProjection = glm::ortho(SCREEN_ASPECT, -SCREEN_ASPECT, -1.0f, 1.0f);
+	_cardProjection = glm::ortho(-SCREEN_ASPECT, SCREEN_ASPECT, -1.0f, 1.0f);
 	_inverseFlippedCardBorderProjection = glm::inverse(glm::ortho(-SCREEN_ASPECT, SCREEN_ASPECT, -1.0f, 1.0f));
 	for (ui i = 0; i < NO_CARDS; ++i)
 	{
@@ -53,37 +52,24 @@ CardDeck::CardDeck(Shader &targetShader, Text &text, Timer &timer, Stats &stats,
 		_pcInstanceTransforms		 .push_back(pcModel);
 		_cardBorderInstanceTransforms.push_back(_cardBorderTransform.Model());
 		_targetInstanceTransforms	 .push_back(targetInstanceTransform);
-		_cardBoundingBoxes  [i] 	  = helpers::BoundingBox(_cardBorderParams, _cardBorderInstanceTransforms[i]);
-		_targetBoundingBoxes[i]		  = helpers::BoundingBox(_targetParams, targetInstanceTransform);
+		_cardBoundingBoxes  [i] = helpers::BoundingBox(_cardBorderParams, _cardBorderInstanceTransforms[i]);
+		_targetBoundingBoxes[i]	= helpers::BoundingBox(_targetParams, targetInstanceTransform);
 	}
 
-	for(ui i = 0; i < _card.size(); ++i)
-	{
+	for(ui i = 0; i < _cards.size(); ++i)
         _cardWeightSum += _cards[i].weight;
-        _cardStats[i] = &(_cards[i].statAltarations);
-	}
-
-    //	for(ui i = 0; i < 1; ++i)
-    // {
-	// 	_rollCards();
-	// 	testVec.push_back(_chosenCardIndices[0]);
-	// 	testVec.push_back(_chosenCardIndices[1]);
-	// 	testVec.push_back(_chosenCardIndices[2]);
-	// }
-
-	// for(ui i = 0; i < _cards.size(); ++i)
-	// 	std::cout << i << ": " << std::count(testVec.begin(), testVec.end(), i) << std::endl;
-
+	
 }
 
-void CardDeck::_rollCards()
+void CardDeck::RollCards()
 {
+	_areCardsDrawn = true;
 	_chosenCardIndices[0] = 9999;
 	_chosenCardIndices[1] = 9999;
 	_chosenCardIndices[2] = 9999;
 	ui rolledCards = 0;
 	ui rAcc = 0;
-	while (rolledCards < _noCards)
+	while (rolledCards < NO_CARDS)
 	{
 		const auto r = _customRand.NextU32(0, _cardWeightSum);
 		for(ui i = 0; i < _cards.size(); ++i)
@@ -93,9 +79,11 @@ void CardDeck::_rollCards()
 			{
 				if(std::find(_chosenCardIndices.begin(), _chosenCardIndices.end(), i) == _chosenCardIndices.end())
 				{
-					_timer.InitHeapClock(_clockIds[rolledCards], _stats.Delay() + _cardStats[i].Delay());
+					_cardStatsToChose[i] = _stats + _cards[i].statAltarations;
+					_timer.InitHeapClock(_clockIds[rolledCards], _cardStatsToChose[i].actualShotDelay);
 					_chosenCardIndices[rolledCards++] = i;
 				}
+				rAcc = 0;
 				break;
 			}
 		}
@@ -108,5 +96,5 @@ void CardDeck::_choseCards(const ui cardIndex)
 	_areCardsDrawn = false;
 	_stats += _cards[_chosenCardIndices[cardIndex]].statAltarations;
 	for(auto i : _clockIds)
-		timer.DestroyHeapClock(i);
+		_timer.DestroyHeapClock(i);
 }

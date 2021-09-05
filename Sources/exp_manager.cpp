@@ -18,7 +18,7 @@ void ExpManager::UpdateExpParticles(const glm::mat4 &pcModel)
 		{
 			_timer.DestroyHeapClock(*i);
 			_expParticleClusterClockIds.erase(i);
-			for (InstanceState * state : _clockIdToInstanceStatePtrMap.at(*i))
+			for (InstanceState *state : _clockIdToInstanceStatePtrMap.at(*i))
 				state->behaviour = ExpPartcleBehaviour::ATTRACTION;
 			_clockIdToInstanceStatePtrMap.erase(*i);
 			/*if(!std::distance(ie, expParticleClusterClockIds.cend())) <--------- Not nescessery maybe untill it is 

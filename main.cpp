@@ -41,10 +41,9 @@ int main(int argc, char **argv)
 	Timer timer(text, playerStats);
 	ExpManager expManager(camera, timer, expParams, expBarParams, CUSTOM_RAND_SEED, 50);
 	EnemyManager enemyManager(enemyShader, camera, timer, playerStats, enemyMeshParams, CUSTOM_RAND_SEED, MAX_NO_ENEMIES);
-	PlayerCharacter playerCharacter(pcParams, projectileParams, camera, text, timer, MAX_NO_SHOOTER_PROJECTILES);
+	PlayerCharacter playerCharacter(pcParams, projectileParams, playerStats, camera, text, timer);
 	Controler controler(display, camera, timer, playerCharacter.PcTransform());
-	CardDeck cardDeck(enemyShader, text, timer, playerStats, pcParams, projectileParams, 
-		overlayParams, cardBorderParams, enemyMeshParams, playerCharacter.ExternDrawCb());
+	CardDeck cardDeck(enemyShader, text, timer, playerStats, overlayParams, cardBorderParams, enemyMeshParams, playerCharacter.ExternDrawCb());
 
 	ui counter = 1;
 
@@ -77,7 +76,7 @@ int main(int argc, char **argv)
 		render();
 		expManager.UpdateExpParticles(pcModel);
 		if(expManager.HasThereBeenLevelUp())
-			cardDeck.AreCarsDrawn() = true;
+			cardDeck.RollCards();
 
 		display.Update();
 		counter++;

@@ -41,7 +41,7 @@ public:
 	void CreateExpParticles(const glm::mat4 &originModel, const ui noParticles);
 	void Reset();
 
-	inline auto CreateExpParticlesCallable() { return std::bind(&ExpManager::CreateExpParticles, this, _1, _2); }
+	inline auto CreateExpParticlesCb() { return std::bind(&ExpManager::CreateExpParticles, this, _1, _2); }
 	inline bool HasThereBeenLevelUp() { return _hasThereBeenLevelUp; }
 	
 protected:

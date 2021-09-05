@@ -62,14 +62,14 @@ bool helpers::BoundingBox::IsThereAnIntersection(const std::vector<glm::vec2> &v
 	return std::any_of(vecs.begin(), vecs.end(), [this](auto &vec){ return IsThereAnIntersection(vec); });
 }
 
-bool helpers::BoundingBox::IsThereAnIntersection(const std::vector<glm::mat4> &transfroms, ui &collisionIndex) const
+bool helpers::BoundingBox::IsThereAnIntersection(const std::vector<glm::mat4> &transforms, ui &collisionIndex) const
 {
     auto b = transforms.cbegin();
     auto e = transforms.cend();
     auto itr = std::find_if(b, e, [this](auto &transform) { return IsThereAnIntersection(glm::vec2(transform * glm::vec4(0,0,0,1))); });
     if (itr == e)
         return false;
-    intersectionIndex = std::distance(b, itr);
+    collisionIndex = std::distance(b, itr);
     return true;
 }
 
