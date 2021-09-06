@@ -8,8 +8,7 @@ Card::Card(const std::string &cardText, const ui weight, const std::vector<Stats
 void CardDeck::DrawCards()
 {
 	helpers::render(_overlayShader, _overlayMesh);
-    _pcDrawFunction(_pcInstanceTransforms, _projInstanceTransforms, _clockIds, _targetBoundingBoxes, _cardStatsToChose, _cardProjection, 
-        _oldestProjectileIndex);
+    _pcDrawFunction(_pcInstanceTransforms, _projInstanceTransforms, _clockIds, _targetBoundingBoxes, _cardProjection, _oldestProjectileIndex);
 	helpers::render(_cardBorderShader, _cardBorderMesh, _cardBorderInstanceTransforms.data(), NO_CARDS, _blankTransform, _cardProjection);
 	helpers::render(_targetShader, _targetMesh, _targetInstanceTransforms.data(), NO_CARDS, _blankTransform, _cardProjection);
 
@@ -79,8 +78,8 @@ void CardDeck::RollCards()
 			{
 				if(std::find(_chosenCardIndices.begin(), _chosenCardIndices.end(), i) == _chosenCardIndices.end())
 				{
-					_cardStatsToChose[i] = _stats + _cards[i].statAltarations;
-					_timer.InitHeapClock(_clockIds[rolledCards], _cardStatsToChose[i].actualShotDelay);
+					_cardShotDelays[rolledCards] = _stats.actualShotDelay + _cards[i].statAltarations.actualShotDelay;
+					_timer.InitHeapClock(_clockIds[rolledCards], _cardShotDelays[rolledCards]);
 					_chosenCardIndices[rolledCards++] = i;
 				}
 				rAcc = 0;

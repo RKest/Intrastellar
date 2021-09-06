@@ -26,7 +26,7 @@ struct Card
 };
 
 using pcDrawFunc = std::function<void(const std::vector<glm::mat4>&, std::vector<glm::mat4>&, const std::vector<ui>&, 
-    const std::vector<helpers::BoundingBox>&, const std::vector<Stats>&, const glm::mat4&, ui&)>;
+    const std::vector<helpers::BoundingBox>&, const glm::mat4&, ui&)>;
 class CardDeck 
 {
 public:
@@ -76,6 +76,7 @@ private:
 
     void _choseCards(const ui cardIndex);
     std::vector<ui> _chosenCardIndices = std::vector<ui>(3, 9999);
+    std::vector<db> _cardShotDelays = std::vector<db>(3);
     ui _cardWeightSum = 0;
     const std::array<Card, 9> _cards\
     {{

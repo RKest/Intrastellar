@@ -38,6 +38,7 @@ void PlayerCharacter::Reset()
 	_projInstanceTransforms.clear();
 	_oldestProjectileIndex = 0;
 	_enemiesShotCounter = 0;
+	_pcStats = defaultStats;
 }
 
 void PlayerCharacter::RenderScore()
@@ -80,7 +81,7 @@ void PlayerCharacter::Draw()
 }
 
 void PlayerCharacter::ExternDraw(const std::vector<glm::mat4> &pcTransforms, std::vector<glm::mat4> &projTransforms, const std::vector<ui> &clockIds, 
-	const std::vector<helpers::BoundingBox> &targetBoundingBoxes, const std::vector<Stats> &pcStats, const glm::mat4 &projection, ui &oldestProjIndex)
+	const std::vector<helpers::BoundingBox> &targetBoundingBoxes, const glm::mat4 &projection, ui &oldestProjIndex)
 {
 	ui projIndex;
 	for(auto &targetBoundingBox : targetBoundingBoxes)

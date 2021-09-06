@@ -29,14 +29,14 @@ public:
 	void Draw();
 	void Shoot(const glm::mat4 &originTransform);
 	void ExternDraw(const std::vector<glm::mat4> &pcTransforms, std::vector<glm::mat4> &projTransforms, const std::vector<ui> &clockIds, 
-	const std::vector<helpers::BoundingBox> &targetBoundingBoxes, const std::vector<Stats> &pcStats, const glm::mat4 &projection, ui &oldestProjIndex);
+	const std::vector<helpers::BoundingBox> &targetBoundingBoxes, const glm::mat4 &projection, ui &oldestProjIndex);
 
 	inline Transform &PcTransform() { return _pcTransform; }
 	inline bool &IsAlive() { return _isAlive; }
 	inline std::vector<glm::mat4> &ProjTransforms() { return _projInstanceTransforms; }
 	inline auto &ProjHitCallback() { return _projHitCallback; }
 	inline auto &PCHitCallback() { return _pcIntersectionCallback; }
-	inline auto ExternDrawCb() { return std::bind(&PlayerCharacter::ExternDraw, this, _1, _2, _3, _4, _5, _6, _7); }
+	inline auto ExternDrawCb() { return std::bind(&PlayerCharacter::ExternDraw, this, _1, _2, _3, _4, _5, _6); }
 
 private:
 	Shader _projectileShader;
