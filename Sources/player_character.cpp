@@ -10,9 +10,15 @@ PlayerCharacter::PlayerCharacter(const UntexturedMeshParams &pcParams, const Unt
 {
 	_pcIntersectionCallback = [this]
 	{
-		_pcStats.currHP -= 1;
+		if(!_isInvincible)
+			_pcStats.currHP -= 1;
 		if(!_pcStats.currHP)
-			_isAlive = false; 
+			_isAlive = false;
+		else
+		{
+			_timer.InitHeapClock(_invincibilityClockId, _invincibilityDuration);
+			_isInvincible = true;
+		}
 	};
 	_projHitCallback  = [this](ui projectileIndex)
 	{
@@ -54,6 +60,9 @@ void PlayerCharacter::RenderScore()
 
 void PlayerCharacter::Update()
 {
+	if(_isInvincible && _timer.HeapIsItTime(_invincibilityClockId))
+		_isInvincible = false;
+
 	_perFrameProjectileTransform = glm::translate(glm::vec3(0.0f, _timer.Scale(_pcStats.shotSpeed), 0.0f));
 	std::for_each
 	(

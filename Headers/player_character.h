@@ -53,6 +53,9 @@ private:
 	Transform _pcTransform;
 
 	bool _isAlive = true;
+	bool _isInvincible = false;
+	db _invincibilityDuration = 400.0;
+	ui _invincibilityClockId;
 
 	std::vector<glm::mat4> _projInstanceTransforms;
 
