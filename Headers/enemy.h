@@ -16,6 +16,17 @@
 
 #include "glm/gtx/matrix_transform_2d.hpp"
 
+struct EnemyData
+{
+	std::vector<glm::mat4> 				instanceTransforms;
+	std::vector<helpers::BoundingBox>	boundignBoxes;
+	std::vector<si>						healths;
+	void Clear();
+	void Erase(const ui index);
+	void Push(const glm::mat4 &instanceTransform, const UntexturedMeshParams &params, const si health = 100);
+	void Update(const glm::mat4 &instanceTransform, const ui index);
+}
+
 class EnemyManager
 {
 public:

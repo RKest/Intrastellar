@@ -1,5 +1,39 @@
 #include "enemy.h"
 
+void EnemyData::Clear()
+{
+	instanceTransforms.clear();
+	boundignBoxes.clear();
+	healths.clear();
+}
+
+void EnemyData::Erase(const ui index)
+{
+	const ui dataSize = healths.size();
+	for (ui i = index + 1; i < dataSize; ++i)
+	{
+		instanceTransforms[i-1] = instanceTransforms[i];
+		boundignBoxes[i-1] = boundignBoxes[i];
+		healths[i-1] = healths[i];
+	}
+	instanceTransforms.pop_back();
+	boundignBoxes.pop_back();
+	healths.pop_back();
+}
+
+void EnemyData::Push(const glm::mat4 &instanceTransform, const UntexturedMeshParams &params, const si health)
+{
+	instanceTransforms.push_back(instanceTransform);
+	boundignBoxes.push_back(helpers::BoundingBox(params, instanceTransform));
+	healths.push_back(health);
+}
+
+void EnemyData::Update(const glm::mat4 &instanceTransform, const ui index)
+{
+	_enemyBoundingBoxes[index].minCoords = glm::vec2(_enemyInstanceTransforms[index] * glm::vec4(_enemyBoundingBoxes[index].minDimentions, 0, 1));
+	_enemyBoundingBoxes[index].maxCoords = glm::vec2(_enemyInstanceTransforms[index] * glm::vec4(_enemyBoundingBoxes[index].maxDimentions, 0, 1));
+}
+
 EnemyManager::EnemyManager(Shader &enemyShader, Camera &camera, Timer &timer, Stats &pcStats,
 	const UntexturedMeshParams &params, ui seed, ui maxNoEnemies)
  : _enemyShader(enemyShader), _camera(camera), _enemyMesh(params, maxNoEnemies, 4), _pcStats(pcStats),
