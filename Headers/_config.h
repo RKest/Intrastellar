@@ -38,6 +38,7 @@ constexpr ui MAX_NO_ENEMIES = 10;
 
 constexpr ui CARD_MAX_PROJ_COUNT = 300;
 constexpr ui NO_CARDS = 3;
+constexpr ui MAX_EXP_PART_NO = 50;
 
 
 inline size_t _dummy_size_t;

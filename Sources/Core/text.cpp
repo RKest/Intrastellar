@@ -34,7 +34,7 @@ Text::Text(const std::string &fontPath, const ui screenWidth, const ui screenHie
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);  
 	projection = glm::ortho(0.0f, static_cast<ft>(screenWidth), 0.0f, static_cast<ft>(screenHieght));
 	shader.Bind();
-	shader.SetMat4("projection", projection);
+	shader.SetUni("projection", projection);
 
 	glGenVertexArrays(1, &vertexArrayObject);
 	glGenBuffers(1, &vertexArrayBuffer);
@@ -50,7 +50,7 @@ Text::Text(const std::string &fontPath, const ui screenWidth, const ui screenHie
 void Text::Render(const std::string &text, ft x, const ft y, const ft scale, const glm::vec3 &colour)
 {
 	shader.Bind();
-	shader.SetVec3("texColour", colour);
+	shader.SetUni("texColour", colour);
 	glActiveTexture(GL_TEXTURE0);
 	glBindVertexArray(vertexArrayObject);
 

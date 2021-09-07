@@ -1,9 +1,8 @@
 #include "exp_manager.h"
 
-ExpManager::ExpManager(Camera &camera, Timer &timer, const UntexturedMeshParams &expMeshParams, 
-	const UntexturedMeshParams &expBarMeshParams, const ui customRandSeed, const ui maxNoExpParticles)
-	: _expParticleShader("./Shaders/Exp"), _expBarShader("./Shaders/ExpBar"), _timer(timer), _camera(camera), 
-	_expMesh(expMeshParams, maxNoExpParticles), _customRand(customRandSeed), _maxNoExpParticles(maxNoExpParticles), _expBarMesh(expMeshParams)
+ExpManager::ExpManager(helpers::Core &core, const UntexturedMeshParams &expMeshParams, const UntexturedMeshParams &expBarMeshParams)
+	: _expParticleShader("./Shaders/Exp"), _expBarShader("./Shaders/ExpBar"), _timer(core.timer), _camera(core.camera), 
+	_expMesh(expMeshParams, MAX_EXP_PART_NO), _customRand(CUSTOM_RAND_SEED), _expBarMesh(expMeshParams)
 {
 }
 
@@ -79,7 +78,7 @@ void ExpManager::UpdateExpParticles(const glm::mat4 &pcModel)
 
 void ExpManager::CreateExpParticles(const glm::mat4 &originModel, const ui noParticles)
 {
-	if(_instanceStates.size() < _maxNoExpParticles)
+	if(_instanceStates.size() < MAX_EXP_PART_NO)
 	{
 		ui heapClockId;
 		_timer.InitHeapClock(heapClockId, _expParticleAttractionDelay);
@@ -87,7 +86,7 @@ void ExpManager::CreateExpParticles(const glm::mat4 &originModel, const ui noPar
 
 		for (ui i = 0; i < noParticles; ++i)
 		{
-			if(_instanceStates.size() == _maxNoExpParticles)
+			if(_instanceStates.size() == MAX_EXP_PART_NO)
 				break;
 			_instanceStates.push_back({
 				glm::translate(glm::vec3(helpers::randomDirVector(_customRand, _timer.Scale(_expParticleEntropySpeed)), 0.0f)),

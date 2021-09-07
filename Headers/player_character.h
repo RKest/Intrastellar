@@ -20,23 +20,20 @@ using namespace std::placeholders;
 class PlayerCharacter
 {
 public:
-	PlayerCharacter(const UntexturedMeshParams &pcParams, const UntexturedMeshParams &projectileParams, Stats &pcStats,
-		Camera &camera, Text &text, Timer &timer);
+	PlayerCharacter(helpers::Core &core, const UntexturedMeshParams &pcParams, const UntexturedMeshParams &projectileParams);
 
 	void Reset();
 	void RenderScore();
 	void Update();
 	void Draw();
 	void Shoot(const glm::mat4 &originTransform);
-	void ExternDraw(const std::vector<glm::mat4> &pcTransforms, std::vector<glm::mat4> &projTransforms, const std::vector<ui> &clockIds, 
-	const std::vector<helpers::BoundingBox> &targetBoundingBoxes, const glm::mat4 &projection, ui &oldestProjIndex);
 
-	inline Transform &PcTransform() { return _pcTransform; }
-	inline bool &IsAlive() { return _isAlive; }
-	inline std::vector<glm::mat4> &ProjTransforms() { return _projInstanceTransforms; }
-	inline auto &ProjHitCallback() { return _projHitCallback; }
-	inline auto &PCHitCallback() { return _pcIntersectionCallback; }
-	inline auto ExternDrawCb() { return std::bind(&PlayerCharacter::ExternDraw, this, _1, _2, _3, _4, _5, _6); }
+	inline Transform &PcTransform()  	  { return _pcTransform; }
+	inline bool &IsAlive() 				  { return _isAlive; }
+	inline auto &ProjTransforms() 	const { return _projInstanceTransforms; }
+	inline auto ProjHitCb() 		 	  { return std::bind(&PlayerCharacter::_projHit, this, _1); }
+	inline auto PCIntersectionCb() 	 	  { return std::bind(&PlayerCharacter::_pcIntersection, this); }
+	inline auto ExternDrawCb() 		 	  { return std::bind(&PlayerCharacter::_externDraw, this, _1, _2, _3, _4, _5, _6); }
 
 private:
 	Shader _projectileShader;
@@ -59,16 +56,13 @@ private:
 
 	std::vector<glm::mat4> _projInstanceTransforms;
 
-	glm::mat4 _perFrameProjectileTransform;
-	db _perFrameProjectileTravel;
-
-	ui _maxProjectileAmount;
 	ui _oldestProjectileIndex = 0;
 	ui _enemiesShotCounter = 0;
 
-	std::function<void(ui)> _projHitCallback;
-	std::function<void()> _pcIntersectionCallback;
-	std::vector<glm::vec2> _pcPositions;
+	void _projHit(const ui index);
+	void _pcIntersection();
+	void _externDraw(const std::vector<glm::mat4> &pcTransforms, std::vector<glm::mat4> &projTransforms, const std::vector<ui> &clockIds, 
+	const std::vector<helpers::BoundingBox> &targetBoundingBoxes, const glm::mat4 &projection, ui &oldestProjIndex);
 
 };
 

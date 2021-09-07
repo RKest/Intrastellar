@@ -14,7 +14,6 @@ int main(int argc, char **argv)
 	Camera camera(glm::vec3(0, 0, -20), 70.0f, display.Aspect(), 0.01f, 1000.0f);
 
 	Shader enemyShader("./Shaders/Enemy");
-
 	const glm::vec3 pcVertices[] = {{0, 0.5, 0}, {-0.5, -0.5, 0}, {0.5, -0.5, 0}};
 	const ui pcIndices[] = {2, 1, 0};
 	const glm::vec3 projectileVertices[] = {{-0.1, 0, 0}, {0.1, 0, 0}, {-0.1, 0.3, 0}, {0.1, 0.3, 0}};
@@ -39,11 +38,12 @@ int main(int argc, char **argv)
 	Stats playerStats = defaultStats;
 	Text text("./Resources/Fonts/slkscr.ttf", SCREEN_WIDTH, SCREEN_HEIGHT);
 	Timer timer(text, playerStats);
-	ExpManager expManager(camera, timer, expParams, expBarParams, CUSTOM_RAND_SEED, 50);
-	EnemyManager enemyManager(enemyShader, camera, timer, playerStats, enemyMeshParams, CUSTOM_RAND_SEED, MAX_NO_ENEMIES);
-	PlayerCharacter playerCharacter(pcParams, projectileParams, playerStats, camera, text, timer);
+	helpers::Core core{camera, text, timer, playerStats};
+	ExpManager expManager(core, expParams, expBarParams);
+	EnemyManager enemyManager(enemyShader, core, enemyMeshParams);
+	PlayerCharacter playerCharacter(core, pcParams, projectileParams);
 	Controler controler(display, camera, timer, playerCharacter.PcTransform());
-	CardDeck cardDeck(enemyShader, text, timer, playerStats, overlayParams, cardBorderParams, enemyMeshParams, playerCharacter.ExternDrawCb());
+	CardDeck cardDeck(enemyShader, core, overlayParams, cardBorderParams, enemyMeshParams, playerCharacter.ExternDrawCb());
 
 	ui counter = 1;
 
@@ -70,13 +70,13 @@ int main(int argc, char **argv)
 		if (timer.IsItTime(Timer::ClocksEnum::SHOT_CLOCK))
 			playerCharacter.Shoot(pcModel);
 		playerCharacter.Update();
-		enemyManager.RecordCollisions(playerCharacter.ProjTransforms(), playerCharacter.ProjHitCallback(), expManager.CreateExpParticlesCb());
-		enemyManager.RecordPCIntersection(helpers::transformStdVector(pcParams, pcModel), playerCharacter.PCHitCallback());
-
-		render();
-		expManager.UpdateExpParticles(pcModel);
+		enemyManager.RecordCollisions(playerCharacter.ProjTransforms(), playerCharacter.ProjHitCb(), expManager.CreateExpParticlesCb());
+		enemyManager.RecordPCIntersection(helpers::transformStdVector(pcParams, pcModel), playerCharacter.PCIntersectionCb());
 		if(expManager.HasThereBeenLevelUp())
 			cardDeck.RollCards();
+			
+		render();
+		expManager.UpdateExpParticles(pcModel);
 
 		display.Update();
 		counter++;

@@ -30,8 +30,7 @@ using pcDrawFunc = std::function<void(const std::vector<glm::mat4>&, std::vector
 class CardDeck 
 {
 public:
-    CardDeck(Shader &targetShader, Text &text, Timer &timer, Stats &stats,
-	    const UntexturedMeshParams &overlayParams, const UntexturedMeshParams &cardBorderParams, 
+    CardDeck(Shader &targetShader, helpers::Core &core, const UntexturedMeshParams &overlayParams, const UntexturedMeshParams &cardBorderParams, 
 	    const UntexturedMeshParams &targetMeshParams, const pcDrawFunc &drawPcCb);
     void DrawCards();
     void RollCards();

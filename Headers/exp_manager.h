@@ -34,15 +34,14 @@ using namespace std::placeholders;
 class ExpManager
 {
 public:
-	ExpManager(Camera &camera, Timer &timer, const UntexturedMeshParams &expMeshParams, const UntexturedMeshParams &expBarMeshParams,
-		const ui customRandSeed, const ui maxNoExpParticles);
+	ExpManager(helpers::Core &core, const UntexturedMeshParams &expMeshParams, const UntexturedMeshParams &expBarMeshParams);
 
 	void UpdateExpParticles(const glm::mat4 &pcModel);
 	void CreateExpParticles(const glm::mat4 &originModel, const ui noParticles);
 	void Reset();
 
 	inline auto CreateExpParticlesCb() { return std::bind(&ExpManager::CreateExpParticles, this, _1, _2); }
-	inline bool HasThereBeenLevelUp() { return _hasThereBeenLevelUp; }
+	inline bool HasThereBeenLevelUp()  { return _hasThereBeenLevelUp; }
 	
 protected:
 private:
@@ -65,8 +64,6 @@ private:
 	std::list<ui> _expParticleClusterClockIds;
 	std::map<ui, std::vector<InstanceState*>> _clockIdToInstanceStatePtrMap;
 	std::list<InstanceState> _instanceStates;
-
-	const ui _maxNoExpParticles;
 
 	db _expParticleAttractionDelay = 1000.0;
 	const ft _expParticleEntropySpeed = 0.002f;

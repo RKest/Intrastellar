@@ -41,12 +41,12 @@ public:
     }
 
     void Bind() { glUseProgram(program); }
-    void Update(const glm::mat4 &model, const glm::mat4 &cameraProjection) { SetMat4(TRANSFORM_U, model); SetMat4(PROJECTION_U, cameraProjection); }
+    void Update(const glm::mat4 &model, const glm::mat4 &cameraProjection) { SetUni(TRANSFORM_U, model); SetUni(PROJECTION_U, cameraProjection); }
 
-    void SetMat4(const std::string &name, const glm::mat4 &arg) { glUniformMatrix4fv(glGetUniformLocation(program, name.c_str()), 1, GL_FALSE, &arg[0][0]); }
-    void SetVec3(const std::string &name, const glm::vec3 &arg) { glUniform3fv(glGetUniformLocation(program, name.c_str()), 1, &arg[0]); }
-    void SetFloat(const std::string &name, float arg)           { glUniform1f(glGetUniformLocation(program, name.c_str()), arg); }
-    void SetInt(const std::string &name, unsigned int arg)      { glUniform1i(glGetUniformLocation(program, name.c_str()), arg); }
+    void SetUni(const std::string &name, const glm::mat4 &arg) { glUniformMatrix4fv(glGetUniformLocation(program, name.c_str()), 1, GL_FALSE, &arg[0][0]); }
+    void SetUni(const std::string &name, const glm::vec3 &arg) { glUniform3fv(glGetUniformLocation(program, name.c_str()), 1, &arg[0]); }
+    void SetUni(const std::string &name, float arg)            { glUniform1f(glGetUniformLocation(program, name.c_str()), arg); }
+    void SetUni(const std::string &name, unsigned int arg)     { glUniform1i(glGetUniformLocation(program, name.c_str()), arg); }
 
     ~Shader()
     {
@@ -68,12 +68,12 @@ private:
         NUM_UNIFORMS
     };
 
-    void SetMat4(Uniforms uId, const glm::mat4 &arg)
+    void SetUni(Uniforms uId, const glm::mat4 &arg)
     {
         glUniformMatrix4fv(uniforms[uId], 1, GL_FALSE, &arg[0][0]);
     }
 
-    void SetVec3(Uniforms uId, const glm::vec3 &arg)
+    void SetUni(Uniforms uId, const glm::vec3 &arg)
     {
         glUniform3fv(uniforms[uId], 1, &arg[0]);
     }

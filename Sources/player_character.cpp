@@ -2,35 +2,15 @@
 #include "glm/gtx/string_cast.hpp"
 #include <iostream>
 
-PlayerCharacter::PlayerCharacter(const UntexturedMeshParams &pcParams, const UntexturedMeshParams &projParams, Stats &pcStats, 
-    Camera &camera, Text &text, Timer &timer)
-	: _pcShader("./Shaders/PC"), _projectileShader("./Shaders/Projectile"), _pcCardShader("./Shaders/PC_Card"),
-		_pcMesh(pcParams), _projMesh(projParams), _camera(camera), _text(text), _timer(timer), _pcStats(pcStats),
-		_pcCardMesh(pcParams, NO_CARDS, 4), _projCardMesh(projParams, CARD_MAX_PROJ_COUNT, 4)
+PlayerCharacter::PlayerCharacter(helpers::Core &core, const UntexturedMeshParams &pcParams, const UntexturedMeshParams &projParams)
+	: _camera(core.camera), _text(core.text), _timer(core.timer), _pcStats(core.stats),
+		_pcShader("./Shaders/PC"), _projectileShader("./Shaders/Projectile"), _pcCardShader("./Shaders/PC_Card"),
+		_pcMesh(pcParams), _projMesh(projParams), _pcCardMesh(pcParams, NO_CARDS), _projCardMesh(projParams, CARD_MAX_PROJ_COUNT)
 {
-	_pcIntersectionCallback = [this]
-	{
-		if(!_isInvincible)
-			_pcStats.currHP -= 1;
-		if(!_pcStats.currHP)
-			_isAlive = false;
-		else
-		{
-			_timer.InitHeapClock(_invincibilityClockId, _invincibilityDuration);
-			_isInvincible = true;
-		}
-	};
-	_projHitCallback  = [this](ui projectileIndex)
-	{
-		_projInstanceTransforms[projectileIndex] = _projInstanceTransforms.back();
-		_projInstanceTransforms.pop_back();
-		_enemiesShotCounter++;
-	};
-	
 	_projectileShader.Bind();
 	const std::vector<glm::vec3> colours = {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
 	for (ui i = 0; i < colours.size(); ++i)
-		_projectileShader.SetVec3("colours[" + std::to_string(i) + ']', colours[i]);
+		_projectileShader.SetUni("colours[" + std::to_string(i) + ']', colours[i]);
 }
 
 void PlayerCharacter::Reset()
@@ -64,12 +44,12 @@ void PlayerCharacter::Update()
 	if(_isInvincible && _timer.HeapIsItTime(_invincibilityClockId))
 		_isInvincible = false;
 
-	_perFrameProjectileTransform = glm::translate(glm::vec3(0.0f, _timer.Scale(_pcStats.shotSpeed), 0.0f));
+	const glm::mat4 perFrameProjectileTransform = glm::translate(glm::vec3(0.0f, _timer.Scale(_pcStats.shotSpeed), 0.0f));
 	std::for_each
 	(
 		std::execution::par_unseq,
 		_projInstanceTransforms.begin(), _projInstanceTransforms.end(),
-		[this](auto &&mat){ mat *= _perFrameProjectileTransform; }
+		[&perFrameProjectileTransform](auto &&mat){ mat *= perFrameProjectileTransform; }
 	);
 }
 
@@ -80,7 +60,34 @@ void PlayerCharacter::Draw()
 	helpers::render(_pcShader, _pcMesh, _pcTransform.Model(), _camera.ViewProjection());
 }
 
-void PlayerCharacter::ExternDraw(const std::vector<glm::mat4> &pcTransforms, std::vector<glm::mat4> &projTransforms, const std::vector<ui> &clockIds, 
+void PlayerCharacter::Shoot(const glm::mat4 &originTransform)
+{
+    helpers::pushToCappedVector(_projInstanceTransforms, originTransform, _oldestProjectileIndex, MAX_PROJ_AMOUNT);
+}
+
+void PlayerCharacter::_projHit(const ui index)
+{
+	_projInstanceTransforms[index] = _projInstanceTransforms.back();
+	_projInstanceTransforms.pop_back();
+	_enemiesShotCounter++;
+}
+
+void PlayerCharacter::_pcIntersection()
+{
+	if(!_isInvincible)
+	{
+		_pcStats.currHP -= 1;
+		if(!_pcStats.currHP)
+			_isAlive = false;
+		else
+		{
+			_timer.InitHeapClock(_invincibilityClockId, _invincibilityDuration);
+			_isInvincible = true;
+		}
+	}
+}
+
+void PlayerCharacter::_externDraw(const std::vector<glm::mat4> &pcTransforms, std::vector<glm::mat4> &projTransforms, const std::vector<ui> &clockIds, 
 	const std::vector<helpers::BoundingBox> &targetBoundingBoxes, const glm::mat4 &projection, ui &oldestProjIndex)
 {
 	ui projIndex;
@@ -98,9 +105,4 @@ void PlayerCharacter::ExternDraw(const std::vector<glm::mat4> &pcTransforms, std
 
 	helpers::render(_projectileShader, _projCardMesh, projTransforms.data(), projTransforms.size(), _blankTransform, projection);
 	helpers::render(_pcCardShader, _pcCardMesh, pcTransforms.data(), pcTransforms.size(), _blankTransform, projection);
-}
-
-void PlayerCharacter::Shoot(const glm::mat4 &originTransform)
-{
-    helpers::pushToCappedVector(_projInstanceTransforms, originTransform, _oldestProjectileIndex, MAX_PROJ_AMOUNT);
 }

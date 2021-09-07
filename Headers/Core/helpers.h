@@ -7,6 +7,8 @@
 #include "Core/display.h"
 #include "Core/camera.h"
 #include "Core/shader.h"
+#include "Core/text.h"
+#include "Core/timer.h"
 
 #include <vector>
 #include <algorithm>
@@ -47,6 +49,13 @@ namespace helpers
 		else
 			cappedVec.push_back(el);
     }
+    struct Core
+    {
+        Camera &camera;
+        Text &text;
+        Timer &timer;
+        Stats &stats;
+    };
 }
 
 #endif
