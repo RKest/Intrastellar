@@ -44,7 +44,9 @@ void PlayerCharacter::Update()
 		_isInvincible = false;
 
 	if(_isInvincible)
-		_pcAlphaValue.second = _setAlpha();
+		_pcAlphaValue.second = _setAlpha(_timer.RemainingTime(_invincibilityClockId));
+	else
+		_pcAlphaValue.second = 1.0f;
 
 	const glm::mat4 perFrameProjectileTransform = glm::translate(glm::vec3(0.0f, _timer.Scale(_pcStats.shotSpeed), 0.0f));
 	std::for_each
@@ -108,12 +110,11 @@ void PlayerCharacter::_externDraw(const std::vector<glm::mat4> &pcTransforms, st
 	helpers::render(_projectileShader, _projCardMesh, projTransforms.data(), projTransforms.size(), _blankTransform, projection);
 	helpers::render(_pcCardShader, _pcCardMesh, pcTransforms.data(), pcTransforms.size(), _blankTransform, projection);
 }
-
-ft _setAlpha()
+ 
+constexpr ft PlayerCharacter::_setAlpha(db remainingInvincibilityTime)
 {
-	const ft period = 5.0f;
-	db remainingInvincibilityTime = _timer.RemainingTime(_invincibilityClockId);
+	const ft period = 3.0f;
 	ft invincibilityFractionPassed = 1 - remainingInvincibilityTime / _invincibilityDuration;
-	ft scaledInfincibilityFractionPassed = TAU * invincibilityFractionPassed / period;
+	ft scaledInfincibilityFractionPassed = TAU * invincibilityFractionPassed * period;
 	return cos(scaledInfincibilityFractionPassed);
 }

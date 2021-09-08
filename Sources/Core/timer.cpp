@@ -19,7 +19,7 @@ bool Clock::IsItTime()
 
 db Clock::RemainingTime()
 {
-	return clockDelayDB - static_cast<db>(std::chrono::duration_cast<std::chrono::milliseconds>(latestFrameTimePoint - lastRecordedPoint));
+	return clockDelayDB - std::chrono::duration_cast<std::chrono::milliseconds>(latestFrameTimePoint - lastRecordedPoint).count();
 }
 
 Timer::Timer(Text &text, Stats &stats)

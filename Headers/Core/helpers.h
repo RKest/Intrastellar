@@ -38,28 +38,31 @@ namespace helpers
     bool IsLBMPressed();
 
     template<typename ...T>
-    void render(Shader &shader, Mesh &mesh, T const&... params)
+    void render(Shader &shader, Mesh &mesh, std::pair<std::string, T> const&... params)
     {
         shader.Bind();
-        shader.SetUnis(params...);
+        if constexpr (sizeof...(params) > 0)
+            shader.SetUnis(params...);
         mesh.Draw();
     }
 
     template<typename ...T>
-    void render(Shader &shader, Mesh &mesh, const glm::mat4 &transfor, const glm::mat4 &projection, T const&... params)
+    void render(Shader &shader, Mesh &mesh, const glm::mat4 &transform, const glm::mat4 &projection, std::pair<std::string, T> const&... params)
     {
         shader.Bind();
-        shader.SetUnis(params...);
+        if constexpr (sizeof...(params) > 0)
+            shader.SetUnis(params...);
         shader.Update(transform, projection);
         mesh.Draw();
     }
     
     template<typename ...T>
     void render(Shader &shader, UntexturedInstancedMesh &mesh, const glm::mat4 *instanceTransforms, ui noInstances, const glm::mat4 &transform, 
-        const glm::mat4 &projection, T const&... params)
+        const glm::mat4 &projection, std::pair<std::string, T> const&... params)
     {
         shader.Bind();
-        shader.SetUnis(params...);
+        if constexpr (sizeof...(params) > 0)
+            shader.SetUnis(params...);
         shader.Update(transform, projection);
         mesh.SetInstanceCount(noInstances);
         mesh.Update(instanceTransforms, mesh.InstancedBufferPosition());

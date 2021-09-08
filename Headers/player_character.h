@@ -64,7 +64,7 @@ private:
 	void _pcIntersection();
 	void _externDraw(const std::vector<glm::mat4> &pcTransforms, std::vector<glm::mat4> &projTransforms, const std::vector<ui> &clockIds, 
 	const std::vector<helpers::BoundingBox> &targetBoundingBoxes, const glm::mat4 &projection, ui &oldestProjIndex);
-	ft _setAlpha();
+	constexpr ft _setAlpha(db remainingInvincibilityTime);
 
 };
 

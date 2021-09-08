@@ -86,6 +86,7 @@ private:
         Card("HP Up, Full Health",                         4, std::vector<Stats>{ stat_altarations::MAX_HP(1)                           ,
                                                                                   stat_altarations::CURR_HP(999)                      }),
         Card("HP Up, Increase Shot Speed",                 3, std::vector<Stats>{ stat_altarations::MAX_HP(1)                           ,
+                                                                                  stat_altarations::CURR_HP(1)                          ,
                                                                                   stat_altarations::SHOT_SPEED(0.01f)                 }),
         Card("Half Shot Delay, Decrease Shot Speed",       2, std::vector<Stats>{ stat_altarations::SHOT_DELAY_MULTIPLAYER(0.5f)        ,
                                                                                   stat_altarations::SHOT_SPEED(-0.015f)               }),
