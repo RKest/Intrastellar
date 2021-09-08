@@ -17,6 +17,7 @@ class Clock
 public:
 	Clock(db &clockDelay, timePt &latestFrameTimePoint);
 	bool IsItTime();
+	db RemainingTime();
 private:
 	db &clockDelayDB;
 	milliDuration clockDelay;
@@ -38,6 +39,7 @@ public:
 	void InitHeapClock(ui &heapClockId, db &clockDelay);
 	void DestroyHeapClock(const ui clockId);
 	bool HeapIsItTime(const ui heapClockId);
+	db RemainingTime(ui heapClockId);
 
 	void RenderFPS();
 	void RecordFrame();

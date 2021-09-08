@@ -92,28 +92,6 @@ bool helpers::IsLBMPressed()
     return buttons & SDL_BUTTON_LMASK;
 }
 
-void helpers::render(Shader &shader, Mesh &mesh)
-{
-	shader.Bind();
-	mesh.Draw();
-}
-
-void helpers::render(Shader &shader, Mesh &mesh, const glm::mat4 &transform, const glm::mat4 &projection)
-{
-	shader.Bind();
-	shader.Update(transform, projection);
-	mesh.Draw();
-}
-
-void helpers::render(Shader &shader, UntexturedInstancedMesh &mesh, const glm::mat4 *instanceTransforms, ui noInstances, const glm::mat4 &transform, const glm::mat4 &projection)
-{
-	shader.Bind();
-	shader.Update(transform, projection);
-	mesh.SetInstanceCount(noInstances);
-	mesh.Update(instanceTransforms, mesh.InstancedBufferPosition());
-	mesh.Draw();
-}
-
 ui helpers::squishedIntToScreenWidth(ui minValue, ui maxValue, ui value)
 {
 	ui relativeValue = value - minValue;

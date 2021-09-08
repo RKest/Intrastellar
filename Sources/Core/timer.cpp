@@ -17,6 +17,11 @@ bool Clock::IsItTime()
 		return false;
 }
 
+db Clock::RemainingTime()
+{
+	return clockDelayDB - static_cast<db>(std::chrono::duration_cast<std::chrono::milliseconds>(latestFrameTimePoint - lastRecordedPoint));
+}
+
 Timer::Timer(Text &text, Stats &stats)
 	: text(text)
 {
@@ -28,6 +33,12 @@ Timer::Timer(Text &text, Stats &stats)
 bool Timer::IsItTime(ClocksEnum onWhichClock)
 {
 	return clocks[onWhichClock].IsItTime();
+}
+
+db Timer::RemainingTime(ui heapClockId)
+{
+	assert(heapClocks.size() >= heapClockId && heapClocks[heapClockId] != nullptr);
+	return heapClocks[heapClockId]->RemainingTime();
 }
 
 void Timer::RenderFPS()

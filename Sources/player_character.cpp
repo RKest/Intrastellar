@@ -4,7 +4,6 @@
 
 PlayerCharacter::PlayerCharacter(helpers::Core &core, const UntexturedMeshParams &pcParams, const UntexturedMeshParams &projParams)
 	: _camera(core.camera), _text(core.text), _timer(core.timer), _pcStats(core.stats),
-		_pcShader("./Shaders/PC"), _projectileShader("./Shaders/Projectile"), _pcCardShader("./Shaders/PC_Card"),
 		_pcMesh(pcParams), _projMesh(projParams), _pcCardMesh(pcParams, NO_CARDS), _projCardMesh(projParams, CARD_MAX_PROJ_COUNT)
 {
 	_projectileShader.Bind();
@@ -44,6 +43,9 @@ void PlayerCharacter::Update()
 	if(_isInvincible && _timer.HeapIsItTime(_invincibilityClockId))
 		_isInvincible = false;
 
+	if(_isInvincible)
+		_pcAlphaValue.second = _setAlpha();
+
 	const glm::mat4 perFrameProjectileTransform = glm::translate(glm::vec3(0.0f, _timer.Scale(_pcStats.shotSpeed), 0.0f));
 	std::for_each
 	(
@@ -57,7 +59,7 @@ void PlayerCharacter::Draw()
 {
 	helpers::render(_projectileShader, _projMesh, _projInstanceTransforms.data(), _projInstanceTransforms.size(), 
 		_blankTransform, _camera.ViewProjection());
-	helpers::render(_pcShader, _pcMesh, _pcTransform.Model(), _camera.ViewProjection());
+	helpers::render(_pcShader, _pcMesh, _pcTransform.Model(), _camera.ViewProjection(), _pcAlphaValue);
 }
 
 void PlayerCharacter::Shoot(const glm::mat4 &originTransform)
@@ -105,4 +107,13 @@ void PlayerCharacter::_externDraw(const std::vector<glm::mat4> &pcTransforms, st
 
 	helpers::render(_projectileShader, _projCardMesh, projTransforms.data(), projTransforms.size(), _blankTransform, projection);
 	helpers::render(_pcCardShader, _pcCardMesh, pcTransforms.data(), pcTransforms.size(), _blankTransform, projection);
+}
+
+ft _setAlpha()
+{
+	const ft period = 5.0f;
+	db remainingInvincibilityTime = _timer.RemainingTime(_invincibilityClockId);
+	ft invincibilityFractionPassed = 1 - remainingInvincibilityTime / _invincibilityDuration;
+	ft scaledInfincibilityFractionPassed = TAU * invincibilityFractionPassed / period;
+	return cos(scaledInfincibilityFractionPassed);
 }

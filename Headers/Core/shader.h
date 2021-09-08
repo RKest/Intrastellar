@@ -10,6 +10,12 @@
 #include <string>
 #include <vector>
 #include <fstream>
+#include <utility>
+
+using matUni = std::pair<std::string, glm::mat4>;
+using vecUni = std::pair<std::string, glm::vec3>;
+using ftUni = std::pair<std::string, ft>;
+using uiUni = std::pair<std::string, ui>;
 
 static void CheckShaderError(GLuint shader, GLuint flag, bool isProgram, const std::string &errorMessage);
 static std::string LoadShader(const std::string &fileName);
@@ -42,6 +48,14 @@ public:
 
     void Bind() { glUseProgram(program); }
     void Update(const glm::mat4 &model, const glm::mat4 &cameraProjection) { SetUni(TRANSFORM_U, model); SetUni(PROJECTION_U, cameraProjection); }
+
+    template<typename T, typename ...Ts>
+    constexpr void SetUnis(const std::pair<std::string, T> first, Ts ...rest)
+    {
+        SetUni(first.first, first.second);
+        if constexpr (sizeof...(rest) > 0)
+            SetUnis(rest...);
+    }
 
     void SetUni(const std::string &name, const glm::mat4 &arg) { glUniformMatrix4fv(glGetUniformLocation(program, name.c_str()), 1, GL_FALSE, &arg[0][0]); }
     void SetUni(const std::string &name, const glm::vec3 &arg) { glUniform3fv(glGetUniformLocation(program, name.c_str()), 1, &arg[0]); }

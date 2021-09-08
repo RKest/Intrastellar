@@ -40,6 +40,7 @@ constexpr ui CARD_MAX_PROJ_COUNT = 300;
 constexpr ui NO_CARDS = 3;
 constexpr ui MAX_EXP_PART_NO = 50;
 
+constexpr ft TAU = 2 * glm::pi<ft>();
 
 inline size_t _dummy_size_t;
 inline bool _dummy_bool;

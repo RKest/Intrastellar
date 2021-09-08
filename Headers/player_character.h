@@ -36,9 +36,9 @@ public:
 	inline auto ExternDrawCb() 		 	  { return std::bind(&PlayerCharacter::_externDraw, this, _1, _2, _3, _4, _5, _6); }
 
 private:
-	Shader _projectileShader;
-	Shader _pcShader;
-	Shader _pcCardShader;
+	Shader _projectileShader{"Shaders/Projectile"};
+	Shader _pcShader{"Shaders/PC"};
+	Shader _pcCardShader{"Shaders/PC_Card"};
 	UntexturedMesh _pcMesh;
 	UntexturedInstancedMesh _pcCardMesh;
 	UntexturedInstancedMesh _projMesh;
@@ -48,21 +48,23 @@ private:
 	Timer &_timer;
     Stats &_pcStats;
 	Transform _pcTransform;
+	ftUni _pcAlphaValue{"alpha", 1.0f};
 
-	bool _isAlive = true;
-	bool _isInvincible = false;
-	db _invincibilityDuration = 400.0;
+	bool _isAlive{true};
+	bool _isInvincible{false};
+	db _invincibilityDuration{400.0};
 	ui _invincibilityClockId;
 
 	std::vector<glm::mat4> _projInstanceTransforms;
 
-	ui _oldestProjectileIndex = 0;
-	ui _enemiesShotCounter = 0;
+	ui _oldestProjectileIndex{};
+	ui _enemiesShotCounter{};
 
 	void _projHit(const ui index);
 	void _pcIntersection();
 	void _externDraw(const std::vector<glm::mat4> &pcTransforms, std::vector<glm::mat4> &projTransforms, const std::vector<ui> &clockIds, 
 	const std::vector<helpers::BoundingBox> &targetBoundingBoxes, const glm::mat4 &projection, ui &oldestProjIndex);
+	ft _setAlpha();
 
 };
 

@@ -1,7 +1,7 @@
 #include "exp_manager.h"
 
 ExpManager::ExpManager(helpers::Core &core, const UntexturedMeshParams &expMeshParams, const UntexturedMeshParams &expBarMeshParams)
-	: _expParticleShader("./Shaders/Exp"), _expBarShader("./Shaders/ExpBar"), _timer(core.timer), _camera(core.camera), 
+	: _timer(core.timer), _camera(core.camera),
 	_expMesh(expMeshParams, MAX_EXP_PART_NO), _customRand(CUSTOM_RAND_SEED), _expBarMesh(expMeshParams)
 {
 }

@@ -39,8 +39,8 @@ public:
 protected:
 private:
     CustomRand _customRand;
-    Shader _cardBorderShader;
-    Shader _overlayShader;
+    Shader _cardBorderShader{"Shaders/CardBorder"};
+    Shader _overlayShader{"Shaders/Overlay"};
     Shader &_targetShader;
     Text &_text;
     Timer &_timer;
