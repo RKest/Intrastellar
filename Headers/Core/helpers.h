@@ -36,7 +36,8 @@ namespace helpers
     };
     glm::vec2 mouseCoordsTransformed(const glm::mat4 &transform);
     bool IsLBMPressed();
-
+    ft det(const glm::vec2 &vec1, const glm::vec2 &vec2);
+    
     template<typename ...T>
     void render(Shader &shader, Mesh &mesh, std::pair<std::string, T> const&... params)
     {

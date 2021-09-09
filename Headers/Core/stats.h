@@ -90,7 +90,7 @@ static const Stats defaultStats(
     0.02f, // shotSpeed
     1,     // noShots
     0.0f,  // shotVariance
-    0.0f,  // shotHomingStrength
+    5.0f,  // shotHomingStrength
     3,     // maxHP
     3,     // currHP
     200.0  // enemySpawnRate

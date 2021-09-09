@@ -17,7 +17,7 @@ void Controler::CaptureMouseMovement()
     const glm::vec2 pcPos = glm::vec2(0);
     const glm::vec2 vecToMouse = glm::normalize(pcPos - mousePos);
 
-    const ft angle = -glm::atan(glm::dot({-1.0, 0.0}, vecToMouse), det({-1.0, 0.0}, vecToMouse));
+    const ft angle = -glm::atan(glm::dot({-1.0, 0.0}, vecToMouse), helpers::det({-1.0, 0.0}, vecToMouse));
     transform.SetRotAngle(angle);
 }
 
@@ -41,9 +41,4 @@ void Controler::CaptureKeyboardPresses(bool &isPcAlive)
     }
     if (display.ReadKeyboardState(codes[display.SPACE]))
         isPcAlive = true;
-}
-
-ft Controler::det(const glm::vec2 &vec1, const glm::vec2 &vec2)
-{
-    return vec1.x * vec2.y - vec1.y * vec2.x;
 }

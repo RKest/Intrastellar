@@ -52,7 +52,7 @@ void PlayerCharacter::Update(const std::vector<glm::mat4> &enemyInstanceTransfor
 	(
 		std::execution::par_unseq,
 		_projInstanceTransforms.begin(), _projInstanceTransforms.end(), 
-			[&perFrameProjectileTransform, this](auto &&mat){mat *= _moveProj(enemyInstanceTransforms, mat); }
+			[this, enemyInstanceTransforms](auto &&mat){mat *= _moveProj(enemyInstanceTransforms, mat); }
 	);
 }
 
@@ -121,6 +121,7 @@ constexpr ft PlayerCharacter::_setAlpha(db remainingInvincibilityTime)
 
 glm::mat4 PlayerCharacter::_moveProj(const std::vector<glm::mat4> &enemyInstanceTransforms, const glm::mat4 &projTransform) const
 {
+	const ft maxProjTurningRadius = _timer.Scale(MAX_PROJ_TURNING_RAD);
 	const glm::mat4 perFrameTransform = glm::translate(glm::vec3(0, _timer.Scale(_pcStats.shotSpeed), 0));
 	if(_pcStats.shotHomingStrength == 0.0f)
 		return perFrameTransform; 
@@ -133,15 +134,17 @@ glm::mat4 PlayerCharacter::_moveProj(const std::vector<glm::mat4> &enemyInstance
 			return perFrameTransform; 
 		
 		const glm::vec2 enemyVec{glm::normalize(glm::vec2(glm::inverse(projTransform) * enemyTransform * glm::vec4(0,0,0,1)))};
-		const ft angle = -glm::atan(glm::dot({0.0, 1.0}, enemyVec), det({0.0, 1.0}, enemyVec));
-		if(angle < MAX_PROJ_TURNING_RAD)
+		const ft angle = -glm::atan(glm::dot({1.0, 0.0}, enemyVec), helpers::det({1.0, 0.0}, enemyVec));
+		if(angle < maxProjTurningRadius)
 			return glm::rotate(angle, glm::vec3(0,0,1)) * perFrameTransform;
-		else if(TAU - angle < MAX_PROJ_TURNING_RAD)
+		else if(TAU - angle < maxProjTurningRadius)
 			return glm::rotate(-angle, glm::vec3(0,0,1)) * perFrameTransform;
 		else if(angle < PI)
-			return glm::rotate(MAX_PROJ_TURNING_RAD, glm::vec3(0,0,1)) * perFrameTransform;
+			return glm::rotate(maxProjTurningRadius, glm::vec3(0,0,1)) * perFrameTransform;
 		else
-			return glm::rotate(-MAX_PROJ_TURNING_RAD, glm::vec3(0,0,1)) * perFrameTransform;
+			return glm::rotate(-maxProjTurningRadius, glm::vec3(0,0,1)) * perFrameTransform;
 	}
+
+	return perFrameTransform;
 
 }

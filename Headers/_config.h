@@ -42,7 +42,7 @@ constexpr ui MAX_EXP_PART_NO = 50;
 
 constexpr ft TAU = 2 * glm::pi<ft>();
 constexpr ft PI = glm::pi<ft>();
-constexpr ft MAX_PROJ_TURNING_RAD = glm::radians(10.0f);
+constexpr ft MAX_PROJ_TURNING_RAD = glm::radians(1.0f);
 
 inline size_t _dummy_size_t;
 inline bool _dummy_bool;

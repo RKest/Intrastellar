@@ -99,3 +99,8 @@ ui helpers::squishedIntToScreenWidth(ui minValue, ui maxValue, ui value)
 	ft valueToMaxFraction = static_cast<ft>(relativeValue) / static_cast<ft>(relativeMaxValue);
 	return SCREEN_WIDTH * valueToMaxFraction;
 }
+
+ft helpers::det(const glm::vec2 &vec1, const glm::vec2 &vec2)
+{
+    return vec1.x * vec2.y - vec1.y * vec2.x;
+}
