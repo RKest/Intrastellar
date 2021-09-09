@@ -45,8 +45,6 @@ int main(int argc, char **argv)
 	Controler controler(display, camera, timer, playerCharacter.PcTransform());
 	CardDeck cardDeck(enemyShader, core, overlayParams, cardBorderParams, enemyMeshParams, playerCharacter.ExternDrawCb());
 
-	ui counter = 1;
-
 	const auto render = [&]
 	{
 		display.Clear(0.1, 0.1, 0.2, 1.0);
@@ -69,7 +67,7 @@ int main(int argc, char **argv)
 
 		if (timer.IsItTime(Timer::ClocksEnum::SHOT_CLOCK))
 			playerCharacter.Shoot(pcModel);
-		playerCharacter.Update();
+		playerCharacter.Update(enemyManager.InstanceTransforms());
 		enemyManager.RecordCollisions(playerCharacter.ProjTransforms(), playerCharacter.ProjHitCb(), expManager.CreateExpParticlesCb());
 		enemyManager.RecordPCIntersection(helpers::transformStdVector(pcParams, pcModel), playerCharacter.PCIntersectionCb());
 		if(expManager.HasThereBeenLevelUp())
@@ -77,9 +75,7 @@ int main(int argc, char **argv)
 			
 		render();
 		expManager.UpdateExpParticles(pcModel);
-
 		display.Update();
-		counter++;
 
 		while (cardDeck.AreCarsDrawn() && !display.IsClosed())
 		{
@@ -87,7 +83,6 @@ int main(int argc, char **argv)
 			render();
 			cardDeck.DrawCards();
 			display.Update();
-			counter++;
 		}
 
 		while (!playerCharacter.IsAlive() && !display.IsClosed())

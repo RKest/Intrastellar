@@ -24,7 +24,7 @@ public:
 
 	void Reset();
 	void RenderScore();
-	void Update();
+	void Update(const std::vector<glm::mat4> &enemyInstanceTransforms);
 	void Draw();
 	void Shoot(const glm::mat4 &originTransform);
 
@@ -64,7 +64,8 @@ private:
 	void _pcIntersection();
 	void _externDraw(const std::vector<glm::mat4> &pcTransforms, std::vector<glm::mat4> &projTransforms, const std::vector<ui> &clockIds, 
 	const std::vector<helpers::BoundingBox> &targetBoundingBoxes, const glm::mat4 &projection, ui &oldestProjIndex);
-	ft _setAlpha();
+	constexpr ft _setAlpha(db remainingInvincibilityTime);
+	glm::mat4 _moveProj(const std::vector<glm::mat4> &enemyInstanceTransforms, const glm::mat4 &projTransform) const;
 
 };
 

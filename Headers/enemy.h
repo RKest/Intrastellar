@@ -40,6 +40,7 @@ public:
 		const std::function<void(ui)> projectileHitCallback, std::function<void(const glm::mat4&, const ui)> fatalityCallback);
 	void RecordPCIntersection(const std::vector<glm::vec2> &pcPositions, const std::function<void()> intersectionCallback);
 	void UpdateBehaviour(const glm::mat4 &pcModel);
+	inline std::vector<glm::mat4> &InstanceTransforms() { return _enemyData.instanceTransforms; } const
 
 private:
 	Shader &_enemyShader;
