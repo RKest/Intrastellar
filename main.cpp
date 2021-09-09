@@ -45,8 +45,6 @@ int main(int argc, char **argv)
 	Controler controler(display, camera, timer, playerCharacter.PcTransform());
 	CardDeck cardDeck(enemyShader, core, overlayParams, cardBorderParams, enemyMeshParams, playerCharacter.ExternDrawCb());
 
-	ui counter = 1;
-
 	const auto render = [&]
 	{
 		display.Clear(0.1, 0.1, 0.2, 1.0);
@@ -69,7 +67,7 @@ int main(int argc, char **argv)
 
 		if (timer.IsItTime(Timer::ClocksEnum::SHOT_CLOCK))
 			playerCharacter.Shoot(pcModel);
-		playerCharacter.Update();
+		playerCharacter.Update(enemyManager.InstanceTransforms());
 		enemyManager.RecordCollisions(playerCharacter.ProjTransforms(), playerCharacter.ProjHitCb(), expManager.CreateExpParticlesCb());
 		enemyManager.RecordPCIntersection(helpers::transformStdVector(pcParams, pcModel), playerCharacter.PCIntersectionCb());
 		if(expManager.HasThereBeenLevelUp())
@@ -77,9 +75,7 @@ int main(int argc, char **argv)
 			
 		render();
 		expManager.UpdateExpParticles(pcModel);
-
 		display.Update();
-		counter++;
 
 		while (cardDeck.AreCarsDrawn() && !display.IsClosed())
 		{
@@ -87,7 +83,6 @@ int main(int argc, char **argv)
 			render();
 			cardDeck.DrawCards();
 			display.Update();
-			counter++;
 		}
 
 		while (!playerCharacter.IsAlive() && !display.IsClosed())
@@ -116,3 +111,62 @@ int main(int argc, char **argv)
 
 	return 0;
 }
+
+
+/*
+Temat: Normalizacja
+Normalizacja to proces upraszczania bazy danych w taki sposób, aby osiągneła ona postać optymalną.
+Normalizację wykonuje się na etapie projektowania modelu fizycznego danych, w celu unknięcia anomalii - błędów lub niespójności w bazie danych (w tym również redundancji).
+
+	-----------------------------------------------------------
+	| Nazwa 	 |	 Adres 		|     Artyków     	| Cena	  |		
+	-----------------------------------------------------------
+	| Jubilat	 | Ul. Polna 3	| Ketchup			| 3,15	  |
+	| Jubliat	 | Ul. Polna 3  | Majonez			| 6,50	  |
+	----------------------------------------------------------
+
+W tabeli sklepy występuje;
+	1. Redundancja danych np. adres sklepu
+	2. Anomalia wprowadzania danych np. niemożliwe jest dodanie sklepu, jeśli nie wprowadzimu przynajmniej jednogeo produktu.
+	3. Anomalia aktualizacji danych np. z chwilą przeniesienia sklepu do innej lokalizacji konieczne będzie zmodyfikowanie danych w wielu rekordach.
+	4. Anomalia usuwania danych np. usunięcie produktów spowoduje usunięcie adresu oraz nazwy.
+
+Pierwsza postać normalna 1NF
+Każdy rekord dowolnej tabeli z bazy przechowuje informację o pojedynczym obiekcie, nie zawiera kolekcji, ma klucz główny, a jej komponenty sa wartościami atomowymi 
+(niepodzielnymi). Pierwsza postac normalna nakłada na tabele bazy danych najważniejszy wymóg: table musi być relacją
+
+	-----------------------------------------------------------
+	| Klient	 | Zamównienie  | Zakupiony Towar     		  |		
+	-----------------------------------------------------------
+	| Jan		 | 1			| Bluza, pasek, spodnie		  |
+	| Wojciech	 | 2			| Skarpetki, buty, koszula	  |
+	| Grzegrz	 | 3			| Rękawice, spodnie			  |
+	----------------------------------------------------------
+
+Druga postać normalna 2NF
+Każda tabela przechowuje dane dot. tylko jednej klasy obiektów.
+
+	--------------------------------------------------------------------------
+	| ID lekarza | ID Specjalizacji | Nazwa specjalizacji | Nazwisko lekarza |
+	--------------------------------------------------------------------------
+	| 1			 | 1				| Internista		 | Nowak			 |
+	| 2			 | 1				| Internista		 | Luicz			 |
+	| 3			 | 2				| Kardiolog		 	 | Burski			 |
+	| 4			 | 3				| Neurolog			 | Kowalska			 |
+	--------------------------------------------------------------------------
+
+Trzecia postać normalna 3NF
+Atrybuty wtóre (zależne od innych atrybutów) są zależne bezpośrednio i wyłącznie od klucza podstawowego tabeli tzn. atrybuty wtóren nie moga być zależne od innych 
+atrybutów wtórnych
+
+	----------------------------------------------------------------------------------
+	| ID lekarza | Nazwisko		    | Gabinet			 | Numer telefonu do gabinetu|
+	----------------------------------------------------------------------------------
+	| 1			 | Nowak			| 13				 | 34769376			 		 |
+	| 2			 | Luicz			| 24				 | 43603487			 		 |
+	| 3			 | Burski			| 54			 	 | 98735698			 		 |
+	| 4			 | Kowalska			| 53				 | 84379824			 		 |
+	----------------------------------------------------------------------------------
+
+Wypożyczalnia(id_filmu, tytuł filmu, reżyser, wypożyczający, adres, data wypożyczenia)
+*/

@@ -28,10 +28,9 @@ void CardDeck::DrawCards()
 
 CardDeck::CardDeck(Shader &targetShader, helpers::Core &core, const UntexturedMeshParams &overlayParams, const UntexturedMeshParams &cardBorderParams, 
 	const UntexturedMeshParams &targetMeshParams, const pcDrawFunc &drawPcCb)
-	:  _targetShader(targetShader), _text(core.text), _timer(core.timer), _stats(core.stats), _overlayMesh(overlayParams), 
-	  _overlayShader("./Shaders/Overlay"), _cardBorderShader("./Shaders/CardBorder"), _customRand(CUSTOM_RAND_SEED),
-	  _cardBorderParams(cardBorderParams), _cardBorderMesh(cardBorderParams, NO_CARDS, 4),
-	  _targetParams(targetMeshParams), _targetMesh(targetMeshParams, NO_CARDS, 4), _pcDrawFunction(drawPcCb)
+	:  _targetShader(targetShader), _text(core.text), _timer(core.timer), _stats(core.stats), _overlayMesh(overlayParams), _customRand(CUSTOM_RAND_SEED),
+	  _cardBorderParams(cardBorderParams), _cardBorderMesh(cardBorderParams, NO_CARDS), _targetParams(targetMeshParams), _targetMesh(targetMeshParams, NO_CARDS), 
+	  _pcDrawFunction(drawPcCb)
 {
 	_pcTransform.SetRotAngle(-25.0f);
 	_cardProjection = glm::ortho(-SCREEN_ASPECT, SCREEN_ASPECT, -1.0f, 1.0f);

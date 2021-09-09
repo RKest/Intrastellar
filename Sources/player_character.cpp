@@ -38,7 +38,7 @@ void PlayerCharacter::RenderScore()
 	_text.Render(scoreString, 10.0f, static_cast<ft>(SCREEN_HEIGHT) - 40.0f, 1.0f, glm::vec3(1));
 }
 
-void PlayerCharacter::Update()
+void PlayerCharacter::Update(const std::vector<glm::mat4> &enemyInstanceTransforms)
 {
 	if(_isInvincible && _timer.HeapIsItTime(_invincibilityClockId))
 		_isInvincible = false;
@@ -48,12 +48,11 @@ void PlayerCharacter::Update()
 	else
 		_pcAlphaValue.second = 1.0f;
 
-	const glm::mat4 perFrameProjectileTransform = glm::translate(glm::vec3(0.0f, _timer.Scale(_pcStats.shotSpeed), 0.0f));
 	std::for_each
 	(
 		std::execution::par_unseq,
-		_projInstanceTransforms.begin(), _projInstanceTransforms.end(),
-		[&perFrameProjectileTransform](auto &&mat){ mat *= perFrameProjectileTransform; }
+		_projInstanceTransforms.begin(), _projInstanceTransforms.end(), 
+			[&perFrameProjectileTransform, this](auto &&mat){mat *= _moveProj(enemyInstanceTransforms, mat); }
 	);
 }
 
@@ -117,4 +116,32 @@ constexpr ft PlayerCharacter::_setAlpha(db remainingInvincibilityTime)
 	ft invincibilityFractionPassed = 1 - remainingInvincibilityTime / _invincibilityDuration;
 	ft scaledInfincibilityFractionPassed = TAU * invincibilityFractionPassed * period;
 	return cos(scaledInfincibilityFractionPassed);
+}
+
+
+glm::mat4 PlayerCharacter::_moveProj(const std::vector<glm::mat4> &enemyInstanceTransforms, const glm::mat4 &projTransform) const
+{
+	const glm::mat4 perFrameTransform = glm::translate(glm::vec3(0, _timer.Scale(_pcStats.shotSpeed), 0));
+	if(_pcStats.shotHomingStrength == 0.0f)
+		return perFrameTransform; 
+	
+	const glm::vec2 projPos{projTransform * glm::vec4(0,0,0,1)};
+	for(auto enemyTransform : enemyInstanceTransforms)
+	{
+		const glm::vec2 enemyPos{enemyTransform * glm::vec4(0,0,0,1)};
+		if(glm::distance(projPos, enemyPos) > _pcStats.shotHomingStrength)
+			return perFrameTransform; 
+		
+		const glm::vec2 enemyVec{glm::normalize(glm::vec2(glm::inverse(projTransform) * enemyTransform * glm::vec4(0,0,0,1)))};
+		const ft angle = -glm::atan(glm::dot({0.0, 1.0}, enemyVec), det({0.0, 1.0}, enemyVec));
+		if(angle < MAX_PROJ_TURNING_RAD)
+			return glm::rotate(angle, glm::vec3(0,0,1)) * perFrameTransform;
+		else if(TAU - angle < MAX_PROJ_TURNING_RAD)
+			return glm::rotate(-angle, glm::vec3(0,0,1)) * perFrameTransform;
+		else if(angle < PI)
+			return glm::rotate(MAX_PROJ_TURNING_RAD, glm::vec3(0,0,1)) * perFrameTransform;
+		else
+			return glm::rotate(-MAX_PROJ_TURNING_RAD, glm::vec3(0,0,1)) * perFrameTransform;
+	}
+
 }
