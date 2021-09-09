@@ -4,7 +4,7 @@
 
 PlayerCharacter::PlayerCharacter(helpers::Core &core, const UntexturedMeshParams &pcParams, const UntexturedMeshParams &projParams)
 	: _camera(core.camera), _text(core.text), _timer(core.timer), _pcStats(core.stats),
-		_pcMesh(pcParams), _projMesh(projParams), _pcCardMesh(pcParams, NO_CARDS), _projCardMesh(projParams, CARD_MAX_PROJ_COUNT)
+		_pcMesh(pcParams), _projMesh(projParams, MAX_PROJ_AMOUNT), _pcCardMesh(pcParams, NO_CARDS), _projCardMesh(projParams, CARD_MAX_PROJ_COUNT)
 {
 	_projectileShader.Bind();
 	const std::vector<glm::vec3> colours = {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
@@ -127,24 +127,23 @@ glm::mat4 PlayerCharacter::_moveProj(const std::vector<glm::mat4> &enemyInstance
 		return perFrameTransform; 
 	
 	const glm::vec2 projPos{projTransform * glm::vec4(0,0,0,1)};
-	for(auto enemyTransform : enemyInstanceTransforms)
-	{
-		const glm::vec2 enemyPos{enemyTransform * glm::vec4(0,0,0,1)};
-		if(glm::distance(projPos, enemyPos) > _pcStats.shotHomingStrength)
-			return perFrameTransform; 
+	auto closestEnemyMat = std::min_element(enemyInstanceTransforms.cbegin(), enemyInstanceTransforms.cend(), [&projPos](auto &m1, auto &m2)
+		{ return glm::distance(glm::vec2(m1 * glm::vec4(0,0,0,1)), projPos) < glm::distance(glm::vec2(m2 * glm::vec4(0,0,0,1)), projPos); });
+
+	if(closestEnemyMat == enemyInstanceTransforms.end())
+		return perFrameTransform;
+
+	const glm::vec2 closestEnemyPos{*closestEnemyMat * glm::vec4(0,0,0,1)};
+	if(glm::distance(projPos, closestEnemyPos) > _pcStats.shotHomingStrength)
+		return perFrameTransform; 
 		
-		const glm::vec2 enemyVec{glm::normalize(glm::vec2(glm::inverse(projTransform) * enemyTransform * glm::vec4(0,0,0,1)))};
-		const ft angle = -glm::atan(glm::dot({1.0, 0.0}, enemyVec), helpers::det({1.0, 0.0}, enemyVec));
-		if(angle < maxProjTurningRadius)
-			return glm::rotate(angle, glm::vec3(0,0,1)) * perFrameTransform;
-		else if(TAU - angle < maxProjTurningRadius)
-			return glm::rotate(-angle, glm::vec3(0,0,1)) * perFrameTransform;
-		else if(angle < PI)
-			return glm::rotate(maxProjTurningRadius, glm::vec3(0,0,1)) * perFrameTransform;
-		else
-			return glm::rotate(-maxProjTurningRadius, glm::vec3(0,0,1)) * perFrameTransform;
-	}
-
-	return perFrameTransform;
-
+	const glm::vec2 enemyVec{glm::normalize(glm::vec2(glm::inverse(projTransform) * glm::vec4(closestEnemyPos,0,1)))};
+	const ft angle = -glm::atan(glm::dot({1.0, 0.0}, enemyVec), helpers::det({1.0, 0.0}, enemyVec));
+	if(angle < maxProjTurningRadius)
+		return glm::rotate(angle, glm::vec3(0,0,1)) * perFrameTransform;
+	if(TAU - angle < maxProjTurningRadius)
+		return glm::rotate(-angle, glm::vec3(0,0,1)) * perFrameTransform;
+	if(angle < PI)
+		return glm::rotate(maxProjTurningRadius, glm::vec3(0,0,1)) * perFrameTransform;
+	return glm::rotate(-maxProjTurningRadius, glm::vec3(0,0,1)) * perFrameTransform;
 }
