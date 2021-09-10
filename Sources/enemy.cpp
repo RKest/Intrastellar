@@ -25,7 +25,7 @@ void EnemyData::Erase(const ui index)
 void EnemyData::Push(const glm::mat4 &instanceTransform, const UntexturedMeshParams &params, const si health)
 {
 	instanceTransforms.push_back(instanceTransform);
-	boundingBoxes.push_back(helpers::BoundingBox(params, instanceTransform));
+	boundingBoxes.emplace_back(params, instanceTransform);
 	healths.push_back(health);
 	size++;
 }

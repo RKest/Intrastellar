@@ -56,7 +56,7 @@ private:
 	ui _currentExp = 0;
 	ui _prevLevelExpTreshold = 0;
 	ui _nextLevelExpTreshold = 100;
-	const ui _levelThresholdMultiplayer = 2;
+	const ft _levelThresholdMultiplayer = 1.5f;
 	bool _hasThereBeenLevelUp = false;
 	const glm::mat4 _expBarProjection = glm::ortho(0.0f, static_cast<ft>(SCREEN_WIDTH), 0.0f, static_cast<ft>(SCREEN_HEIGHT));
 	std::array<glm::vec3, 4> _expBarPositions{{glm::vec3(0), glm::vec3(0,1,0), glm::vec3(0), glm::vec3(0)}};

@@ -85,7 +85,7 @@ namespace stat_altarations
 static const Stats defaultStats(
     150.0, // shotDelay
     1.0f,  // shotDelayMultiplayar
-    100.0f, // shotDamage
+    10.0f, // shotDamage
     1.0f,  // shotDanageMultiplayer
     0.02f, // shotSpeed
     1,     // noShots

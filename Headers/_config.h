@@ -33,7 +33,7 @@ constexpr ft SCREEN_ASPECT = static_cast<ft>(SCREEN_WIDTH) / static_cast<ft>(SCR
 constexpr std::array UNIFORMS = {"transform", "projection"};
 
 //Shooter 
-constexpr ui MAX_PROJ_AMOUNT = 10;
+constexpr ui MAX_PROJ_AMOUNT = 50;
 constexpr ui MAX_NO_ENEMIES = 10;
 
 constexpr ui CARD_MAX_PROJ_COUNT = 300;
@@ -43,11 +43,7 @@ constexpr ui MAX_EXP_PART_NO = 50;
 constexpr ft TAU = 2 * glm::pi<ft>();
 constexpr ft PI = glm::pi<ft>();
 constexpr ft MAX_PROJ_TURNING_RAD = glm::radians(1.0f);
-constexpr ft MULTIPLE_PROJ_ANGLE(const ui noShots, const ui whichShot) 
-{ 
-	const ft angleBetweenShots = glm::radians(15.0f) / static_cast<ft>((noShots >> 2) + 1);
-	return ((noShots >> 1) - whichShot) * -angleBetweenShots;
-}
+constexpr ft DEF_ANGLE_BETWEEN_SHOTS = glm::radians(15.0f);
 
 inline size_t _dummy_size_t;
 inline bool _dummy_bool;
