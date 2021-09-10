@@ -65,7 +65,14 @@ void PlayerCharacter::Draw()
 
 void PlayerCharacter::Shoot(const glm::mat4 &originTransform)
 {
-    helpers::pushToCappedVector(_projInstanceTransforms, originTransform, _oldestProjectileIndex, MAX_PROJ_AMOUNT);
+	if(_pcStats.noShots == 1)
+    	helpers::pushToCappedVector(_projInstanceTransforms, initProjTransform, _oldestProjectileIndex, MAX_PROJ_AMOUNT);
+	else
+		for(ui i = 0; i < _pcStats.noShots; ++i)
+		{
+			const glm::mat4 initProjTransform = glm::rotate(MULTIPLE_PROJ_ANGLE(_pcStats.noShots, i), glm::vec3(0,0,1)) * originTransform;
+    		helpers::pushToCappedVector(_projInstanceTransforms, initProjTransform, _oldestProjectileIndex, MAX_PROJ_AMOUNT);
+		}
 }
 
 void PlayerCharacter::_projHit(const ui index)

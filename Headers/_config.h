@@ -43,6 +43,11 @@ constexpr ui MAX_EXP_PART_NO = 50;
 constexpr ft TAU = 2 * glm::pi<ft>();
 constexpr ft PI = glm::pi<ft>();
 constexpr ft MAX_PROJ_TURNING_RAD = glm::radians(1.0f);
+constexpr ft MULTIPLE_PROJ_ANGLE(const ui noShots, const ui whichShot) 
+{ 
+	const ft angleBetweenShots = glm::radians(15.0f) / static_cast<ft>((noShots >> 2) + 1);
+	return ((noShots >> 1) - whichShot) * -angleBetweenShots;
+}
 
 inline size_t _dummy_size_t;
 inline bool _dummy_bool;
