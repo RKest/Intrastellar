@@ -93,9 +93,9 @@ private:
         Card("All stats Up, HP down",                      1, std::vector<Stats>{ stat_altarations::MAX_HP(-1)                          ,
                                                                                   stat_altarations::SHOT_DAMADE(10.0f)                  ,
                                                                                   stat_altarations::SHOT_DELAY(-50.0)                   ,
-                                                                                  stat_altarations::SHOT_SPEED(0.1f)                  }),
+                                                                                  stat_altarations::SHOT_SPEED(0.01f)                 }),
         Card("+1 Shots, Increase Shot Delay",              2, std::vector<Stats>{ stat_altarations::NO_SHOTS(1)                         ,
-                                                                                  stat_altarations::SHOT_DELAY(200.0f)                }),
+                                                                                  stat_altarations::SHOT_DELAY(200.0)                 }),
         Card("+2 Shots, Half Shot Delay, Damage Way Down", 1, std::vector<Stats>{ stat_altarations::NO_SHOTS(2)                         ,
                                                                                   stat_altarations::SHOT_DELAY_MULTIPLAYER(0.5f)        ,
                                                                                   stat_altarations::SHOT_DAMADE_MULTIPLAYER(0.3f)     })

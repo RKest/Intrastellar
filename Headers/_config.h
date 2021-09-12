@@ -33,12 +33,12 @@ constexpr ft SCREEN_ASPECT = static_cast<ft>(SCREEN_WIDTH) / static_cast<ft>(SCR
 constexpr std::array UNIFORMS = {"transform", "projection"};
 
 //Shooter 
-constexpr ui MAX_PROJ_AMOUNT = 50;
-constexpr ui MAX_NO_ENEMIES = 10;
+constexpr ui MAX_PROJ_AMOUNT = 100;
+constexpr ui MAX_NO_ENEMIES = 50;
 
 constexpr ui CARD_MAX_PROJ_COUNT = 300;
 constexpr ui NO_CARDS = 3;
-constexpr ui MAX_EXP_PART_NO = 50;
+constexpr ui MAX_EXP_PART_NO = 200;
 
 constexpr ft TAU = 2 * glm::pi<ft>();
 constexpr ft PI = glm::pi<ft>();

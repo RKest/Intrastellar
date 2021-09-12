@@ -71,7 +71,10 @@ int main(int argc, char **argv)
 		enemyManager.RecordCollisions(playerCharacter.ProjTransforms(), playerCharacter.ProjHitCb(), expManager.CreateExpParticlesCb());
 		enemyManager.RecordPCIntersection(helpers::transformStdVector(pcParams, pcModel), playerCharacter.PCIntersectionCb());
 		if(expManager.HasThereBeenLevelUp())
+		{
+			playerStats.enemySpawnRate *= 0.5f;
 			cardDeck.RollCards();
+		}
 			
 		render();
 		expManager.UpdateExpParticles(pcModel);
