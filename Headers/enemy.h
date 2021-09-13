@@ -13,19 +13,39 @@
 #include <execution>
 #include <algorithm>
 #include <functional>
+#include <cmath>
 
 #include "glm/gtx/matrix_transform_2d.hpp"
 
-struct EnemyData
+//TODO look into std::fpclassify
+
+class EnemyBehaviuor 
 {
+public:
+	EnemyBehaviuor(const EnemyStats &enemyStats, Timer &timer);
+	Update(const glm::mat4 pcTransform);
+private:
+	const EnemyStats &_enemyStats;
+	Timer &_timer;
+	bool doesShoot{};
+	ui _shotClockId{};
+};
+
+class EnemyData
+{
+public:
+	EnemyData(Timer &_timer);
 	std::vector<glm::mat4> 				instanceTransforms;
 	std::vector<helpers::BoundingBox>	boundingBoxes;
 	std::vector<si>						healths;
+	std::vector<EnemyBehaviuor>			enemyBehaviours;
 	ui size = 0;
 	void Clear();
 	void Erase(const ui index);
 	void Push(const glm::mat4 &instanceTransform, const UntexturedMeshParams &params, const si health = 100);
 	void Update(const ui index);
+private:
+	Timer &_timer;
 };
 
 class EnemyManager

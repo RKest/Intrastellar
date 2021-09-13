@@ -96,4 +96,19 @@ static const Stats defaultStats(
     200.0  // enemySpawnRate
 );
 
+struct EnemyStats 
+{
+    db speed;
+    ft shotSpeed;
+    db shotDelay;
+    ft shotRange;
+};
+
+static const EnemyStats defaultEnemyStats{
+    0.0,
+    0.0f,
+    0.0,
+    0.0f
+};
+
 #endif

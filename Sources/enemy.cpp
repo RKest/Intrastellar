@@ -1,5 +1,34 @@
 #include "enemy.h"
 
+EnemyBehaviuor::EnemyBehaviuor(const EnemyStats &enemyStats, Timer &timer)
+	: _enemyStats(enemyStats), _timer(timer)
+{
+	if(FP_ZERO == std::fpclassify(_enemyStats.shotDelay))
+		doesShoot = false;
+	else
+	{
+		doesShoot = true;
+		timer.InitHeapClock(_shotClockId, _enemyStats.shotDelay);
+	}
+}
+
+EnemyBehaviuor::Update(const glm::mat4 &pcTransform)
+{
+	const glm::vec2 pcPos{pcTransform * glm::vec4(0,0,0,1)};
+	if(!doesShoot)
+		return;
+	
+}
+
+EnemyData::EnemyData(Timer &timer) 
+	: _timer(timer) 
+{
+	instanceTransforms.reserve(MAX_NO_ENEMIES);
+	boundingBoxes	  .reserve(MAX_NO_ENEMIES);
+	healths			  .reserve(MAX_NO_ENEMIES);
+	enemyBehaviours	  .reserve(MAX_NO_ENEMIES);
+}
+
 void EnemyData::Clear()
 {
 	instanceTransforms.clear();

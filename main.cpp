@@ -57,7 +57,7 @@ int main(int argc, char **argv)
 	while (!display.IsClosed())
 	{
 		timer.RecordFrame();
-		glm::mat4 pcModel = playerCharacter.PcTransform().Model();
+		const glm::mat4 pcModel = playerCharacter.PcTransform().Model();
 		controler.CaptureKeyboardPresses(playerCharacter.IsAlive());
 		controler.CaptureMouseMovement();
 
