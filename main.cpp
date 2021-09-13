@@ -172,4 +172,21 @@ atrybutów wtórnych
 	----------------------------------------------------------------------------------
 
 Wypożyczalnia(id_filmu, tytuł filmu, reżyser, wypożyczający, adres, data wypożyczenia)
+
+(id_wypożyczalni, 	 ulica_wypożyczalni, numer_budynku, 	   miejscowość_wypożyczalni, kod_pocztowy_wypożyczalni		)
+(id_reżysera, 		 imie_reżysera,      nazwisko_reżysera																)
+(id_filmu, 		  	 id_wypożyczalni, 	 id_reżysera,		   tytuł_filmu												)
+(id_wypożyczającego, id_wypożyczalni, 	 imie_wypożyczającego, nazwisko_wypożyczającego, wypożyczenia_wypożyczającego	)
+(id_wypożyczenia, 	 id_wypożyczalni, 	 id_filmu, 			   id_wypożyczającego, 		 data_wypożyczenia				)
+
+
+T: SQL
+
+Podzbiory SQL:
+	SQL DML: Data Manipulation Language	(INSERT, UPDATE, DELETE)
+	SQL DDL: Data Definition Language 	(CREATE, DROP, ALTER)
+	SQL DCL: Data Control Language 		(GRANT, REVOKE)
+	SQL DQL: Data Query Language		(SELECT)
+
+
 */
