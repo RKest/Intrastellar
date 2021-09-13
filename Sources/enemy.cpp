@@ -12,11 +12,19 @@ EnemyBehaviuor::EnemyBehaviuor(const EnemyStats &enemyStats, Timer &timer)
 	}
 }
 
-EnemyBehaviuor::Update(const glm::mat4 &pcTransform)
+EnemyBehaviuor::Update(const glm::mat4 pcTransform, glm::mat4 &instanceTransform, std::vector<glm::mat4> &projInstanceTransforms)
 {
 	const glm::vec2 pcPos{pcTransform * glm::vec4(0,0,0,1)};
+	const glm::vec2 enemyPos{instanceTransform * glm::vec4(0,0,0,1)};
+	const glm::vec2 vecToPc{pcPos - enemyPos};
+	const db perFrameDistanceTraveled = _timer.Scale(_enemyStats.speed);
+	const glm::vec2 scaledVecToPc = helpers::scale2dVec(vecToPc, scaledPerFrameTravelDistance);
+	const glm::mat4 perFrameEnemyTransform = glm::translate(glm::vec3(scaledVecToPc, 0));
+	instanceTransform *= perFrameEnemyTransform;
+
 	if(!doesShoot)
 		return;
+	helpers::pushToCappedVector(projInstanceTransforms, instanceTransform, _oldestProjIndex, MAX_PROJ_AMOUNT_PER_ENEMY);
 	
 }
 
@@ -43,19 +51,23 @@ void EnemyData::Erase(const ui index)
 	{
 		instanceTransforms[i-1] = instanceTransforms[i];
 		boundingBoxes[i-1] = boundingBoxes[i];
-		healths[i-1] = healths[i];
+		enemyBehaviours[i-1] = enemyBehaviours[i];
+		projInstanceTransforms[i-1] = projInstanceTransforms[i];
 	}
 	instanceTransforms.pop_back();
 	boundingBoxes.pop_back();
-	healths.pop_back();
+	enemyBehaviours.pop_back();
+	projInstanceTransforms.pop_back();
 	size--;
 }
 
-void EnemyData::Push(const glm::mat4 &instanceTransform, const UntexturedMeshParams &params, const si health)
+void EnemyData::Push(const glm::mat4 &instanceTransform, const UntexturedMeshParams &params, const EnemyStats &stats, Timer &timer)
 {
 	instanceTransforms.push_back(instanceTransform);
 	boundingBoxes.emplace_back(params, instanceTransform);
-	healths.push_back(health);
+	enemyBehaviours.emplace_back(stats, timer);
+	projInstanceTransforms.emplace_back();
+	
 	size++;
 }
 
@@ -120,10 +132,10 @@ void EnemyManager::UpdateBehaviour(const glm::mat4 &pcModel)
 	for (ui i = 0; i < _enemyData.size; ++i)
 	{
 		const glm::vec2 enemyPos = glm::vec2(_enemyData.instanceTransforms[i] * glm::vec4(0, 0, 0, 1));
-		glm::vec2 vecToPc = pcPos - enemyPos;
-		helpers::scale2dVec(vecToPc, scaledPerFrameTravelDistance);
+		const glm::vec2 vecToPc = pcPos - enemyPos;
+		const glm::vec2 scaledVecToPc = helpers::scale2dVec(vecToPc, scaledPerFrameTravelDistance);
 
-		const glm::mat4 localTransform = glm::translate(glm::vec3(vecToPc, 0));
+		const glm::mat4 localTransform = glm::translate(glm::vec3(scaledVecToPc, 0));
 		_enemyData.instanceTransforms[i] *= localTransform;
 		_enemyData.Update(i);
 	}

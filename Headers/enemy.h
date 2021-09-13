@@ -23,12 +23,13 @@ class EnemyBehaviuor
 {
 public:
 	EnemyBehaviuor(const EnemyStats &enemyStats, Timer &timer);
-	Update(const glm::mat4 pcTransform);
+	Update(const glm::mat4 pcTransform, glm::mat4 &instanceTransform, std::vector<glm::mat4> &projInstanceTransforms);
 private:
 	const EnemyStats &_enemyStats;
 	Timer &_timer;
 	bool doesShoot{};
 	ui _shotClockId{};
+	ui _oldestProjIndex{};
 };
 
 class EnemyData
@@ -39,10 +40,11 @@ public:
 	std::vector<helpers::BoundingBox>	boundingBoxes;
 	std::vector<si>						healths;
 	std::vector<EnemyBehaviuor>			enemyBehaviours;
+	std::vector<std::vector<glm::mat4>> projInstanceTransforms;
 	ui size = 0;
 	void Clear();
 	void Erase(const ui index);
-	void Push(const glm::mat4 &instanceTransform, const UntexturedMeshParams &params, const si health = 100);
+	void Push(const glm::mat4 &instanceTransform, const UntexturedMeshParams &params, const EnemyStats &stats, Timer &timer);
 	void Update(const ui index);
 private:
 	Timer &_timer;

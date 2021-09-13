@@ -18,7 +18,7 @@
 
 namespace helpers
 {
-    void scale2dVec(glm::vec2 &vecToScale, const ft scaleToLength);
+    [[nodiscard]]glm::vec2 scale2dVec(const glm::vec2 &vecToScale, const ft scaleToLength);
     glm::vec2 randomDirVector(CustomRand &customRand, const ft len);
     std::vector<glm::vec2> transformStdVector(const std::vector<glm::vec3> &stdVec, const glm::mat4 &model);
     std::vector<glm::vec2> transformStdVector(const UntexturedMeshParams &params, const glm::mat4 &model);
@@ -80,6 +80,16 @@ namespace helpers
 		}
 		else
 			cappedVec.push_back(el);
+    }
+
+    template<typename T>
+    const std::vector<T> &flattenVector(const std::vector<std::vector<T>> &stdVec)
+    {
+        auto bar = std::accumulate(stdVec.begin(), stdVec.end(), decltype(foo)::value_type{},
+            [](auto& dest, auto& src) {
+                dest.insert(dest.end(), src.begin(), src.end());
+                return dest;
+            });
     }
 
     struct Core

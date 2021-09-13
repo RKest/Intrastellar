@@ -35,6 +35,8 @@ constexpr std::array UNIFORMS = {"transform", "projection"};
 //Shooter 
 constexpr ui MAX_PROJ_AMOUNT = 100;
 constexpr ui MAX_NO_ENEMIES = 50;
+constexpr ui MAX_ENEMY_PROJ_AMOUNT = 300;
+constexpr ui MAX_PROJ_AMOUNT_PER_ENEMY = 10;
 
 constexpr ui CARD_MAX_PROJ_COUNT = 300;
 constexpr ui NO_CARDS = 3;

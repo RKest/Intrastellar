@@ -1,6 +1,6 @@
 #include "Core/helpers.h"
 
-void helpers::scale2dVec(glm::vec2 &vecToScale, const ft scaleToLength)
+glm::vec2 helpers::scale2dVec(const glm::vec2 &vecToScale, const ft scaleToLength)
 {
 	ft h = hypot(vecToScale.x, vecToScale.y);
 	vecToScale.x = scaleToLength * (vecToScale.x / h);

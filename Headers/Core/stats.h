@@ -102,13 +102,15 @@ struct EnemyStats
     ft shotSpeed;
     db shotDelay;
     ft shotRange;
+    ui health;
 };
 
 static const EnemyStats defaultEnemyStats{
     0.0,
     0.0f,
     0.0,
-    0.0f
+    0.0f,
+    100
 };
 
 #endif
