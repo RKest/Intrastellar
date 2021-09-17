@@ -50,5 +50,33 @@ constexpr ft DEF_ANGLE_BETWEEN_SHOTS = glm::radians(15.0f);
 inline size_t _dummy_size_t;
 inline bool _dummy_bool;
 inline const glm::mat4 _blankTransform = glm::mat4(1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1);
+template<typename T, typename ...Ts>
+void _log(T first, Ts ...rest)
+{
+    std::cout << first << ", ";
+    if constexpr (sizeof...(rest) > 0)
+        _log(rest...);
+    else 
+        std::cout << '\n';
+}
 
+#if __cplusplus > 201703L
+#include <source_location>
+#define LOG(...) log(std::source_location::current(), __VA_ARGS__)
+template<typename ...T>
+void log(std::source_location loc, T ...args)
+{
+    std::cout << "[" << loc.file_name() << "] "
+              << "(" << loc.function_name() << " "
+              << loc.line() << ":" << loc.column() << ") ";
+    _log(args...);
+}
+#else
+#define LOG(...) log(__VA_ARGS__)
+template<typename ...T>
+void log(T ...args)
+{
+    _log(args...);
+}
+#endif
 #endif
