@@ -28,7 +28,7 @@ private:
 class Timer
 {
 public:
-	Timer(Text &text, Stats &stats);
+	Timer(Text &text, PlayerStats &stats);
 	enum ClocksEnum : ui
 	{
 		SHOT_CLOCK,

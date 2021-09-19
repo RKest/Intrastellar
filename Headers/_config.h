@@ -61,10 +61,10 @@ void _log(T first, Ts ...rest)
 }
 
 #if __cplusplus > 201703L
-#include <source_location>
-#define LOG(...) log(std::source_location::current(), __VA_ARGS__)
+#include <experimental/source_location>
+#define LOG(...) log(std::experimental::fundamentals_v2::source_location::current(), __VA_ARGS__)
 template<typename ...T>
-void log(std::source_location loc, T ...args)
+void log(std::experimental::fundamentals_v2::source_location loc, T ...args)
 {
     std::cout << "[" << loc.file_name() << "] "
               << "(" << loc.function_name() << " "

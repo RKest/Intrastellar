@@ -46,7 +46,7 @@ private:
 	Camera &_camera;
 	Text &_text;
 	Timer &_timer;
-    Stats &_pcStats;
+    PlayerStats &_pcStats;
 	Transform _pcTransform;
 	ftUni _pcAlphaValue{"alpha", 1.0f};
 

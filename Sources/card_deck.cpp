@@ -1,7 +1,7 @@
 #include "card_deck.h"
 
-Card::Card(const std::string &cardText, const ui weight, const std::vector<Stats> &statAltarationList)
-	: cardText(cardText), weight(weight), statAltarations(std::accumulate(statAltarationList.begin(), statAltarationList.end(), Stats()))
+Card::Card(const std::string &cardText, const ui weight, const std::vector<PlayerStats> &statAltarationList)
+	: cardText(cardText), weight(weight), statAltarations(std::accumulate(statAltarationList.begin(), statAltarationList.end(), PlayerStats()))
 {
 }
 

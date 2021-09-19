@@ -35,12 +35,13 @@ int main(int argc, char **argv)
 	MESH_PARAMS_FROM_PATH("./Resources/OBJs/card-border-1.obj", cardBorderParams);
 	const UntexturedMeshParams expBarParams = {expBarVertices, expBarIndices, ARR_SIZE(expBarVertices), ARR_SIZE(expBarIndices)};
 
-	Stats playerStats = defaultStats;
+	PlayerStats playerStats = defaultStats;
+	EnemyStats enemyStats = defaultEnemyStats;
 	Text text("./Resources/Fonts/slkscr.ttf", SCREEN_WIDTH, SCREEN_HEIGHT);
 	Timer timer(text, playerStats);
 	helpers::Core core{camera, text, timer, playerStats};
 	ExpManager expManager(core, expParams, expBarParams);
-	EnemyManager enemyManager(enemyShader, core, enemyMeshParams);
+	EnemyManager enemyManager(enemyShader, core, enemyMeshParams, enemyStats);
 	PlayerCharacter playerCharacter(core, pcParams, projectileParams);
 	Controler controler(display, camera, timer, playerCharacter.PcTransform());
 	CardDeck cardDeck(enemyShader, core, overlayParams, cardBorderParams, enemyMeshParams, playerCharacter.ExternDrawCb());

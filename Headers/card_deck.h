@@ -19,10 +19,10 @@
 
 struct Card
 {
-    Card(const std::string &cardText, const ui weight, const std::vector<Stats> &statAltarationList);
+    Card(const std::string &cardText, const ui weight, const std::vector<PlayerStats> &statAltarationList);
     const ui weight;
     const std::string cardText;
-    const Stats statAltarations;
+    const PlayerStats statAltarations;
 };
 
 using pcDrawFunc = std::function<void(const std::vector<glm::mat4>&, std::vector<glm::mat4>&, const std::vector<ui>&, 
@@ -44,7 +44,7 @@ private:
     Shader &_targetShader;
     Text &_text;
     Timer &_timer;
-    Stats  &_stats;
+    PlayerStats  &_stats;
     UntexturedMeshParams    _cardBorderParams;
     UntexturedMeshParams    _targetParams;
     UntexturedInstancedMesh _cardBorderMesh;
@@ -66,7 +66,7 @@ private:
     std::vector<glm::mat4> _projInstanceTransforms;
     std::vector<ui> _clockIds = std::vector<ui>(3);
     std::vector<helpers::BoundingBox> _targetBoundingBoxes = std::vector<helpers::BoundingBox>(3);
-    std::vector<Stats> _cardStatsToChose = std::vector<Stats>(3);
+    std::vector<PlayerStats> _cardStatsToChose = std::vector<PlayerStats>(3);
     //_cardBorderProection --- Just above here
 	ui _oldestProjectileIndex = 0;
 
@@ -79,24 +79,24 @@ private:
     ui _cardWeightSum = 0;
     const std::array<Card, 9> _cards\
     {{
-        Card("Decrease Shot Delay",                        5, std::vector<Stats>{ stat_altarations::SHOT_DELAY(-50.0)                 }),
-        Card("Increase Damage",                            5, std::vector<Stats>{ stat_altarations::SHOT_DAMADE(10.0f)                }),
-        Card("Double Damage, Increase Shot Delay",         2, std::vector<Stats>{ stat_altarations::SHOT_DAMADE_MULTIPLAYER(2.0f)       ,
+        Card("Decrease Shot Delay",                        5, std::vector<PlayerStats>{ stat_altarations::SHOT_DELAY(-50.0)                 }),
+        Card("Increase Damage",                            5, std::vector<PlayerStats>{ stat_altarations::SHOT_DAMADE(10.0f)                }),
+        Card("Double Damage, Increase Shot Delay",         2, std::vector<PlayerStats>{ stat_altarations::SHOT_DAMADE_MULTIPLAYER(2.0f)       ,
                                                                                   stat_altarations::SHOT_DELAY_MULTIPLAYER(1.5f)      }),
-        Card("HP Up, Full Health",                         4, std::vector<Stats>{ stat_altarations::MAX_HP(1)                           ,
+        Card("HP Up, Full Health",                         4, std::vector<PlayerStats>{ stat_altarations::MAX_HP(1)                           ,
                                                                                   stat_altarations::CURR_HP(999)                      }),
-        Card("HP Up, Increase Shot Speed",                 3, std::vector<Stats>{ stat_altarations::MAX_HP(1)                           ,
+        Card("HP Up, Increase Shot Speed",                 3, std::vector<PlayerStats>{ stat_altarations::MAX_HP(1)                           ,
                                                                                   stat_altarations::CURR_HP(1)                          ,
                                                                                   stat_altarations::SHOT_SPEED(0.01f)                 }),
-        Card("Half Shot Delay, Decrease Shot Speed",       2, std::vector<Stats>{ stat_altarations::SHOT_DELAY_MULTIPLAYER(0.5f)        ,
+        Card("Half Shot Delay, Decrease Shot Speed",       2, std::vector<PlayerStats>{ stat_altarations::SHOT_DELAY_MULTIPLAYER(0.5f)        ,
                                                                                   stat_altarations::SHOT_SPEED(-0.015f)               }),
-        Card("All stats Up, HP down",                      1, std::vector<Stats>{ stat_altarations::MAX_HP(-1)                          ,
+        Card("All stats Up, HP down",                      1, std::vector<PlayerStats>{ stat_altarations::MAX_HP(-1)                          ,
                                                                                   stat_altarations::SHOT_DAMADE(10.0f)                  ,
                                                                                   stat_altarations::SHOT_DELAY(-50.0)                   ,
                                                                                   stat_altarations::SHOT_SPEED(0.01f)                 }),
-        Card("+1 Shots, Increase Shot Delay",              2, std::vector<Stats>{ stat_altarations::NO_SHOTS(1)                         ,
+        Card("+1 Shots, Increase Shot Delay",              2, std::vector<PlayerStats>{ stat_altarations::NO_SHOTS(1)                         ,
                                                                                   stat_altarations::SHOT_DELAY(200.0)                 }),
-        Card("+2 Shots, Half Shot Delay, Damage Way Down", 1, std::vector<Stats>{ stat_altarations::NO_SHOTS(2)                         ,
+        Card("+2 Shots, Half Shot Delay, Damage Way Down", 1, std::vector<PlayerStats>{ stat_altarations::NO_SHOTS(2)                         ,
                                                                                   stat_altarations::SHOT_DELAY_MULTIPLAYER(0.5f)        ,
                                                                                   stat_altarations::SHOT_DAMADE_MULTIPLAYER(0.3f)     })
     }};

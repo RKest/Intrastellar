@@ -1,6 +1,6 @@
 #include "enemy.h"
 
-EnemyBehaviuor::EnemyBehaviuor(const EnemyStats &enemyStats, Timer &timer)
+EnemyBehaviuor::EnemyBehaviuor(EnemyStats &enemyStats, Timer &timer)
 	: _enemyStats(enemyStats), _timer(timer)
 {
 	if(FP_ZERO == std::fpclassify(_enemyStats.shotDelay))
@@ -12,61 +12,67 @@ EnemyBehaviuor::EnemyBehaviuor(const EnemyStats &enemyStats, Timer &timer)
 	}
 }
 
-EnemyBehaviuor::Update(const glm::mat4 pcTransform, glm::mat4 &instanceTransform, std::vector<glm::mat4> &projInstanceTransforms)
+void EnemyBehaviuor::Update(const glm::mat4 pcTransform, glm::mat4 &instanceTransform, std::vector<glm::mat4> &projInstanceTransforms)
 {
 	const glm::vec2 pcPos{pcTransform * glm::vec4(0,0,0,1)};
 	const glm::vec2 enemyPos{instanceTransform * glm::vec4(0,0,0,1)};
 	const glm::vec2 vecToPc{pcPos - enemyPos};
 	const db perFrameDistanceTraveled = _timer.Scale(_enemyStats.speed);
-	const glm::vec2 scaledVecToPc = helpers::scale2dVec(vecToPc, scaledPerFrameTravelDistance);
+	const glm::vec2 scaledVecToPc = helpers::scale2dVec(vecToPc, perFrameDistanceTraveled);
 	const glm::mat4 perFrameEnemyTransform = glm::translate(glm::vec3(scaledVecToPc, 0));
 	instanceTransform *= perFrameEnemyTransform;
 
 	if(!doesShoot)
 		return;
-	helpers::pushToCappedVector(projInstanceTransforms, instanceTransform, _oldestProjIndex, MAX_PROJ_AMOUNT_PER_ENEMY);
+	if(_timer.HeapIsItTime(_shotClockId))
+		helpers::pushToCappedVector(projInstanceTransforms, instanceTransform, _oldestProjIndex, MAX_PROJ_AMOUNT_PER_ENEMY);
 	
 }
 
 EnemyData::EnemyData(Timer &timer) 
 	: _timer(timer) 
 {
-	instanceTransforms.reserve(MAX_NO_ENEMIES);
-	boundingBoxes	  .reserve(MAX_NO_ENEMIES);
-	healths			  .reserve(MAX_NO_ENEMIES);
-	enemyBehaviours	  .reserve(MAX_NO_ENEMIES);
+	instanceTransforms		.reserve(MAX_NO_ENEMIES);
+	boundingBoxes	  		.reserve(MAX_NO_ENEMIES);
+	healths			  		.reserve(MAX_NO_ENEMIES);
+	enemyBehaviours	  		.reserve(MAX_NO_ENEMIES);
+	projInstanceTransforms	.reserve(MAX_NO_ENEMIES);
 }
 
 void EnemyData::Clear()
 {
-	instanceTransforms.clear();
-	boundingBoxes.clear();
-	healths.clear();
+	instanceTransforms		.clear();
+	boundingBoxes			.clear();
+	healths					.clear();
+	enemyBehaviours			.clear();
+	projInstanceTransforms	.clear();
+
 	size = 0;
 }
 
 void EnemyData::Erase(const ui index)
 {
-	for (ui i = index + 1; i < size; ++i)
-	{
-		instanceTransforms[i-1] = instanceTransforms[i];
-		boundingBoxes[i-1] = boundingBoxes[i];
-		enemyBehaviours[i-1] = enemyBehaviours[i];
-		projInstanceTransforms[i-1] = projInstanceTransforms[i];
-	}
-	instanceTransforms.pop_back();
-	boundingBoxes.pop_back();
-	enemyBehaviours.pop_back();
-	projInstanceTransforms.pop_back();
+	instanceTransforms		[index] = instanceTransforms		[size - 1];
+	boundingBoxes			[index] = boundingBoxes				[size - 1];
+	enemyBehaviours			[index] = enemyBehaviours			[size - 1];
+	projInstanceTransforms	[index] = projInstanceTransforms	[size - 1];
+	healths					[index] = healths					[size - 1];
+	instanceTransforms		.pop_back();
+	boundingBoxes			.pop_back();
+	enemyBehaviours			.pop_back();
+	projInstanceTransforms	.pop_back();
+	healths					.pop_back();
+
 	size--;
 }
 
-void EnemyData::Push(const glm::mat4 &instanceTransform, const UntexturedMeshParams &params, const EnemyStats &stats, Timer &timer)
+void EnemyData::Push(const glm::mat4 &instanceTransform, const UntexturedMeshParams &params, EnemyStats &stats, Timer &timer)
 {
-	instanceTransforms.push_back(instanceTransform);
-	boundingBoxes.emplace_back(params, instanceTransform);
-	enemyBehaviours.emplace_back(stats, timer);
-	projInstanceTransforms.emplace_back();
+	instanceTransforms		.push_back(instanceTransform);
+	boundingBoxes			.emplace_back(params, instanceTransform);
+	enemyBehaviours			.emplace_back(stats, timer);
+	projInstanceTransforms	.emplace_back();
+	healths					.push_back(stats.health);
 	
 	size++;
 }
@@ -77,9 +83,9 @@ void EnemyData::Update(const ui index)
 	boundingBoxes[index].maxCoords = glm::vec2(instanceTransforms[index] * glm::vec4(boundingBoxes[index].maxDimentions, 0, 1));
 }
 
-EnemyManager::EnemyManager(Shader &enemyShader, helpers::Core &core, const UntexturedMeshParams &params)
- : _camera(core.camera), _pcStats(core.stats), _timer(core.timer), _customRand(CUSTOM_RAND_SEED),
- 	_enemyShader(enemyShader), _enemyMeshParams(params), _enemyMesh(params, MAX_NO_ENEMIES), _maxNoEnemies(MAX_NO_ENEMIES)
+EnemyManager::EnemyManager(Shader &enemyShader, helpers::Core &core, const UntexturedMeshParams &params, EnemyStats &enemyStats)
+ : _camera(core.camera), _pcStats(core.stats), _timer(core.timer), _enemyStats(enemyStats), _customRand(CUSTOM_RAND_SEED),
+ 	_enemyShader(enemyShader), _enemyMeshParams(params), _enemyMesh(params, MAX_NO_ENEMIES), _enemyData(core.timer)
 {
 }
 
@@ -93,6 +99,7 @@ void EnemyManager::RecordCollisions(const std::vector<glm::mat4> &projectileTran
 		{
 			projectileHitCallback(collisionIndex);
 			_enemyData.healths[i] -= _pcStats.actualDamage;
+			puts(std::to_string(_enemyData.healths[i]).c_str());
 			if(_enemyData.healths[i] <= 0)
 			{
 				fatalityCallback(_enemyData.instanceTransforms[i], 3);
@@ -127,23 +134,16 @@ void EnemyManager::Draw()
 
 void EnemyManager::UpdateBehaviour(const glm::mat4 &pcModel)
 {
-	const glm::vec2 pcPos = glm::vec2(pcModel * glm::vec4(0, 0, 0, 1));
-	const db scaledPerFrameTravelDistance = _timer.Scale(_enemyPerFrameDistance);
 	for (ui i = 0; i < _enemyData.size; ++i)
 	{
-		const glm::vec2 enemyPos = glm::vec2(_enemyData.instanceTransforms[i] * glm::vec4(0, 0, 0, 1));
-		const glm::vec2 vecToPc = pcPos - enemyPos;
-		const glm::vec2 scaledVecToPc = helpers::scale2dVec(vecToPc, scaledPerFrameTravelDistance);
-
-		const glm::mat4 localTransform = glm::translate(glm::vec3(scaledVecToPc, 0));
-		_enemyData.instanceTransforms[i] *= localTransform;
+		_enemyData.enemyBehaviours[i].Update(pcModel, _enemyData.instanceTransforms[i], _enemyData.projInstanceTransforms[i]);
 		_enemyData.Update(i);
 	}
 }
 
 void EnemyManager::Spawn(const glm::mat4 &pcModel)
 {
-	if(_enemyData.size >= _maxNoEnemies)
+	if(_enemyData.size >= MAX_NO_ENEMIES)
 		return;
 
 	glm::vec2 pcPos = glm::vec2(pcModel * glm::vec4(0,0,0,1));
@@ -151,5 +151,5 @@ void EnemyManager::Spawn(const glm::mat4 &pcModel)
 	const ft enemyY = _customRand.NextUi() % 2 ? _customRand.NextFloat(pcPos.y - 9.0f,  pcPos.y - 11.0f) : _customRand.NextFloat(pcPos.y + 9.0f, pcPos.y + 11.0f);
 
 	glm::mat4 instanceTransform = _enemyTransform.Model() * glm::translate(glm::vec3(enemyX, enemyY, 0));
-	_enemyData.Push(instanceTransform, _enemyMeshParams);
+	_enemyData.Push(instanceTransform, _enemyMeshParams, _enemyStats, _timer);
 } 

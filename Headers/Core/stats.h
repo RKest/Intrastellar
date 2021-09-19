@@ -3,9 +3,9 @@
 
 #include "_config.h"
 
-struct Stats
+struct PlayerStats
 {
-    Stats(db shotDelay = 0.0, ft shotDelayMultiplayar = 1.0f, ft shotDamage = 0.0f, ft shotDanageMultiplayer = 1.0f, ft shotSpeed = 0.0f,
+    PlayerStats(db shotDelay = 0.0, ft shotDelayMultiplayar = 1.0f, ft shotDamage = 0.0f, ft shotDanageMultiplayer = 1.0f, ft shotSpeed = 0.0f,
           ui noShots = 0, ft shotVariance = 0.0f, ft shotHomingStrength = 0.0f, si maxHP = 0, si currHP = 0, db enemySpawnRate = 0.0)
         : shotDelay(shotDelay), shotDelayMultiplayar(shotDelayMultiplayar), shotDamage(shotDamage),
           shotDanageMultiplayer(shotDanageMultiplayer), shotSpeed(shotSpeed), noShots(noShots), shotVariance(shotVariance),
@@ -28,7 +28,7 @@ struct Stats
     db actualShotDelay;
     ft actualDamage;
 
-    void operator+=(const Stats &lval)
+    void operator+=(const PlayerStats &lval)
     {
         shotDelay += lval.shotDelay;
         shotDelayMultiplayar *= lval.shotDelayMultiplayar;
@@ -45,9 +45,9 @@ struct Stats
             currHP = maxHP;
         Recalculate();
     }
-    Stats operator+(const Stats &lval) const
+    PlayerStats operator+(const PlayerStats &lval) const
     {
-        return Stats(
+        return PlayerStats(
             shotDelay + lval.shotDelay,
             shotDelayMultiplayar * lval.shotDelayMultiplayar,
             shotDamage + lval.shotDamage,
@@ -70,19 +70,19 @@ struct Stats
 
 namespace stat_altarations
 {
-    inline Stats SHOT_DELAY(db arg)              { return Stats(arg); }
-    inline Stats SHOT_DELAY_MULTIPLAYER(ft arg)  { return Stats(0.0, arg); }
-    inline Stats SHOT_DAMADE(ft arg)             { return Stats(0.0, 1.0f, arg); }
-    inline Stats SHOT_DAMADE_MULTIPLAYER(ft arg) { return Stats(0.0, 1.0f, 0.0f, arg); }
-    inline Stats SHOT_SPEED(ft arg)              { return Stats(0.0, 1.0f, 0.0f, 1.0f, arg); }
-    inline Stats NO_SHOTS(ui arg)                { return Stats(0.0, 1.0f, 0.0f, 1.0f, 0.0f, arg); }
-    inline Stats SHOT_VARIANCE(ft arg)           { return Stats(0.0, 1.0f, 0.0f, 1.0f, 0.0f, 0, arg); }
-    inline Stats SHOT_HOMING_STRENGTH(ft arg)    { return Stats(0.0, 1.0f, 0.0f, 1.0f, 0.0f, 0, 0.0f, arg); }
-    inline Stats MAX_HP(si arg)                  { return Stats(0.0, 1.0f, 0.0f, 1.0f, 0.0f, 0, 0.0f, 0.0f, arg); }
-    inline Stats CURR_HP(si arg)                 { return Stats(0.0, 1.0f, 0.0f, 1.0f, 0.0f, 0, 0.0f, 0.0f, 0, arg); }
+    inline PlayerStats SHOT_DELAY(db arg)              { return PlayerStats(arg); }
+    inline PlayerStats SHOT_DELAY_MULTIPLAYER(ft arg)  { return PlayerStats(0.0, arg); }
+    inline PlayerStats SHOT_DAMADE(ft arg)             { return PlayerStats(0.0, 1.0f, arg); }
+    inline PlayerStats SHOT_DAMADE_MULTIPLAYER(ft arg) { return PlayerStats(0.0, 1.0f, 0.0f, arg); }
+    inline PlayerStats SHOT_SPEED(ft arg)              { return PlayerStats(0.0, 1.0f, 0.0f, 1.0f, arg); }
+    inline PlayerStats NO_SHOTS(ui arg)                { return PlayerStats(0.0, 1.0f, 0.0f, 1.0f, 0.0f, arg); }
+    inline PlayerStats SHOT_VARIANCE(ft arg)           { return PlayerStats(0.0, 1.0f, 0.0f, 1.0f, 0.0f, 0, arg); }
+    inline PlayerStats SHOT_HOMING_STRENGTH(ft arg)    { return PlayerStats(0.0, 1.0f, 0.0f, 1.0f, 0.0f, 0, 0.0f, arg); }
+    inline PlayerStats MAX_HP(si arg)                  { return PlayerStats(0.0, 1.0f, 0.0f, 1.0f, 0.0f, 0, 0.0f, 0.0f, arg); }
+    inline PlayerStats CURR_HP(si arg)                 { return PlayerStats(0.0, 1.0f, 0.0f, 1.0f, 0.0f, 0, 0.0f, 0.0f, 0, arg); }
 }
 
-static const Stats defaultStats(
+static const PlayerStats defaultStats(
     150.0, // shotDelay
     1.0f,  // shotDelayMultiplayar
     20.0f, // shotDamage
@@ -106,7 +106,7 @@ struct EnemyStats
 };
 
 static const EnemyStats defaultEnemyStats{
-    0.0,
+    0.01,
     0.0f,
     0.0,
     0.0f,

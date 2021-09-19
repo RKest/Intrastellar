@@ -22,10 +22,13 @@
 class EnemyBehaviuor 
 {
 public:
-	EnemyBehaviuor(const EnemyStats &enemyStats, Timer &timer);
-	Update(const glm::mat4 pcTransform, glm::mat4 &instanceTransform, std::vector<glm::mat4> &projInstanceTransforms);
+	EnemyBehaviuor(EnemyStats &enemyStats, Timer &timer);
+	EnemyBehaviuor(EnemyBehaviuor&&) = default;
+	EnemyBehaviuor(const EnemyBehaviuor&) = default;
+	EnemyBehaviuor operator=(const EnemyBehaviuor& rhs) { return EnemyBehaviuor(rhs); }
+	void Update(const glm::mat4 pcTransform, glm::mat4 &instanceTransform, std::vector<glm::mat4> &projInstanceTransforms);
 private:
-	const EnemyStats &_enemyStats;
+	EnemyStats &_enemyStats;
 	Timer &_timer;
 	bool doesShoot{};
 	ui _shotClockId{};
@@ -44,7 +47,7 @@ public:
 	ui size = 0;
 	void Clear();
 	void Erase(const ui index);
-	void Push(const glm::mat4 &instanceTransform, const UntexturedMeshParams &params, const EnemyStats &stats, Timer &timer);
+	void Push(const glm::mat4 &instanceTransform, const UntexturedMeshParams &params, EnemyStats &stats, Timer &timer);
 	void Update(const ui index);
 private:
 	Timer &_timer;
@@ -53,7 +56,7 @@ private:
 class EnemyManager
 {
 public:
-	EnemyManager(Shader &enemyShader, helpers::Core &core, const UntexturedMeshParams &params);
+	EnemyManager(Shader &enemyShader, helpers::Core &core, const UntexturedMeshParams &params, EnemyStats &enemyStats);
 
 	void Reset();
 	void Draw();
@@ -68,7 +71,8 @@ private:
 	Shader &_enemyShader;
 	Camera &_camera;
 	Timer &_timer;
-	Stats &_pcStats;
+	PlayerStats &_pcStats;
+	EnemyStats &_enemyStats;
 
 	Transform _enemyTransform;
 	UntexturedInstancedMesh _enemyMesh;
@@ -76,9 +80,6 @@ private:
 	const UntexturedMeshParams _enemyMeshParams;
 
 	EnemyData _enemyData;
-
-	const ui _maxNoEnemies;
-	const db _enemyPerFrameDistance = 0.01;
 };
 
 #endif

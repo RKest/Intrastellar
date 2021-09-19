@@ -22,7 +22,7 @@ db Clock::RemainingTime()
 	return clockDelayDB - std::chrono::duration_cast<std::chrono::milliseconds>(latestFrameTimePoint - lastRecordedPoint).count();
 }
 
-Timer::Timer(Text &text, Stats &stats)
+Timer::Timer(Text &text, PlayerStats &stats)
 	: text(text)
 {
 	lastFramePt = _clock::now();

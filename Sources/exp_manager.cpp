@@ -57,8 +57,8 @@ void ExpManager::UpdateExpParticles(const glm::mat4 &pcModel)
 				if(!std::distance(je, _instanceStates.end()))
 					break;
 			}
-			helpers::scale2dVec(vecToPc, _timer.Scale(_expParticleAttractionSpeed));
-			const glm::mat4 localTranform = glm::translate(glm::vec3(vecToPc, 0));
+			const glm::vec2 scaledVecToPc = helpers::scale2dVec(vecToPc, _timer.Scale(_expParticleAttractionSpeed));
+			const glm::mat4 localTranform = glm::translate(glm::vec3(scaledVecToPc, 0));
 			j->transform *= localTranform;
 			++j;
 		}

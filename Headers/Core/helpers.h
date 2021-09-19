@@ -85,7 +85,7 @@ namespace helpers
     template<typename T>
     const std::vector<T> &flattenVector(const std::vector<std::vector<T>> &stdVec)
     {
-        auto bar = std::accumulate(stdVec.begin(), stdVec.end(), decltype(foo)::value_type{},
+        return std::accumulate(stdVec.begin(), stdVec.end(), decltype(stdVec)::value_type(),
             [](auto& dest, auto& src) {
                 dest.insert(dest.end(), src.begin(), src.end());
                 return dest;
@@ -97,7 +97,7 @@ namespace helpers
         Camera &camera;
         Text &text;
         Timer &timer;
-        Stats &stats;
+        PlayerStats &stats;
     };
 }
 

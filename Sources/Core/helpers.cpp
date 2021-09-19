@@ -2,16 +2,16 @@
 
 glm::vec2 helpers::scale2dVec(const glm::vec2 &vecToScale, const ft scaleToLength)
 {
-	ft h = hypot(vecToScale.x, vecToScale.y);
-	vecToScale.x = scaleToLength * (vecToScale.x / h);
-	vecToScale.y = scaleToLength * (vecToScale.y / h);
+	const ft h = hypot(vecToScale.x, vecToScale.y);
+	const glm::vec2 returnVec{scaleToLength * (vecToScale.x / h), scaleToLength * (vecToScale.y / h)};
+	return returnVec;
 }
 
 glm::vec2 helpers::randomDirVector(CustomRand &customRand, const ft len)
 {
 	glm::vec2 unscaledRandomVec = glm::vec2(customRand.NextFloat(-1, 1), customRand.NextFloat(-1, 1));
-	scale2dVec(unscaledRandomVec, len);
-	return unscaledRandomVec;
+	glm::vec2 scaledRandomVec = scale2dVec(unscaledRandomVec, len);
+	return scaledRandomVec;
 }
 
 std::vector<glm::vec2> helpers::transformStdVector(const std::vector<glm::vec3> &stdVec, const glm::mat4 &model)
