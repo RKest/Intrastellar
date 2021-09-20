@@ -19,18 +19,30 @@
 
 //TODO look into std::fpclassify
 
+using behavourPredicate_t = std::function<bool(const glm::mat4&)>;
+
+static const behavoirPredicate_t defBehaviourPredicate = [](const glm::mat4&){ return false; }
+
 class EnemyBehaviuor 
 {
 public:
 	EnemyBehaviuor(EnemyStats &enemyStats, Timer &timer);
+	EnemyBehaviuor(EnemyStats &enemyStats, Timer &timer, const behavourPredicate_t behavoirPredicate);
 	EnemyBehaviuor(EnemyBehaviuor&&) = default;
 	EnemyBehaviuor(const EnemyBehaviuor&) = default;
 	EnemyBehaviuor operator=(const EnemyBehaviuor& rhs) { return EnemyBehaviuor(rhs); }
-	void Update(const glm::mat4 pcTransform, glm::mat4 &instanceTransform, std::vector<glm::mat4> &projInstanceTransforms);
+	[[nodiscard]]bool IsChosen(const glm::mat4 &pcModel) const;
+	[[nodiscard]]inline bool IsChosen() const { return true; }
+	[[nodiscard]]inline bool IsDefault() cosnt { return isDefault; }
+	void Update(const glm::mat4 &pcTransform, glm::mat4 &instanceTransform, std::vector<glm::mat4> &projInstanceTransforms);
+
 private:
 	EnemyStats &_enemyStats;
 	Timer &_timer;
-	bool doesShoot{};
+	bool _doesShoot{};
+	bool _isActive{};
+	bool _isDefault{};
+	const behavourPredicate_t _behavoirPredicate;
 	ui _shotClockId{};
 	ui _oldestProjIndex{};
 };

@@ -1,18 +1,39 @@
 #include "enemy.h"
 
-EnemyBehaviuor::EnemyBehaviuor(EnemyStats &enemyStats, Timer &timer)
-	: _enemyStats(enemyStats), _timer(timer)
+EnemyBehaviuor(EnemyStats &enemyStats, Timer &timer)
+	: _enemyStats(enemyStats), _timer(timer), _behavoirPredicate(defBehaviourPredicate), _isDefault(true)
 {
-	if(FP_ZERO == std::fpclassify(_enemyStats.shotDelay))
-		doesShoot = false;
-	else
-	{
-		doesShoot = true;
-		timer.InitHeapClock(_shotClockId, _enemyStats.shotDelay);
-	}
+	_doesShoot = FP_ZERO != std::fpclassify(_enemyStats.shotDelay);
+}
+EnemyBehaviuor::EnemyBehaviuor(EnemyStats &enemyStats, Timer &timer, const behavourPredicate_t behavoirPredicate)
+	: _enemyStats(enemyStats), _timer(timer), _behavoirPredicate(behavoirPredicate)
+{
+	_doesShoot = FP_ZERO != std::fpclassify(_enemyStats.shotDelay);
 }
 
-void EnemyBehaviuor::Update(const glm::mat4 pcTransform, glm::mat4 &instanceTransform, std::vector<glm::mat4> &projInstanceTransforms)
+bool EnemyBehaviour::IsChosen(const glm::mat4 &pcModel) const 
+{
+	if(_behavoirPredicate(pcModel))
+	{
+		if(!_isActive && _doesShoot)
+		{
+			timer.InitHeapClock(_shotClockId, _enemyStats.shotDelay);
+			_isActive = true;
+		}
+		return true;
+	}
+	else
+	{
+		if(_isActive && _doesShoot)
+		{
+			timer.DestroyHeapClock(_shotClockId);
+			_isActive = false;
+		}
+		return false;
+	}		
+}
+
+void EnemyBehaviuor::Update(const glm::mat4 &pcTransform, glm::mat4 &instanceTransform, std::vector<glm::mat4> &projInstanceTransforms)
 {
 	const glm::vec2 pcPos{pcTransform * glm::vec4(0,0,0,1)};
 	const glm::vec2 enemyPos{instanceTransform * glm::vec4(0,0,0,1)};
