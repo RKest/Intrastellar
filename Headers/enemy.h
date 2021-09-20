@@ -51,17 +51,18 @@ class EnemyData
 {
 public:
 	EnemyData(Timer &_timer);
-	std::vector<glm::mat4> 				instanceTransforms;
-	std::vector<helpers::BoundingBox>	boundingBoxes;
-	std::vector<si>						healths;
-	std::vector<EnemyBehaviuor>			enemyBehaviours;
-	std::vector<std::vector<glm::mat4>> projInstanceTransforms;
+	std::vector<glm::mat4> 						instanceTransforms;
+	std::vector<helpers::BoundingBox>			boundingBoxes;
+	std::vector<si>								healths;
+	std::vector<std::vector<EnemyBehaviuor>>	enemyBehaviours;
+	std::vector<std::vector<glm::mat4>> 		projInstanceTransforms;
 	ui size = 0;
 	void Clear();
 	void Erase(const ui index);
 	void Push(const glm::mat4 &instanceTransform, const UntexturedMeshParams &params, EnemyStats &stats, Timer &timer);
-	void Update(const ui index);
+	void Update(cosnt glm::mat4 &pcModel, const ui index);
 private:
+	[[nodiscard]] int ChoseBehavoiur() const;
 	Timer &_timer;
 };
 

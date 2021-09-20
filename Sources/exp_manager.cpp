@@ -63,7 +63,10 @@ void ExpManager::UpdateExpParticles(const glm::mat4 &pcModel)
 			++j;
 		}
 		else
+		{
+			LOG();
 			throw std::runtime_error("ERRORR:EXP_MANAGER: Wrong behaviour for the instance state");
+		}
 	}
 
 	const ui noInstances = _instanceStates.size();

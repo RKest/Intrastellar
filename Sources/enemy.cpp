@@ -98,8 +98,22 @@ void EnemyData::Push(const glm::mat4 &instanceTransform, const UntexturedMeshPar
 	size++;
 }
 
-void EnemyData::Update(const ui index)
+void EnemyData::Update(cosnt glm::mat4 &pcModel, const ui index)
 {
+	const auto behavoiursBegin = enemyBehaviours[index].cbegin();
+	const auto behavoiursEnd   = enemyBehaviours[index].cend();
+	auto chosenbehavoiurIter = std::find_if(behavoiursBegin, behavoiursEnd, [](auto &behavoiur) { return behavoiur.IsChosen(); } );
+	if(chosenbehavoiurIter == behavoiursEnd)
+	{
+		chosenbehavoiurIter =  std::find_if(behavoiursBegin, behavoiursEnd, [](auto &behavoiur) { return behavoiur.IsDefault();} );
+		if(chosenbehavoiurIter == behavoiursEnd)
+		{
+			LOG();
+			throw std::runtime_error("ERRORR:ENEMY_DATA: No default behaviour defined");
+		}
+	}
+
+	chosenbehavoiurIter->Update(pcModel, instanceTransforms[index], projInstanceTransforms[index]);
 	boundingBoxes[index].minCoords = glm::vec2(instanceTransforms[index] * glm::vec4(boundingBoxes[index].minDimentions, 0, 1));
 	boundingBoxes[index].maxCoords = glm::vec2(instanceTransforms[index] * glm::vec4(boundingBoxes[index].maxDimentions, 0, 1));
 }
@@ -157,7 +171,6 @@ void EnemyManager::UpdateBehaviour(const glm::mat4 &pcModel)
 {
 	for (ui i = 0; i < _enemyData.size; ++i)
 	{
-		_enemyData.enemyBehaviours[i].Update(pcModel, _enemyData.instanceTransforms[i], _enemyData.projInstanceTransforms[i]);
 		_enemyData.Update(i);
 	}
 }

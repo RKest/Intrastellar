@@ -189,5 +189,12 @@ Podzbiory SQL:
 	SQL DCL: Data Control Language 		(GRANT, REVOKE)
 	SQL DQL: Data Query Language		(SELECT)
 
+SQL Funkcje agregujące:
+	- COUNT
+	- SUM
+	- AVG
+	- MAX
+	- MIN
+np. SELECT COUNT(nazwa_kolumny) FROM nazwa_tabeli
 
 */
