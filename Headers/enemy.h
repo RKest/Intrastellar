@@ -17,35 +17,60 @@
 
 #include "glm/gtx/matrix_transform_2d.hpp"
 
-//TODO look into std::fpclassify
+enum BehavoiurStatus
+{
+	NOT_CHOSEN,
+	CHOSEN,
+	DEFAULT
+};
 
-using behavourPredicate_t = std::function<bool(const glm::mat4&)>;
-
-static const behavourPredicate_t defBehaviourPredicate = [](const glm::mat4&){ return false; };
-
-class EnemyBehaviuor 
+template <bool isDefault>
+class EnemyBehaviuor
 {
 public:
-	EnemyBehaviuor(EnemyStats &enemyStats, Timer &timer);
-	EnemyBehaviuor(EnemyStats &enemyStats, Timer &timer, const behavourPredicate_t behavoirPredicate);
-	EnemyBehaviuor(EnemyBehaviuor&&) = default;
-	EnemyBehaviuor(const EnemyBehaviuor&) = default;
-	EnemyBehaviuor operator=(const EnemyBehaviuor& rhs) { return EnemyBehaviuor(rhs); }
-	[[nodiscard]]bool IsChosen(const glm::mat4 &pcModel);
-	[[nodiscard]]inline bool IsChosen() const { return true; }
-	[[nodiscard]]inline bool IsDefault() const { return _isDefault; }
-	void Update(const glm::mat4 &pcTransform, glm::mat4 &instanceTransform, std::vector<glm::mat4> &projInstanceTransforms);
+	EnemyBehaviuor(EnemyStats &stats, Timer &timer);
+	virtual EnemyBehaviuor(EnemyBehaviuor&&) = default;
+	virtual EnemyBehaviuor(const EnemyBehaviuor&) = default;
+	virtual EnemyBehaviuor operator=(const EnemyBehaviuor& rhs) { return EnemyBehaviuor(rhs); }
+	virtual ~EnemyBehaviuor() = default;
+	virtual void Update(const glm::mat4 &pcTransform, glm::mat4 &instanceTransform, 
+		[[maybe_unused]]std::vector<glm::mat4> &projInstanceTransforms) = 0;
+	[[nodiscard]]BehavoiurStatus EnemyBehaviuorStatus(const glm::mat4 &pcModel, const glm::mat4 &enemyModel) const;
+	inline bool &IsActive() { return _isActive; }
+protected:
+	virtual bool HasMetPredicate(const glm::mat4 &pcModel, const glm::mat4 &enemyModel) const  = 0;
+	EnemyStats &_enemyStats;
+	Timer &_timer;
+	bool _isActive{};
+};
+
+class ChaseBehaviour : public EnemyBehaviuor<true>
+{
+public:
+	ChaseBehaviour(EnemyStats &enemyStats, Timer &timer) : EnemyBehaviuor(enemyStats, timer) {};
+	void Update(const glm::mat4 &pcTransform, glm::mat4 &instanceTransform, std::vector<glm::mat4> &projInstanceTransforms) override;
+	bool IsChosen(const glm::mat4&) override;
 
 private:
 	EnemyStats &_enemyStats;
 	Timer &_timer;
-	const behavourPredicate_t _behavoirPredicate;
-	bool _doesShoot{};
-	bool _isActive{};
-	bool _isDefault{};
-	ui _shotClockId{};
-	ui _oldestProjIndex{};
 };
+
+class ShootBehavoiur : public EnemyBehaviuor<false>
+{
+public:
+	ShootBehavoiur(EnemyStats &enemyStats, Timer &timer) : EnemyBehaviuor(enemyStats, timer) {};
+	void Update(const glm::mat4 &pcTransform, glm::mat4 &instanceTransform, std::vector<glm::mat4> &projInstanceTransforms) override;
+
+private:
+	bool HasMetPredicate(const glm::mat4 &pcModel, const glm::mat4 &enemyModel) const;
+	EnemyStats &_enemyStats;
+	Timer &_timer;
+	ui _latestShotIndex{};
+	ui _chotClockId;
+};
+
+static auto choseBehaviour(const std::vector<EnemyBehaviuor> &behavoiurs);
 
 class EnemyData
 {

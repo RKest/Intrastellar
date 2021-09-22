@@ -33,6 +33,17 @@ std::vector<glm::vec2> helpers::transformStdVector(const UntexturedMeshParams &p
 	return returnVec;
 }
 
+void helpers::transformMatVec(std::vector<glm::mat4> &vec, const glm::mat4 &model)
+{
+	std::for_each(vec.begin(), vec.end(), [](auto &mat){ mat *= model; })
+}
+
+void helpers::transformMatVec(std::vector<glm::mat4> &vec, const ft yTransformVal)
+{
+	const glm::mat4 model = glm::translate(glm::vec3(0, yTransformVal, 0));
+	std::for_each(vec.begin(), vec.end(), [&model](auto &mat){ mat *= model; })
+}
+
 helpers::BoundingBox::BoundingBox(const UntexturedMeshParams &params, const glm::mat4 &transform)
 {
 	ft minX = 100.0f, maxX = -100.0f, minY = 100.0f, maxY = -100.0f;

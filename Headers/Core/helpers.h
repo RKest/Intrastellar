@@ -22,6 +22,8 @@ namespace helpers
     glm::vec2 randomDirVector(CustomRand &customRand, const ft len);
     std::vector<glm::vec2> transformStdVector(const std::vector<glm::vec3> &stdVec, const glm::mat4 &model);
     std::vector<glm::vec2> transformStdVector(const UntexturedMeshParams &params, const glm::mat4 &model);
+    void transformMatVec(std::vector<glm::mat4> &vec, const glm::mat4 &model);
+    void transformMatVec(std::vector<glm::mat4> &vec, const ft yTransformVal);
     struct BoundingBox
     {
         BoundingBox() = default;
@@ -91,6 +93,7 @@ namespace helpers
                 return dest;
             });
     }
+
 
     struct Core
     {

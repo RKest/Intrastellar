@@ -1,53 +1,67 @@
 #include "enemy.h"
 
-EnemyBehaviuor::EnemyBehaviuor(EnemyStats &enemyStats, Timer &timer)
-	: _enemyStats(enemyStats), _timer(timer), _behavoirPredicate(defBehaviourPredicate), _isDefault(true)
+template <bool isDefault>
+EnemyBehaviuor<isDefault>::EnemyBehaviuor(EnemyStats &stats, Timer &timer)
+	: _enemyStats(stats), _timer(timer)
 {
-	_doesShoot = FP_ZERO != std::fpclassify(_enemyStats.shotDelay);
-}
-EnemyBehaviuor::EnemyBehaviuor(EnemyStats &enemyStats, Timer &timer, const behavourPredicate_t behavoirPredicate)
-	: _enemyStats(enemyStats), _timer(timer), _behavoirPredicate(behavoirPredicate)
-{
-	_doesShoot = FP_ZERO != std::fpclassify(_enemyStats.shotDelay);
 }
 
-bool EnemyBehaviuor::IsChosen(const glm::mat4 &pcModel) 
+template <bool isDefault>
+BehavoiurStatus EnemyBehaviuor<isDefault>::EnemyBehaviuorStatus(const glm::mat4 &pcModel, const glm::mat4 &enemyModel) const
 {
-	if(_behavoirPredicate(pcModel))
-	{
-		if(!_isActive && _doesShoot)
-		{
-			_timer.InitHeapClock(_shotClockId, _enemyStats.shotDelay);
-			_isActive = true;
-		}
-		return true;
-	}
+	if constexpr (isDefault)
+		return BehavoiurStatus::DEFAULT;
+	else if (HasMetPredicate(pcModel, enemyModel))
+		return BehavoiurStatus::CHOSEN;
 	else
-	{
-		if(_isActive && _doesShoot)
-		{
-			_timer.DestroyHeapClock(_shotClockId);
-			_isActive = false;
-		}
-		return false;
-	}		
+		return BehavoiurStatus::NOT_CHOSEN;
+		
 }
 
-void EnemyBehaviuor::Update(const glm::mat4 &pcTransform, glm::mat4 &instanceTransform, std::vector<glm::mat4> &projInstanceTransforms)
+void ChaseBehaviour::Update(const glm::mat4 &pcTransform, glm::mat4 &instanceTransform, std::vector<glm::mat4> &projInstanceTransforms)
 {
-	const glm::vec2 pcPos{pcTransform * glm::vec4(0,0,0,1)};
+	const glm::vec2 pcPos	{pcTransform 	   * glm::vec4(0,0,0,1)};
 	const glm::vec2 enemyPos{instanceTransform * glm::vec4(0,0,0,1)};
-	const glm::vec2 vecToPc{pcPos - enemyPos};
+	const glm::vec2 vecToPc {pcPos - enemyPos};
 	const ft perFrameDistanceTraveled = decl_cast(perFrameDistanceTraveled, _timer.Scale(_enemyStats.speed));
 	const glm::vec2 scaledVecToPc = helpers::scale2dVec(vecToPc, perFrameDistanceTraveled);
 	const glm::mat4 perFrameEnemyTransform = glm::translate(glm::vec3(scaledVecToPc, 0));
 	instanceTransform *= perFrameEnemyTransform;
+}
 
-	if(!_doesShoot)
-		return;
-	if(_timer.HeapIsItTime(_shotClockId))
-		helpers::pushToCappedVector(projInstanceTransforms, instanceTransform, _oldestProjIndex, MAX_PROJ_AMOUNT_PER_ENEMY);
-	
+void ShootBehavoiur::Update(const glm::mat4 &pcTransform, glm::mat4 &instanceTransform, std::vector<glm::mat4> &projInstanceTransforms)
+{
+	helpers::transformMatVec(projInstanceTransforms, _timer.Scale(_enemyStats.shotSpeed));
+	helpers::pushToCappedVector(projInstanceTransforms, instanceTransform, _latestShotIndex, MAX_PROJ_AMOUNT_PER_ENEMY);
+}
+
+bool ShootBehavoiur::HasMetPredicate(const glm::mat4 &pcModel, const glm::mat4 &enemyModel) const
+{
+	const glm::vec2 pcPos	{pcModel 	* glm::vec4(0,0,0,1)};
+	const glm::vec2 enemyPos{enemyModel * glm::vec4(0,0,0,1)};
+	if(glm::distance(pcPos, enemyPos) > 10.0f)
+		return true;
+	return false;
+}
+
+auto choseBehaviour(const std::vector<EnemyBehaviuor> &behavoiurs, const glm::mat4 &pcModel, const glm::mat4 &enemyModel)
+{
+	const auto bbegin = behavoiurs.cbegin();
+	const auto bend = behavoiurs.cend();
+	const auto chosenIt = bend;
+	const auto defaultIt = bend;
+	for(auto i = bbegin; i != bend; ++i)
+	{
+		if(BehavoiurStatus::CHOSEN == i->EnemyBehaviuorStatus(pcModel, enemyModel))
+			chosenIt = i;
+		else if(BehavoiurStatus::DEFAULT == i->EnemyBehaviuorStatus(pcModel, enemyModel));
+			defaultIt = i;
+	}
+	if(chosenIt != bend)
+		return chosenIt;
+	if(defaultIt != bend)
+		return defaultIt;
+	throw std::runtime_error("ERROR:choseBehaviour: Failed to chose a behaviour");
 }
 
 EnemyData::EnemyData(Timer &timer) 
