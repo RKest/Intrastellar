@@ -19,7 +19,8 @@ bool Clock::IsItTime()
 
 db Clock::RemainingTime()
 {
-	return clockDelayDB - std::chrono::duration_cast<std::chrono::milliseconds>(latestFrameTimePoint - lastRecordedPoint).count();
+	return clockDelayDB - decl_cast(clockDelayDB, 
+		std::chrono::duration_cast<std::chrono::milliseconds>(latestFrameTimePoint - lastRecordedPoint).count());
 }
 
 Timer::Timer(Text &text, PlayerStats &stats)
@@ -43,7 +44,7 @@ db Timer::RemainingTime(ui heapClockId)
 
 void Timer::RenderFPS()
 {
-	const ui fpsValuesSize = pastFPSValues.size();
+	const ui fpsValuesSize = decl_cast(fpsValuesSize, pastFPSValues.size());
 	if(!fpsValuesSize)
 		return;
 
@@ -68,13 +69,6 @@ void Timer::RecordFrame()
 			pastFPSValues.pop_front();
 		framesThisSecond = 0;
 	}
-}
-
-
-
-db Timer::Scale(db number)
-{
-	return number * lastFrameDuration.count();
 }
 
 void Timer::InitHeapClock(ui &heapClockId, db &clockDelay)

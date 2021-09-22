@@ -21,7 +21,7 @@
 
 using behavourPredicate_t = std::function<bool(const glm::mat4&)>;
 
-static const behavoirPredicate_t defBehaviourPredicate = [](const glm::mat4&){ return false; }
+static const behavourPredicate_t defBehaviourPredicate = [](const glm::mat4&){ return false; };
 
 class EnemyBehaviuor 
 {
@@ -31,18 +31,18 @@ public:
 	EnemyBehaviuor(EnemyBehaviuor&&) = default;
 	EnemyBehaviuor(const EnemyBehaviuor&) = default;
 	EnemyBehaviuor operator=(const EnemyBehaviuor& rhs) { return EnemyBehaviuor(rhs); }
-	[[nodiscard]]bool IsChosen(const glm::mat4 &pcModel) const;
+	[[nodiscard]]bool IsChosen(const glm::mat4 &pcModel);
 	[[nodiscard]]inline bool IsChosen() const { return true; }
-	[[nodiscard]]inline bool IsDefault() cosnt { return isDefault; }
+	[[nodiscard]]inline bool IsDefault() const { return _isDefault; }
 	void Update(const glm::mat4 &pcTransform, glm::mat4 &instanceTransform, std::vector<glm::mat4> &projInstanceTransforms);
 
 private:
 	EnemyStats &_enemyStats;
 	Timer &_timer;
+	const behavourPredicate_t _behavoirPredicate;
 	bool _doesShoot{};
 	bool _isActive{};
 	bool _isDefault{};
-	const behavourPredicate_t _behavoirPredicate;
 	ui _shotClockId{};
 	ui _oldestProjIndex{};
 };
@@ -60,7 +60,7 @@ public:
 	void Clear();
 	void Erase(const ui index);
 	void Push(const glm::mat4 &instanceTransform, const UntexturedMeshParams &params, EnemyStats &stats, Timer &timer);
-	void Update(cosnt glm::mat4 &pcModel, const ui index);
+	void Update(const glm::mat4 &pcModel, const ui index);
 private:
 	[[nodiscard]] int ChoseBehavoiur() const;
 	Timer &_timer;
@@ -82,17 +82,17 @@ public:
 
 private:
 	Shader &_enemyShader;
+	Shader _enemyProjShader{"./Shaders/EnemyProjectile"};
 	Camera &_camera;
-	Timer &_timer;
 	PlayerStats &_pcStats;
-	EnemyStats &_enemyStats;
-
-	Transform _enemyTransform;
-	UntexturedInstancedMesh _enemyMesh;
-	CustomRand _customRand;
-	const UntexturedMeshParams _enemyMeshParams;
-
+	Timer &_timer;
 	EnemyData _enemyData;
+	const UntexturedMeshParams _enemyMeshParams;
+	UntexturedInstancedMesh _enemyMesh;
+	EnemyStats &_enemyStats;
+	Transform _enemyTransform;
+	CustomRand _customRand{CUSTOM_RAND_SEED};
+
 };
 
 #endif

@@ -14,7 +14,7 @@ class Controler
 {
 public:
     Controler(Display &display, Camera &camera, Timer &timer, Transform &transform) 
-    : display(display), camera(camera), transform(transform), timer(timer) {};
+    : display(display), camera(camera), timer(timer), transform(transform) {};
     void CaptureMouseMovement();
     void CaptureKeyboardPresses(bool &isPcAlive);
 

@@ -28,19 +28,19 @@ void CardDeck::DrawCards()
 
 CardDeck::CardDeck(Shader &targetShader, helpers::Core &core, const UntexturedMeshParams &overlayParams, const UntexturedMeshParams &cardBorderParams, 
 	const UntexturedMeshParams &targetMeshParams, const pcDrawFunc &drawPcCb)
-	:  _targetShader(targetShader), _text(core.text), _timer(core.timer), _stats(core.stats), _overlayMesh(overlayParams), _customRand(CUSTOM_RAND_SEED),
-	  _cardBorderParams(cardBorderParams), _cardBorderMesh(cardBorderParams, NO_CARDS), _targetParams(targetMeshParams), _targetMesh(targetMeshParams, NO_CARDS), 
-	  _pcDrawFunction(drawPcCb)
+	:   _text(core.text), _timer(core.timer), _stats(core.stats), _customRand(CUSTOM_RAND_SEED), _targetShader(targetShader), _overlayMesh(overlayParams),
+	  _cardBorderParams(cardBorderParams), _cardBorderMesh(cardBorderParams, NO_CARDS), _targetParams(targetMeshParams), 
+	  _targetMesh(targetMeshParams, NO_CARDS), _pcDrawFunction(drawPcCb)
 {
 	_pcTransform.SetRotAngle(-25.0f);
 	_cardProjection = glm::ortho(-SCREEN_ASPECT, SCREEN_ASPECT, -1.0f, 1.0f);
 	_inverseFlippedCardBorderProjection = glm::inverse(glm::ortho(-SCREEN_ASPECT, SCREEN_ASPECT, -1.0f, 1.0f));
 	for (ui i = 0; i < NO_CARDS; ++i)
 	{
-		const ft xOffset = -0.9f + i * 0.9f;
+		const ft xOffset = -0.9f + static_cast<ft>(i) * 0.9f;
 		_pcTransform				 .Pos().x = xOffset; 
-		_pcTransform				 .Pos().y = -0.3;
-		_pcTransform				 .Scale() = glm::vec3(0.1);
+		_pcTransform				 .Pos().y = -0.3f;
+		_pcTransform				 .Scale() = glm::vec3(0.1f);
 
 		const glm::mat4 pcModel 				 = _pcTransform.Model();
 		const glm::mat4 targetInstanceTransform  = pcModel * glm::translate(glm::vec3(0, 5, 0)) * 

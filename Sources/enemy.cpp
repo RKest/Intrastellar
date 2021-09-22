@@ -1,6 +1,6 @@
 #include "enemy.h"
 
-EnemyBehaviuor(EnemyStats &enemyStats, Timer &timer)
+EnemyBehaviuor::EnemyBehaviuor(EnemyStats &enemyStats, Timer &timer)
 	: _enemyStats(enemyStats), _timer(timer), _behavoirPredicate(defBehaviourPredicate), _isDefault(true)
 {
 	_doesShoot = FP_ZERO != std::fpclassify(_enemyStats.shotDelay);
@@ -11,13 +11,13 @@ EnemyBehaviuor::EnemyBehaviuor(EnemyStats &enemyStats, Timer &timer, const behav
 	_doesShoot = FP_ZERO != std::fpclassify(_enemyStats.shotDelay);
 }
 
-bool EnemyBehaviour::IsChosen(const glm::mat4 &pcModel) const 
+bool EnemyBehaviuor::IsChosen(const glm::mat4 &pcModel) 
 {
 	if(_behavoirPredicate(pcModel))
 	{
 		if(!_isActive && _doesShoot)
 		{
-			timer.InitHeapClock(_shotClockId, _enemyStats.shotDelay);
+			_timer.InitHeapClock(_shotClockId, _enemyStats.shotDelay);
 			_isActive = true;
 		}
 		return true;
@@ -26,7 +26,7 @@ bool EnemyBehaviour::IsChosen(const glm::mat4 &pcModel) const
 	{
 		if(_isActive && _doesShoot)
 		{
-			timer.DestroyHeapClock(_shotClockId);
+			_timer.DestroyHeapClock(_shotClockId);
 			_isActive = false;
 		}
 		return false;
@@ -38,12 +38,12 @@ void EnemyBehaviuor::Update(const glm::mat4 &pcTransform, glm::mat4 &instanceTra
 	const glm::vec2 pcPos{pcTransform * glm::vec4(0,0,0,1)};
 	const glm::vec2 enemyPos{instanceTransform * glm::vec4(0,0,0,1)};
 	const glm::vec2 vecToPc{pcPos - enemyPos};
-	const db perFrameDistanceTraveled = _timer.Scale(_enemyStats.speed);
+	const ft perFrameDistanceTraveled = decl_cast(perFrameDistanceTraveled, _timer.Scale(_enemyStats.speed));
 	const glm::vec2 scaledVecToPc = helpers::scale2dVec(vecToPc, perFrameDistanceTraveled);
 	const glm::mat4 perFrameEnemyTransform = glm::translate(glm::vec3(scaledVecToPc, 0));
 	instanceTransform *= perFrameEnemyTransform;
 
-	if(!doesShoot)
+	if(!_doesShoot)
 		return;
 	if(_timer.HeapIsItTime(_shotClockId))
 		helpers::pushToCappedVector(projInstanceTransforms, instanceTransform, _oldestProjIndex, MAX_PROJ_AMOUNT_PER_ENEMY);
@@ -91,24 +91,24 @@ void EnemyData::Push(const glm::mat4 &instanceTransform, const UntexturedMeshPar
 {
 	instanceTransforms		.push_back(instanceTransform);
 	boundingBoxes			.emplace_back(params, instanceTransform);
-	enemyBehaviours			.emplace_back(stats, timer);
+	enemyBehaviours			.emplace_back(std::vector<EnemyBehaviuor>{{EnemyBehaviuor{stats, timer}}});
 	projInstanceTransforms	.emplace_back();
 	healths					.push_back(stats.health);
 	
 	size++;
 }
 
-void EnemyData::Update(cosnt glm::mat4 &pcModel, const ui index)
+void EnemyData::Update(const glm::mat4 &pcModel, const ui index)
 {
-	const auto behavoiursBegin = enemyBehaviours[index].cbegin();
-	const auto behavoiursEnd   = enemyBehaviours[index].cend();
+	const auto behavoiursBegin = enemyBehaviours[index].begin();
+	const auto behavoiursEnd   = enemyBehaviours[index].end();
 	auto chosenbehavoiurIter = std::find_if(behavoiursBegin, behavoiursEnd, [](auto &behavoiur) { return behavoiur.IsChosen(); } );
 	if(chosenbehavoiurIter == behavoiursEnd)
 	{
 		chosenbehavoiurIter =  std::find_if(behavoiursBegin, behavoiursEnd, [](auto &behavoiur) { return behavoiur.IsDefault();} );
 		if(chosenbehavoiurIter == behavoiursEnd)
 		{
-			LOG();
+			LOG("i");
 			throw std::runtime_error("ERRORR:ENEMY_DATA: No default behaviour defined");
 		}
 	}
@@ -119,8 +119,8 @@ void EnemyData::Update(cosnt glm::mat4 &pcModel, const ui index)
 }
 
 EnemyManager::EnemyManager(Shader &enemyShader, helpers::Core &core, const UntexturedMeshParams &params, EnemyStats &enemyStats)
- : _camera(core.camera), _pcStats(core.stats), _timer(core.timer), _enemyStats(enemyStats), _customRand(CUSTOM_RAND_SEED),
- 	_enemyShader(enemyShader), _enemyMeshParams(params), _enemyMesh(params, MAX_NO_ENEMIES), _enemyData(core.timer)
+ : _enemyShader(enemyShader), _camera(core.camera), _pcStats(core.stats), _timer(core.timer), _enemyData(core.timer),
+ 	 _enemyMeshParams(params), _enemyMesh(params, MAX_NO_ENEMIES), _enemyStats(enemyStats)
 {
 }
 
@@ -133,8 +133,7 @@ void EnemyManager::RecordCollisions(const std::vector<glm::mat4> &projectileTran
 		if(_enemyData.boundingBoxes[i].IsThereAnIntersection(projectileTransforms, collisionIndex))
 		{
 			projectileHitCallback(collisionIndex);
-			_enemyData.healths[i] -= _pcStats.actualDamage;
-			puts(std::to_string(_enemyData.healths[i]).c_str());
+			_enemyData.healths[i] -= decl_cast(_enemyData.healths, _pcStats.actualDamage);
 			if(_enemyData.healths[i] <= 0)
 			{
 				fatalityCallback(_enemyData.instanceTransforms[i], 3);
@@ -171,7 +170,7 @@ void EnemyManager::UpdateBehaviour(const glm::mat4 &pcModel)
 {
 	for (ui i = 0; i < _enemyData.size; ++i)
 	{
-		_enemyData.Update(i);
+		_enemyData.Update(pcModel, i);
 	}
 }
 

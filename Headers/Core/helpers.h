@@ -37,7 +37,7 @@ namespace helpers
     glm::vec2 mouseCoordsTransformed(const glm::mat4 &transform);
     bool IsLBMPressed();
     ft det(const glm::vec2 &vec1, const glm::vec2 &vec2);
-    
+
     template<typename ...T>
     void render(Shader &shader, Mesh &mesh, std::pair<std::string, T> const&... params)
     {
@@ -58,14 +58,14 @@ namespace helpers
     }
     
     template<typename ...T>
-    void render(Shader &shader, UntexturedInstancedMesh &mesh, const glm::mat4 *instanceTransforms, ui noInstances, const glm::mat4 &transform, 
+    void render(Shader &shader, UntexturedInstancedMesh &mesh, const glm::mat4 *instanceTransforms, size_t noInstances, const glm::mat4 &transform, 
         const glm::mat4 &projection, std::pair<std::string, T> const&... params)
     {
         shader.Bind();
         if constexpr (sizeof...(params) > 0)
             shader.SetUnis(params...);
         shader.Update(transform, projection);
-        mesh.SetInstanceCount(noInstances);
+        mesh.SetInstanceCount(static_cast<ui>(noInstances));
         mesh.Update(instanceTransforms, mesh.InstancedBufferPosition());
         mesh.Draw();
     }

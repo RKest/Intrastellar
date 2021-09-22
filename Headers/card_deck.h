@@ -20,8 +20,8 @@
 struct Card
 {
     Card(const std::string &cardText, const ui weight, const std::vector<PlayerStats> &statAltarationList);
-    const ui weight;
     const std::string cardText;
+    const ui weight;
     const PlayerStats statAltarations;
 };
 
@@ -38,18 +38,18 @@ public:
 
 protected:
 private:
+    Text &_text;
+    Timer &_timer;
+    PlayerStats  &_stats;
     CustomRand _customRand;
     Shader _cardBorderShader{"Shaders/CardBorder"};
     Shader _overlayShader{"Shaders/Overlay"};
     Shader &_targetShader;
-    Text &_text;
-    Timer &_timer;
-    PlayerStats  &_stats;
-    UntexturedMeshParams    _cardBorderParams;
-    UntexturedMeshParams    _targetParams;
-    UntexturedInstancedMesh _cardBorderMesh;
-    UntexturedInstancedMesh _targetMesh;
     UntexturedMesh          _overlayMesh;
+    UntexturedMeshParams    _cardBorderParams;
+    UntexturedInstancedMesh _cardBorderMesh;
+    UntexturedMeshParams    _targetParams;
+    UntexturedInstancedMesh _targetMesh;
     Transform _pcTransform;
     Transform _cardBorderTransform;
 

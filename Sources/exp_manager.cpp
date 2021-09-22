@@ -1,8 +1,8 @@
 #include "exp_manager.h"
 
 ExpManager::ExpManager(helpers::Core &core, const UntexturedMeshParams &expMeshParams, const UntexturedMeshParams &expBarMeshParams)
-	: _timer(core.timer), _camera(core.camera),
-	_expMesh(expMeshParams, MAX_EXP_PART_NO), _customRand(CUSTOM_RAND_SEED), _expBarMesh(expMeshParams)
+	: _timer(core.timer), _camera(core.camera), _customRand(CUSTOM_RAND_SEED),
+	_expMesh(expMeshParams, MAX_EXP_PART_NO),  _expBarMesh(expBarMeshParams)
 {
 }
 
@@ -51,25 +51,26 @@ void ExpManager::UpdateExpParticles(const glm::mat4 &pcModel)
 				{
 					_hasThereBeenLevelUp = true;
 					_prevLevelExpTreshold = _nextLevelExpTreshold;
-					_nextLevelExpTreshold *= _levelThresholdMultiplayer;
+					_nextLevelExpTreshold = decl_cast(_nextLevelExpTreshold, 
+						decl_cast(_levelThresholdMultiplayer, _nextLevelExpTreshold) * _levelThresholdMultiplayer);
 				}
 
 				if(!std::distance(je, _instanceStates.end()))
 					break;
 			}
-			const glm::vec2 scaledVecToPc = helpers::scale2dVec(vecToPc, _timer.Scale(_expParticleAttractionSpeed));
+			const glm::vec2 scaledVecToPc = helpers::scale2dVec(vecToPc, decl_cast(scaledVecToPc.x, _timer.Scale(_expParticleAttractionSpeed)));
 			const glm::mat4 localTranform = glm::translate(glm::vec3(scaledVecToPc, 0));
 			j->transform *= localTranform;
 			++j;
 		}
 		else
 		{
-			LOG();
+			LOG("i");
 			throw std::runtime_error("ERRORR:EXP_MANAGER: Wrong behaviour for the instance state");
 		}
 	}
 
-	const ui noInstances = _instanceStates.size();
+	const size_t noInstances = _instanceStates.size();
 	std::vector<glm::mat4> instanceTransforms;
 	instanceTransforms.reserve(noInstances);
 	std::transform(_instanceStates.begin(), _instanceStates.end(), std::back_inserter(instanceTransforms), 
@@ -92,7 +93,7 @@ void ExpManager::CreateExpParticles(const glm::mat4 &originModel, const ui noPar
 			if(_instanceStates.size() == MAX_EXP_PART_NO)
 				break;
 			_instanceStates.push_back({
-				glm::translate(glm::vec3(helpers::randomDirVector(_customRand, _timer.Scale(_expParticleEntropySpeed)), 0.0f)),
+				glm::translate(glm::vec3(helpers::randomDirVector(_customRand, static_cast<ft>(_timer.Scale(_expParticleEntropySpeed))), 0.0f)),
 				originModel,
 				ExpPartcleBehaviour::ENTROPY,
 				heapClockId
@@ -123,5 +124,5 @@ void ExpManager::_updateExpBar()
 	ui expBarWidth = helpers::squishedIntToScreenWidth(_prevLevelExpTreshold, _nextLevelExpTreshold, _currentExp);
 	_expBarPositions[2] = glm::vec3(expBarWidth, 0, 0);
 	_expBarPositions[3] = glm::vec3(expBarWidth, 1, 0);
-	_expBarMesh.Update(_expBarPositions.data(), _expBarPositions.size());
+	_expBarMesh.Update(_expBarPositions.data(), static_cast<ui>(_expBarPositions.size()));
 }

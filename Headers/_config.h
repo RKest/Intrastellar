@@ -25,12 +25,12 @@ constexpr size_t ARR_SIZE(T (&)[N]) {
 	const UntexturedMeshParams params = {model.positions.data(), model.indices.data(), static_cast<ui>(model.positions.size()), static_cast<ui>(model.indices.size())};
 #endif
 
+[[maybe_unused]]constexpr std::array UNIFORMS = {"transform", "projection"};
+
 constexpr ui CUSTOM_RAND_SEED = 982347557;
 constexpr ui SCREEN_WIDTH = 960;
 constexpr ui SCREEN_HEIGHT = 540;
 constexpr ft SCREEN_ASPECT = static_cast<ft>(SCREEN_WIDTH) / static_cast<ft>(SCREEN_HEIGHT);
-
-constexpr std::array UNIFORMS = {"transform", "projection"};
 
 //Shooter 
 constexpr ui MAX_PROJ_AMOUNT = 100;
@@ -42,8 +42,10 @@ constexpr ui CARD_MAX_PROJ_COUNT = 300;
 constexpr ui NO_CARDS = 3;
 constexpr ui MAX_EXP_PART_NO = 200;
 
-constexpr ft TAU = 2 * glm::pi<ft>();
+constexpr ft TAU = 2.0f * glm::pi<ft>();
+constexpr db TAU_d = 2.0 * glm::pi<db>();
 constexpr ft PI = glm::pi<ft>();
+constexpr db PI_d = glm::pi<db>();
 constexpr ft MAX_PROJ_TURNING_RAD = glm::radians(1.0f);
 constexpr ft DEF_ANGLE_BETWEEN_SHOTS = glm::radians(15.0f);
 
@@ -66,9 +68,8 @@ void _log(T first, Ts ...rest)
 template<typename ...T>
 void log(std::experimental::fundamentals_v2::source_location loc, T ...args)
 {
-    std::cout << "[" << loc.file_name() << "] "
-              << "(" << loc.function_name() << " "
-              << loc.line() << ":" << loc.column() << ") ";
+    std::cout << "[" << loc.file_name() << ":" << loc.line() << ":" << loc.column() << "] "
+              << "(" << loc.function_name() << ") ";
     _log(args...);
 }
 #else
@@ -78,5 +79,35 @@ void log(T ...args)
 {
     _log(args...);
 }
+
 #endif
+
+template <typename T, typename = void>
+struct is_std_container : std::false_type { };
+
+template <typename T>
+struct is_std_container<T,
+    std::void_t<decltype(std::declval<T&>().begin()),
+                decltype(std::declval<T&>().end()),
+                typename T::value_type>>
+    : std::true_type { };
+
+template <typename T>
+using container_type = typename std::enable_if<is_std_container<T>::value, typename T::value_type>::type;
+
+template <typename T>
+using non_container_type = typename std::enable_if<!is_std_container<T>::value, T>::type;
+
+template <typename T, typename U>
+constexpr container_type<T> decl_cast([[maybe_unused]]const T &to, const U &from) 
+{
+   return static_cast<typename T::value_type>(from);
+}
+
+template <typename T, typename U>
+constexpr non_container_type<T> decl_cast([[maybe_unused]]const T &to, const U &from) 
+{
+   return static_cast<T>(from);
+}
+
 #endif

@@ -44,7 +44,11 @@ public:
 	void RenderFPS();
 	void RecordFrame();
 	bool IsItTime(ClocksEnum onWhichClock);
-	db Scale(db number);
+	template<typename T>
+	inline T Scale(T number)
+	{
+		return number * static_cast<T>(lastFrameDuration.count());
+	}
 	~Timer();
 
 protected:

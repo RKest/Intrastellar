@@ -16,10 +16,10 @@ glm::vec2 helpers::randomDirVector(CustomRand &customRand, const ft len)
 
 std::vector<glm::vec2> helpers::transformStdVector(const std::vector<glm::vec3> &stdVec, const glm::mat4 &model)
 {
-	const ui vecSize = stdVec.size();
+	const size_t vecSize = stdVec.size();
 	std::vector<glm::vec2> returnVec;
 	returnVec.reserve(vecSize);
-	for (ui i = 0; i < vecSize; ++i)
+	for (size_t i = 0; i < vecSize; ++i)
 		returnVec.push_back(glm::vec2(model * glm::vec4(stdVec[i], 1)));
 	return returnVec;
 }
@@ -69,7 +69,7 @@ bool helpers::BoundingBox::IsThereAnIntersection(const std::vector<glm::mat4> &t
     auto itr = std::find_if(b, e, [this](auto &transform) { return IsThereAnIntersection(glm::vec2(transform * glm::vec4(0,0,0,1))); });
     if (itr == e)
         return false;
-    collisionIndex = std::distance(b, itr);
+    collisionIndex = decl_cast(collisionIndex, std::distance(b, itr));
     return true;
 }
 
@@ -97,7 +97,7 @@ ui helpers::squishedIntToScreenWidth(ui minValue, ui maxValue, ui value)
 	ui relativeValue = value - minValue;
 	ui relativeMaxValue = maxValue - minValue;
 	ft valueToMaxFraction = static_cast<ft>(relativeValue) / static_cast<ft>(relativeMaxValue);
-	return SCREEN_WIDTH * valueToMaxFraction;
+	return decl_cast(relativeValue, decl_cast(valueToMaxFraction, SCREEN_WIDTH) * valueToMaxFraction);
 }
 
 ft helpers::det(const glm::vec2 &vec1, const glm::vec2 &vec2)

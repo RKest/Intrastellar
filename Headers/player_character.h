@@ -36,6 +36,10 @@ public:
 	inline auto ExternDrawCb() 		 	  { return std::bind(&PlayerCharacter::_externDraw, this, _1, _2, _3, _4, _5, _6); }
 
 private:
+	Camera &_camera;
+	Text &_text;
+	Timer &_timer;
+    PlayerStats &_pcStats;
 	Shader _projectileShader{"Shaders/Projectile"};
 	Shader _pcShader{"Shaders/PC"};
 	Shader _pcCardShader{"Shaders/PC_Card"};
@@ -43,10 +47,6 @@ private:
 	UntexturedInstancedMesh _pcCardMesh;
 	UntexturedInstancedMesh _projMesh;
 	UntexturedInstancedMesh _projCardMesh;
-	Camera &_camera;
-	Text &_text;
-	Timer &_timer;
-    PlayerStats &_pcStats;
 	Transform _pcTransform;
 	ftUni _pcAlphaValue{"alpha", 1.0f};
 

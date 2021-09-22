@@ -8,7 +8,7 @@
 
 #include "glm/gtx/string_cast.hpp"
 
-int main(int argc, char **argv)
+int main()
 {
 	Display display(SCREEN_WIDTH, SCREEN_HEIGHT, "Intrastellar");
 	Camera camera(glm::vec3(0, 0, -20), 70.0f, display.Aspect(), 0.01f, 1000.0f);
@@ -48,7 +48,7 @@ int main(int argc, char **argv)
 
 	const auto render = [&]
 	{
-		display.Clear(0.1, 0.1, 0.2, 1.0);
+		display.Clear(0.1f, 0.1f, 0.2f, 1.0f);
 		enemyManager.Draw();
 		playerCharacter.RenderScore();
 		playerCharacter.Draw();

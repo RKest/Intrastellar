@@ -45,11 +45,11 @@ public:
 	
 protected:
 private:
-	Shader _expParticleShader{"Shaders/Exp"};
-	Shader _expBarShader{"Shaders/ExpBar"};
-	CustomRand _customRand;
 	Timer &_timer;
 	Camera &_camera;
+	CustomRand _customRand;
+	Shader _expParticleShader{"Shaders/Exp"};
+	Shader _expBarShader{"Shaders/ExpBar"};
 	UntexturedInstancedMesh _expMesh;
 	UntexturedDynamicMesh _expBarMesh;
 
@@ -66,8 +66,8 @@ private:
 	std::list<InstanceState> _instanceStates;
 
 	db _expParticleAttractionDelay = 1000.0;
-	const ft _expParticleEntropySpeed = 0.002f;
-	const ft _expParticleAttractionSpeed = 0.1f;
+	const db _expParticleEntropySpeed = 0.002;
+	const db _expParticleAttractionSpeed = 0.1;
 
 	void _updateExpBar();
 };

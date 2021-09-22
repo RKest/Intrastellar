@@ -4,7 +4,7 @@
 
 PlayerCharacter::PlayerCharacter(helpers::Core &core, const UntexturedMeshParams &pcParams, const UntexturedMeshParams &projParams)
 	: _camera(core.camera), _text(core.text), _timer(core.timer), _pcStats(core.stats),
-		_pcMesh(pcParams), _projMesh(projParams, MAX_PROJ_AMOUNT), _pcCardMesh(pcParams, NO_CARDS), _projCardMesh(projParams, CARD_MAX_PROJ_COUNT)
+		_pcMesh(pcParams), _pcCardMesh(pcParams, NO_CARDS), _projMesh(projParams, MAX_PROJ_AMOUNT), _projCardMesh(projParams, CARD_MAX_PROJ_COUNT)
 {
 	_projectileShader.Bind();
 	const std::vector<glm::vec3> colours = {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
@@ -58,7 +58,7 @@ void PlayerCharacter::Update(const std::vector<glm::mat4> &enemyInstanceTransfor
 
 void PlayerCharacter::Draw()
 {
-	helpers::render(_projectileShader, _projMesh, _projInstanceTransforms.data(), _projInstanceTransforms.size(), 
+	helpers::render(_projectileShader, _projMesh, _projInstanceTransforms.data(), _projInstanceTransforms.size(),
 		_blankTransform, _camera.ViewProjection());
 	helpers::render(_pcShader, _pcMesh, _pcTransform.Model(), _camera.ViewProjection(), _pcAlphaValue);
 }
@@ -72,9 +72,9 @@ void PlayerCharacter::Shoot(const glm::mat4 &originTransform)
 		for (ui i = 0; i < _pcStats.noShots >> 1; ++i)
 		{
 			helpers::pushToCappedVector(_projInstanceTransforms, originTransform * glm::translate(glm::vec3(0.1,0,0)) * 
-				glm::rotate(i * DEF_ANGLE_BETWEEN_SHOTS, glm::vec3(0,0,1)), _oldestProjectileIndex, MAX_PROJ_AMOUNT);
+				glm::rotate(	   static_cast<ft>(i) * DEF_ANGLE_BETWEEN_SHOTS, glm::vec3(0,0,1)), _oldestProjectileIndex, MAX_PROJ_AMOUNT);
 			helpers::pushToCappedVector(_projInstanceTransforms, originTransform * glm::translate(glm::vec3(0.1,0,0)) * 
-				glm::rotate(TAU - (i * DEF_ANGLE_BETWEEN_SHOTS), glm::vec3(0,0,1)), _oldestProjectileIndex, MAX_PROJ_AMOUNT);
+				glm::rotate(TAU - (static_cast<ft>(i) * DEF_ANGLE_BETWEEN_SHOTS), glm::vec3(0,0,1)), _oldestProjectileIndex, MAX_PROJ_AMOUNT);
 		}
 	}
 	else
@@ -82,10 +82,10 @@ void PlayerCharacter::Shoot(const glm::mat4 &originTransform)
 		helpers::pushToCappedVector(_projInstanceTransforms, originTransform, _oldestProjectileIndex, MAX_PROJ_AMOUNT);
 		for (ui i = 1; i <= _pcStats.noShots >> 1; ++i)
 		{
-			helpers::pushToCappedVector(_projInstanceTransforms, originTransform * glm::rotate(i * DEF_ANGLE_BETWEEN_SHOTS, glm::vec3(0,0,1)), 
-				_oldestProjectileIndex, MAX_PROJ_AMOUNT);
-			helpers::pushToCappedVector(_projInstanceTransforms, originTransform * glm::rotate(TAU - (i * DEF_ANGLE_BETWEEN_SHOTS), glm::vec3(0,0,1)),  
-				_oldestProjectileIndex, MAX_PROJ_AMOUNT);
+			helpers::pushToCappedVector(_projInstanceTransforms, originTransform * glm::rotate(static_cast<ft>(i) * DEF_ANGLE_BETWEEN_SHOTS, 
+				glm::vec3(0,0,1)), _oldestProjectileIndex, MAX_PROJ_AMOUNT);
+			helpers::pushToCappedVector(_projInstanceTransforms, originTransform * glm::rotate(TAU - (static_cast<ft>(i) * DEF_ANGLE_BETWEEN_SHOTS), 
+				glm::vec3(0,0,1)), _oldestProjectileIndex, MAX_PROJ_AMOUNT);
 		}
 	}
 }
@@ -134,10 +134,10 @@ void PlayerCharacter::_externDraw(const std::vector<glm::mat4> &pcTransforms, st
  
 constexpr ft PlayerCharacter::_setAlpha(db remainingInvincibilityTime)
 {
-	const ft period = 3.0f;
-	ft invincibilityFractionPassed = 1 - remainingInvincibilityTime / _invincibilityDuration;
-	ft scaledInfincibilityFractionPassed = TAU * invincibilityFractionPassed * period;
-	return cos(scaledInfincibilityFractionPassed);
+	const db period = 3.0;
+	db invincibilityFractionPassed = 1.0 - remainingInvincibilityTime / _invincibilityDuration;
+	db scaledInfincibilityFractionPassed = TAU_d * invincibilityFractionPassed * period;
+	return cos(static_cast<ft>(scaledInfincibilityFractionPassed));
 }
 
 

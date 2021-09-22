@@ -9,7 +9,7 @@ template <typename T>
 void VAB::Init(const T *bufferDataPtr, ui noBufferElements, ui bufferPos, GLenum mode, GLenum type)
 {
     glBindBuffer(GL_ARRAY_BUFFER, vertexArrayBuffers[bufferPos]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(bufferDataPtr[0]) * noBufferElements, bufferDataPtr, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(bufferDataPtr[0]) * noBufferElements, bufferDataPtr, mode);
 
     glEnableVertexAttribArray(bufferPos);
     glVertexAttribPointer(bufferPos, sizeof(bufferDataPtr[0]) / sizeof(type), type, GL_FALSE, 0, 0);
@@ -23,7 +23,7 @@ void VAB::Index(const ui *indicesPtr, ui noIndices, ui bufferPos)
 
 void VAB::Instance(GLuint *vertexArrayBuffers, ui startingBufferPos, ui size, ui maxNoInstances)
 {
-    const size_t instanceSize = sizeof(GLfloat) * size * size;
+    const GLsizei instanceSize = sizeof(GLfloat) * size * size;
     glBindBuffer(GL_ARRAY_BUFFER, vertexArrayBuffers[startingBufferPos]);
     glBufferData(GL_ARRAY_BUFFER, maxNoInstances * instanceSize, NULL, GL_DYNAMIC_DRAW);
 
