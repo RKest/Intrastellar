@@ -30,7 +30,7 @@ class EnemyBehaviuor
 public:
 	EnemyBehaviuor(EnemyStats &stats, Timer &timer);
 	virtual EnemyBehaviuor(EnemyBehaviuor&&) = default;
-	virtual EnemyBehaviuor(const EnemyBehaviuor&) = default;
+	virtual EnemyBehaviuor(const EnemyBehaviuor&shutingUpAnIntelisense) = default;
 	virtual EnemyBehaviuor operator=(const EnemyBehaviuor& rhs) { return EnemyBehaviuor(rhs); }
 	virtual ~EnemyBehaviuor() = default;
 	virtual void Update(const glm::mat4 &pcTransform, glm::mat4 &instanceTransform, 
@@ -52,8 +52,6 @@ public:
 	bool IsChosen(const glm::mat4&) override;
 
 private:
-	EnemyStats &_enemyStats;
-	Timer &_timer;
 };
 
 class ShootBehavoiur : public EnemyBehaviuor<false>
@@ -64,13 +62,26 @@ public:
 
 private:
 	bool HasMetPredicate(const glm::mat4 &pcModel, const glm::mat4 &enemyModel) const;
-	EnemyStats &_enemyStats;
-	Timer &_timer;
 	ui _latestShotIndex{};
-	ui _chotClockId;
+	ui _shotClockId;
 };
 
-static auto choseBehaviour(const std::vector<EnemyBehaviuor> &behavoiurs);
+static auto choseBehaviour(const std::vector<EnemyBehaviuor> &behavoiurs, const glm::mat4 &pcModel, const glm::mat4 &enemyModel);
+
+class Enemy
+{
+public:
+	Enemy(Timer &timer, EnemyStats &stats, const UntexturedMeshParams &params, std::vector<EnemyBehaviuor> &behaviours);
+	void Spawn();
+	void Despawn();
+private:
+	Timer &_timer;
+	EnemyData _data;
+	EnemyStats &_stats;
+	const UntexturedMeshParams _params;
+	UntexturedInstancedMesh _mesh;
+
+};
 
 class EnemyData
 {
@@ -84,7 +95,7 @@ public:
 	ui size = 0;
 	void Clear();
 	void Erase(const ui index);
-	void Push(const glm::mat4 &instanceTransform, const UntexturedMeshParams &params, EnemyStats &stats, Timer &timer);
+	void Push(const glm::mat4 &instanceTransform, const UntexturedMeshParams &params, EnemyStats &stats, const std::vector<EnemyBehaviuor> &behaviours);
 	void Update(const glm::mat4 &pcModel, const ui index);
 private:
 	[[nodiscard]] int ChoseBehavoiur() const;

@@ -12,9 +12,23 @@ BehavoiurStatus EnemyBehaviuor<isDefault>::EnemyBehaviuorStatus(const glm::mat4 
 	if constexpr (isDefault)
 		return BehavoiurStatus::DEFAULT;
 	else if (HasMetPredicate(pcModel, enemyModel))
+	{
+		if(!_isActive)
+		{
+			_timer.InitHeapClock(_shotClockId, _enemyStats);
+			_isActive = true;
+		}
 		return BehavoiurStatus::CHOSEN;
+	}
 	else
+	{
+		if(_isActive)
+		{
+			_timer.DestroyHeapClock(_shotClockId);
+			_isActive = false;
+		}
 		return BehavoiurStatus::NOT_CHOSEN;
+	}
 		
 }
 
@@ -32,7 +46,15 @@ void ChaseBehaviour::Update(const glm::mat4 &pcTransform, glm::mat4 &instanceTra
 void ShootBehavoiur::Update(const glm::mat4 &pcTransform, glm::mat4 &instanceTransform, std::vector<glm::mat4> &projInstanceTransforms)
 {
 	helpers::transformMatVec(projInstanceTransforms, _timer.Scale(_enemyStats.shotSpeed));
-	helpers::pushToCappedVector(projInstanceTransforms, instanceTransform, _latestShotIndex, MAX_PROJ_AMOUNT_PER_ENEMY);
+	if(_timer.HeapIsItTime(_shotClockId))
+	{
+		const glm::vec2 pcPos{pcTransform * glm::vec4(0,0,0,1)};
+		const glm::vec2 enemyVec = glm::normalize(glm::vec2(glm::inverse(instanceTransform) * glm::vec4(pcPos, 0, 1)));
+		const ft angle = -glm::atan(glm::dot({1.0, 0.0}, enemyVec), helpers::det({1.0, 0.0}, enemyVec));
+		const glm::mat4 aimTransform = glm::rotate(angle, glm::vec3(0,0,1));
+		const glm::mat4 initProjTransform = instanceTransform * aimTransform;
+		helpers::pushToCappedVector(projInstanceTransforms, initProjTransform, _latestShotIndex, MAX_PROJ_AMOUNT_PER_ENEMY);
+	}
 }
 
 bool ShootBehavoiur::HasMetPredicate(const glm::mat4 &pcModel, const glm::mat4 &enemyModel) const
@@ -42,26 +64,6 @@ bool ShootBehavoiur::HasMetPredicate(const glm::mat4 &pcModel, const glm::mat4 &
 	if(glm::distance(pcPos, enemyPos) > 10.0f)
 		return true;
 	return false;
-}
-
-auto choseBehaviour(const std::vector<EnemyBehaviuor> &behavoiurs, const glm::mat4 &pcModel, const glm::mat4 &enemyModel)
-{
-	const auto bbegin = behavoiurs.cbegin();
-	const auto bend = behavoiurs.cend();
-	const auto chosenIt = bend;
-	const auto defaultIt = bend;
-	for(auto i = bbegin; i != bend; ++i)
-	{
-		if(BehavoiurStatus::CHOSEN == i->EnemyBehaviuorStatus(pcModel, enemyModel))
-			chosenIt = i;
-		else if(BehavoiurStatus::DEFAULT == i->EnemyBehaviuorStatus(pcModel, enemyModel));
-			defaultIt = i;
-	}
-	if(chosenIt != bend)
-		return chosenIt;
-	if(defaultIt != bend)
-		return defaultIt;
-	throw std::runtime_error("ERROR:choseBehaviour: Failed to chose a behaviour");
 }
 
 EnemyData::EnemyData(Timer &timer) 
@@ -101,33 +103,41 @@ void EnemyData::Erase(const ui index)
 	size--;
 }
 
-void EnemyData::Push(const glm::mat4 &instanceTransform, const UntexturedMeshParams &params, EnemyStats &stats, Timer &timer)
+void EnemyData::Push(const glm::mat4 &instanceTransform, const UntexturedMeshParams &params, EnemyStats &stats, const std::vector<EnemyBehaviuor> &behaviours)
 {
 	instanceTransforms		.push_back(instanceTransform);
 	boundingBoxes			.emplace_back(params, instanceTransform);
-	enemyBehaviours			.emplace_back(std::vector<EnemyBehaviuor>{{EnemyBehaviuor{stats, timer}}});
+	enemyBehaviours			.push_back(behaviours);
 	projInstanceTransforms	.emplace_back();
 	healths					.push_back(stats.health);
 	
 	size++;
 }
 
+auto choseBehaviour(const std::vector<EnemyBehaviuor> &behavoiurs, const glm::mat4 &pcModel, const glm::mat4 &enemyModel)
+{
+	const auto bbegin = behavoiurs.cbegin();
+	const auto bend = behavoiurs.cend();
+	const auto chosenIt = bend;
+	const auto defaultIt = bend;
+	for(auto i = bbegin; i != bend; ++i)
+	{
+		if(BehavoiurStatus::CHOSEN == i->EnemyBehaviuorStatus(pcModel, enemyModel))
+			chosenIt = i;
+		else if(BehavoiurStatus::DEFAULT == i->EnemyBehaviuorStatus(pcModel, enemyModel));
+			defaultIt = i;
+	}
+	if(chosenIt != bend)
+		return chosenIt;
+	if(defaultIt != bend)
+		return defaultIt;
+	throw std::runtime_error("ERROR:choseBehaviour: Failed to chose a behaviour");
+}
+
 void EnemyData::Update(const glm::mat4 &pcModel, const ui index)
 {
-	const auto behavoiursBegin = enemyBehaviours[index].begin();
-	const auto behavoiursEnd   = enemyBehaviours[index].end();
-	auto chosenbehavoiurIter = std::find_if(behavoiursBegin, behavoiursEnd, [](auto &behavoiur) { return behavoiur.IsChosen(); } );
-	if(chosenbehavoiurIter == behavoiursEnd)
-	{
-		chosenbehavoiurIter =  std::find_if(behavoiursBegin, behavoiursEnd, [](auto &behavoiur) { return behavoiur.IsDefault();} );
-		if(chosenbehavoiurIter == behavoiursEnd)
-		{
-			LOG("i");
-			throw std::runtime_error("ERRORR:ENEMY_DATA: No default behaviour defined");
-		}
-	}
-
-	chosenbehavoiurIter->Update(pcModel, instanceTransforms[index], projInstanceTransforms[index]);
+	const auto chosenBehavoiurIter = choseBehaviour(enemyBehaviours[index], pcModel, instanceTransforms[index]);
+	chosenBehavoiurIter->Update(pcModel, instanceTransforms[index], projInstanceTransforms[index]);
 	boundingBoxes[index].minCoords = glm::vec2(instanceTransforms[index] * glm::vec4(boundingBoxes[index].minDimentions, 0, 1));
 	boundingBoxes[index].maxCoords = glm::vec2(instanceTransforms[index] * glm::vec4(boundingBoxes[index].maxDimentions, 0, 1));
 }
@@ -183,9 +193,7 @@ void EnemyManager::Draw()
 void EnemyManager::UpdateBehaviour(const glm::mat4 &pcModel)
 {
 	for (ui i = 0; i < _enemyData.size; ++i)
-	{
 		_enemyData.Update(pcModel, i);
-	}
 }
 
 void EnemyManager::Spawn(const glm::mat4 &pcModel)
@@ -193,9 +201,13 @@ void EnemyManager::Spawn(const glm::mat4 &pcModel)
 	if(_enemyData.size >= MAX_NO_ENEMIES)
 		return;
 
-	glm::vec2 pcPos = glm::vec2(pcModel * glm::vec4(0,0,0,1));
+	glm::vec2 pcPos{pcModel * glm::vec4(0,0,0,1)};
 	const ft enemyX = _customRand.NextUi() % 2 ? _customRand.NextFloat(pcPos.x - 9.0f,  pcPos.x - 11.0f) : _customRand.NextFloat(pcPos.x + 9.0f, pcPos.x + 11.0f);
 	const ft enemyY = _customRand.NextUi() % 2 ? _customRand.NextFloat(pcPos.y - 9.0f,  pcPos.y - 11.0f) : _customRand.NextFloat(pcPos.y + 9.0f, pcPos.y + 11.0f);
+
+	std::vector<EnemyBehaviuor> behaviours{{ChaseBehaviour(_enemyStats, _timer)}};
+	if(!(_customRand.NextUi() % 10))
+		behaviours.emplace_back<ShootBehavoiur>(_enemyStats, _timer);
 
 	glm::mat4 instanceTransform = _enemyTransform.Model() * glm::translate(glm::vec3(enemyX, enemyY, 0));
 	_enemyData.Push(instanceTransform, _enemyMeshParams, _enemyStats, _timer);

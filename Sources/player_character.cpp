@@ -48,12 +48,7 @@ void PlayerCharacter::Update(const std::vector<glm::mat4> &enemyInstanceTransfor
 	else
 		_pcAlphaValue.second = 1.0f;
 
-	std::for_each
-	(
-		std::execution::par_unseq,
-		_projInstanceTransforms.begin(), _projInstanceTransforms.end(), 
-			[this, enemyInstanceTransforms](auto &&mat){mat *= _moveProj(enemyInstanceTransforms, mat); }
-	);
+	helpers::transformMatVec(_projInstanceTransforms, _moveProj(enemyInstanceTransforms, mat));
 }
 
 void PlayerCharacter::Draw()
@@ -120,9 +115,7 @@ void PlayerCharacter::_externDraw(const std::vector<glm::mat4> &pcTransforms, st
 		if(targetBoundingBox.IsThereAnIntersection(projTransforms, projIndex))
 			projTransforms.erase(projTransforms.begin() + projIndex);
 
-	glm::mat4 perFrameProjectileTransform = glm::translate(glm::vec3(0, _timer.Scale(0.05f), 0));
-	std::for_each(std::execution::par_unseq, projTransforms.begin(), projTransforms.end(),
-		[&perFrameProjectileTransform](auto &mat){ mat *= perFrameProjectileTransform; });
+	helpers::transformMatVec(projTransforms, _timer.Scale(0.05f));
 
 	for (ui i = 0; i < clockIds.size(); ++i)
 		if (_timer.HeapIsItTime(clockIds[i]))
