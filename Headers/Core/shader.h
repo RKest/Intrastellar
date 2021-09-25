@@ -1,6 +1,4 @@
-#ifndef SHADER_H
-#define SHADER_H
-
+#pragma once
 #include "_config.h"
 
 #include "Core/transform.h"
@@ -163,5 +161,3 @@ static GLuint CreateShader(const std::string &text, GLenum shaderType)
 
     return shader;
 }
-
-#endif // Shader_H

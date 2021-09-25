@@ -1,5 +1,4 @@
-#ifndef CARD_DECK_H
-#define CARD_DECK_H
+#pragma once
 #include "_config.h"
 
 #include "Core/text.h"
@@ -101,5 +100,3 @@ private:
                                                                                   stat_altarations::SHOT_DAMADE_MULTIPLAYER(0.3f)     })
     }};
 };
-
-#endif

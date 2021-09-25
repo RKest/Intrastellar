@@ -1,6 +1,4 @@
-#ifndef MY_TRANSFORM_H
-#define MY_TRANSFORM_H
-
+#pragma once
 #include "_config.h"
 #include <glm/glm.hpp>
 #include <glm/gtx/transform.hpp>
@@ -33,5 +31,3 @@ private:
     ft rotAngle = 0.0f;
     glm::mat4 QuaternionRotate(const glm::vec3 &axis, ft angle);
 };
-
-#endif // TRANSFORM_H

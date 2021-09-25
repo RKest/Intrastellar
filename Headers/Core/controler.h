@@ -1,5 +1,4 @@
-#ifndef CONTROLER_H
-#define CONTROLER_H
+#pragma once
 #include "_config.h"
 #include "Core/transform.h"
 #include "Core/display.h"
@@ -29,4 +28,3 @@ private:
     db defaultMovementAmount = 0.02f;
 
 };
-#endif

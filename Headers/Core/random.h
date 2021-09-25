@@ -1,5 +1,4 @@
-#ifndef CUSTON_RAND_H
-#define CUSTON_RAND_H
+#pragma once
 #include "_config.h"
 #include <cstdint>
 
@@ -34,5 +33,3 @@ private:
 	next Next();
 	next procGen;
 };
-
-#endif

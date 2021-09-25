@@ -1,5 +1,4 @@
-#ifndef _CONFIG_H
-#define _CONFIG_H
+#pragma once
 
 #include <cstddef>
 #include <iostream>
@@ -93,21 +92,18 @@ struct is_std_container<T,
     : std::true_type { };
 
 template <typename T>
-using container_type = typename std::enable_if<is_std_container<T>::value, typename T::value_type>::type;
-
+concept container_type = is_std_container<T>::value;
 template <typename T>
-using non_container_type = typename std::enable_if<!is_std_container<T>::value, T>::type;
+concept non_container_type = !is_std_container<T>::value;
 
-template <typename T, typename U>
-constexpr container_type<T> decl_cast([[maybe_unused]]const T &to, const U &from) 
+template <container_type T, typename U>
+constexpr T::value_type decl_cast([[maybe_unused]]const T &to, const U &from) 
 {
    return static_cast<typename T::value_type>(from);
 }
 
-template <typename T, typename U>
-constexpr non_container_type<T> decl_cast([[maybe_unused]]const T &to, const U &from) 
+template <non_container_type T, typename U>
+constexpr T decl_cast([[maybe_unused]]const T &to, const U &from) 
 {
    return static_cast<T>(from);
 }
-
-#endif

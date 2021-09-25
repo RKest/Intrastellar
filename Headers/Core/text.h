@@ -1,5 +1,4 @@
-#ifndef TEXT_H
-#define TEXT_H
+#pragma once
 #include "_config.h"
 #include "shader.h"
 
@@ -37,4 +36,3 @@ private:
 	glm::mat4 projection;
 	
 };
-#endif

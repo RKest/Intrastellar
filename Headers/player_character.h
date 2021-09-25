@@ -1,6 +1,4 @@
-#ifndef SHOOTER_H
-#define SHOOTER_H
-
+#pragma once
 #include "Core/transform.h"
 #include "Core/shader.h"
 #include "Core/camera.h"
@@ -13,6 +11,7 @@
 #include <execution>
 #include <algorithm>
 #include <functional>
+#include <vector>
 
 
 using namespace std::placeholders;
@@ -68,5 +67,3 @@ private:
 	glm::mat4 _moveProj(const std::vector<glm::mat4> &enemyInstanceTransforms, const glm::mat4 &projTransform) const;
 
 };
-
-#endif

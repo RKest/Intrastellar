@@ -1,21 +1,22 @@
-#ifndef ENEMY_H
-#define ENEMY_H
+#pragma once
 
 #include "_config.h"
 
-#include "Core/mesh.h"
-#include "Core/random.h"
+#include "Core/transform.h"
 #include "Core/shader.h"
+#include "Core/camera.h"
+#include "Core/mesh.h"
+#include "Core/text.h"
 #include "Core/timer.h"
 #include "Core/helpers.h"
+#include "Core/stats.h"
 
-#include <vector>
 #include <execution>
 #include <algorithm>
 #include <functional>
-#include <cmath>
+#include <vector>
+#include <memory>
 
-#include "glm/gtx/matrix_transform_2d.hpp"
 
 enum BehavoiurStatus
 {
@@ -24,54 +25,93 @@ enum BehavoiurStatus
 	DEFAULT
 };
 
-template <bool isDefault>
 class EnemyBehaviuor
 {
 public:
-	EnemyBehaviuor(EnemyStats &stats, Timer &timer);
-	virtual EnemyBehaviuor(EnemyBehaviuor&&) = default;
-	virtual EnemyBehaviuor(const EnemyBehaviuor&shutingUpAnIntelisense) = default;
-	virtual EnemyBehaviuor operator=(const EnemyBehaviuor& rhs) { return EnemyBehaviuor(rhs); }
+	EnemyBehaviuor(EnemyStats &stats, Timer &timer, bool isDefault = false);
+	EnemyBehaviuor(EnemyBehaviuor&&) = default;
+	EnemyBehaviuor(const EnemyBehaviuor&) = default;
+	EnemyBehaviuor operator=(const EnemyBehaviuor& rhs) { return EnemyBehaviuor(rhs); }
 	virtual ~EnemyBehaviuor() = default;
-	virtual void Update(const glm::mat4 &pcTransform, glm::mat4 &instanceTransform, 
-		[[maybe_unused]]std::vector<glm::mat4> &projInstanceTransforms) = 0;
-	[[nodiscard]]BehavoiurStatus EnemyBehaviuorStatus(const glm::mat4 &pcModel, const glm::mat4 &enemyModel) const;
+	virtual void Update([[maybe_unused]]const glm::mat4 &pcTransform, [[maybe_unused]]glm::mat4 &instanceTransform, 
+		[[maybe_unused]]std::vector<glm::mat4> &projInstanceTransforms) {};
+	[[nodiscard]]BehavoiurStatus EnemyBehaviuorStatus(const glm::mat4 &pcModel, const glm::mat4 &enemyModel);
 	inline bool &IsActive() { return _isActive; }
 protected:
-	virtual bool HasMetPredicate(const glm::mat4 &pcModel, const glm::mat4 &enemyModel) const  = 0;
+	virtual bool HasMetPredicate([[maybe_unused]]const glm::mat4 &pcModel, [[maybe_unused]]const glm::mat4 &enemyModel) { return true; };
 	EnemyStats &_enemyStats;
 	Timer &_timer;
 	bool _isActive{};
+	const bool _isDefault;
 };
 
-class ChaseBehaviour : public EnemyBehaviuor<true>
+using behavoiurPtrVec = std::vector<std::unique_ptr<EnemyBehaviuor>>;
+
+class ChaseBehaviour : public EnemyBehaviuor
 {
 public:
-	ChaseBehaviour(EnemyStats &enemyStats, Timer &timer) : EnemyBehaviuor(enemyStats, timer) {};
-	void Update(const glm::mat4 &pcTransform, glm::mat4 &instanceTransform, std::vector<glm::mat4> &projInstanceTransforms) override;
-	bool IsChosen(const glm::mat4&) override;
+	ChaseBehaviour(EnemyStats &enemyStats, Timer &timer) : EnemyBehaviuor(enemyStats, timer, true) {};
+	void Update(const glm::mat4 &pcTransform, glm::mat4 &instanceTransform, [[maybe_unused]]std::vector<glm::mat4> &projInstanceTransforms) override;
 
 private:
 };
 
-class ShootBehavoiur : public EnemyBehaviuor<false>
+class ShootBehavoiur : public EnemyBehaviuor
 {
 public:
 	ShootBehavoiur(EnemyStats &enemyStats, Timer &timer) : EnemyBehaviuor(enemyStats, timer) {};
 	void Update(const glm::mat4 &pcTransform, glm::mat4 &instanceTransform, std::vector<glm::mat4> &projInstanceTransforms) override;
 
 private:
-	bool HasMetPredicate(const glm::mat4 &pcModel, const glm::mat4 &enemyModel) const;
+	bool HasMetPredicate(const glm::mat4 &pcModel, const glm::mat4 &enemyModel);
 	ui _latestShotIndex{};
 	ui _shotClockId;
 };
 
-static auto choseBehaviour(const std::vector<EnemyBehaviuor> &behavoiurs, const glm::mat4 &pcModel, const glm::mat4 &enemyModel);
+inline static auto choseBehaviour(behavoiurPtrVec &behavoiurs, const glm::mat4 &pcModel, const glm::mat4 &enemyModel)
+{
+	const auto bbegin = behavoiurs.begin();
+	const auto bend = behavoiurs.end();
+	auto chosenIt = bend;
+	auto defaultIt = bend;
+	for(auto i = bbegin; i != bend; ++i)
+	{
+		const BehavoiurStatus behaviourStatus = i->get()->EnemyBehaviuorStatus(pcModel, enemyModel);
+		if(BehavoiurStatus::CHOSEN == behaviourStatus)
+			chosenIt = i;
+		else if(BehavoiurStatus::DEFAULT == behaviourStatus)
+			defaultIt = i;
+	}
+	if(chosenIt != bend)
+		return chosenIt;
+	if(defaultIt != bend)
+		return defaultIt;
+	throw std::runtime_error("ERROR:choseBehaviour: Failed to chose a behaviour");
+}
+
+class EnemyData
+{
+public:
+	EnemyData(Timer &_timer);
+
+	std::vector<glm::mat4> 				instanceTransforms;
+	std::vector<helpers::BoundingBox>	boundingBoxes;
+	std::vector<si>						healths;
+	std::vector<behavoiurPtrVec>		enemyBehaviours;
+	std::vector<std::vector<glm::mat4>> projInstanceTransforms;
+	ui size = 0;
+	void Clear();
+	void Erase(const ui index);
+	void Push(const glm::mat4 &instanceTransform, const UntexturedMeshParams &params, EnemyStats &stats, behavoiurPtrVec &behaviours);
+	void Update(const glm::mat4 &pcModel, const ui index);
+private:
+	Timer &_timer;
+};
 
 class Enemy
 {
 public:
-	Enemy(Timer &timer, EnemyStats &stats, const UntexturedMeshParams &params, std::vector<EnemyBehaviuor> &behaviours);
+	Enemy(Timer &timer, EnemyStats &stats, const UntexturedMeshParams &params, behavoiurPtrVec &behaviours);
 	void Spawn();
 	void Despawn();
 private:
@@ -81,25 +121,6 @@ private:
 	const UntexturedMeshParams _params;
 	UntexturedInstancedMesh _mesh;
 
-};
-
-class EnemyData
-{
-public:
-	EnemyData(Timer &_timer);
-	std::vector<glm::mat4> 						instanceTransforms;
-	std::vector<helpers::BoundingBox>			boundingBoxes;
-	std::vector<si>								healths;
-	std::vector<std::vector<EnemyBehaviuor>>	enemyBehaviours;
-	std::vector<std::vector<glm::mat4>> 		projInstanceTransforms;
-	ui size = 0;
-	void Clear();
-	void Erase(const ui index);
-	void Push(const glm::mat4 &instanceTransform, const UntexturedMeshParams &params, EnemyStats &stats, const std::vector<EnemyBehaviuor> &behaviours);
-	void Update(const glm::mat4 &pcModel, const ui index);
-private:
-	[[nodiscard]] int ChoseBehavoiur() const;
-	Timer &_timer;
 };
 
 class EnemyManager
@@ -130,5 +151,3 @@ private:
 	CustomRand _customRand{CUSTOM_RAND_SEED};
 
 };
-
-#endif

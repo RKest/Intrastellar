@@ -1,6 +1,4 @@
-#ifndef STATS_H
-#define STATS_H
-
+#pragma once
 #include "_config.h"
 
 struct PlayerStats
@@ -112,5 +110,3 @@ static const EnemyStats defaultEnemyStats{
     0.0f,
     100
 };
-
-#endif

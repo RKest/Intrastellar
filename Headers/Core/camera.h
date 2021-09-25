@@ -1,5 +1,4 @@
-#ifndef CAMERA_H
-#define CAMERA_H
+#pragma once
 
 #include "_config.h"
 #include <glm/glm.hpp>
@@ -33,5 +32,3 @@ private:
     glm::vec3 forward;
     glm::vec3 up;
 };
-
-#endif //CAMERA_H

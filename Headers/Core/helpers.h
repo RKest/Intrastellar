@@ -1,5 +1,4 @@
-#ifndef HELPERS_H
-#define HELPERS_H
+#pragma once
 
 #include "_config.h"
 #include "Core/random.h"
@@ -94,7 +93,6 @@ namespace helpers
             });
     }
 
-
     struct Core
     {
         Camera &camera;
@@ -102,6 +100,10 @@ namespace helpers
         Timer &timer;
         PlayerStats &stats;
     };
-}
 
-#endif
+    // template<container_type Cont, typename Call>
+    // void forEach(Cont &cont, Call f)
+    // {
+    //     std::for_each(begin(cont), end(cont), f);
+    // }
+}

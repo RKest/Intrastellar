@@ -1,6 +1,4 @@
-#ifndef EXP_MANAGER_H
-#define EXP_MANAGER_H
-
+#pragma once
 #include "_config.h"
 #include "Core/mesh.h"
 #include "Core/timer.h"
@@ -71,5 +69,3 @@ private:
 
 	void _updateExpBar();
 };
-
-#endif

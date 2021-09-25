@@ -1,6 +1,4 @@
-#ifndef MESH_H
-#define MESH_H
-
+#pragma once
 #include <memory>
 #include <glm/glm.hpp>
 #include <glm/gtx/transform.hpp>
@@ -122,6 +120,3 @@ private:
 
     GLuint vertexArrayBuffers[NO_BUFFERS];
 };
-
-
-#endif //MESH_H

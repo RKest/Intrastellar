@@ -1,5 +1,4 @@
-#ifndef TIMER_H
-#define TIMER_H
+#pragma once
 #include "_config.h"
 #include "Core/text.h"
 #include "Core/stats.h"
@@ -69,5 +68,3 @@ private:
 	const ui maxPolledFrames = 5;
 };
 
-
-#endif

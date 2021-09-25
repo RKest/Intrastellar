@@ -1,6 +1,4 @@
-#ifndef DISPLAY_H
-#define DISPLAY_H
-
+#pragma once
 #include "_config.h"
 #include <string>
 #include <SDL2/SDL.h>
@@ -48,5 +46,3 @@ private:
     const Uint8 *keys = SDL_GetKeyboardState(NULL);
 
 };
-
-#endif // DISPLAY_H

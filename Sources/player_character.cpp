@@ -48,7 +48,8 @@ void PlayerCharacter::Update(const std::vector<glm::mat4> &enemyInstanceTransfor
 	else
 		_pcAlphaValue.second = 1.0f;
 
-	helpers::transformMatVec(_projInstanceTransforms, _moveProj(enemyInstanceTransforms, mat));
+	for (auto &projTransform : _projInstanceTransforms)
+		projTransform *= _moveProj(enemyInstanceTransforms, projTransform);
 }
 
 void PlayerCharacter::Draw()

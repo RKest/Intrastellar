@@ -1,38 +1,21 @@
 #include "enemy.h"
 
-template <bool isDefault>
-EnemyBehaviuor<isDefault>::EnemyBehaviuor(EnemyStats &stats, Timer &timer)
-	: _enemyStats(stats), _timer(timer)
+EnemyBehaviuor::EnemyBehaviuor(EnemyStats &stats, Timer &timer, bool isDefault)
+	: _enemyStats(stats), _timer(timer), _isDefault(isDefault)
 {
 }
 
-template <bool isDefault>
-BehavoiurStatus EnemyBehaviuor<isDefault>::EnemyBehaviuorStatus(const glm::mat4 &pcModel, const glm::mat4 &enemyModel) const
+BehavoiurStatus EnemyBehaviuor::EnemyBehaviuorStatus(const glm::mat4 &pcModel, const glm::mat4 &enemyModel)
 {
-	if constexpr (isDefault)
+	if (_isDefault)
 		return BehavoiurStatus::DEFAULT;
 	else if (HasMetPredicate(pcModel, enemyModel))
-	{
-		if(!_isActive)
-		{
-			_timer.InitHeapClock(_shotClockId, _enemyStats);
-			_isActive = true;
-		}
 		return BehavoiurStatus::CHOSEN;
-	}
 	else
-	{
-		if(_isActive)
-		{
-			_timer.DestroyHeapClock(_shotClockId);
-			_isActive = false;
-		}
 		return BehavoiurStatus::NOT_CHOSEN;
-	}
-		
 }
 
-void ChaseBehaviour::Update(const glm::mat4 &pcTransform, glm::mat4 &instanceTransform, std::vector<glm::mat4> &projInstanceTransforms)
+void ChaseBehaviour::Update(const glm::mat4 &pcTransform, glm::mat4 &instanceTransform, [[maybe_unused]]std::vector<glm::mat4> &projInstanceTransforms)
 {
 	const glm::vec2 pcPos	{pcTransform 	   * glm::vec4(0,0,0,1)};
 	const glm::vec2 enemyPos{instanceTransform * glm::vec4(0,0,0,1)};
@@ -57,13 +40,29 @@ void ShootBehavoiur::Update(const glm::mat4 &pcTransform, glm::mat4 &instanceTra
 	}
 }
 
-bool ShootBehavoiur::HasMetPredicate(const glm::mat4 &pcModel, const glm::mat4 &enemyModel) const
+bool ShootBehavoiur::HasMetPredicate(const glm::mat4 &pcModel, const glm::mat4 &enemyModel)
 {
 	const glm::vec2 pcPos	{pcModel 	* glm::vec4(0,0,0,1)};
 	const glm::vec2 enemyPos{enemyModel * glm::vec4(0,0,0,1)};
-	if(glm::distance(pcPos, enemyPos) > 10.0f)
+	LOG(glm::distance(pcPos, enemyPos));
+	if(glm::distance(pcPos, enemyPos) < 10.0f)
+	{
+		if(!_isActive)
+		{
+			_timer.InitHeapClock(_shotClockId, _enemyStats.shotDelay);
+			_isActive = true;
+		}
 		return true;
-	return false;
+	}
+	else
+	{
+		if(_isActive)
+		{
+			_timer.DestroyHeapClock(_shotClockId);
+			_isActive = false;
+		}
+		return false;
+	}
 }
 
 EnemyData::EnemyData(Timer &timer) 
@@ -89,11 +88,11 @@ void EnemyData::Clear()
 
 void EnemyData::Erase(const ui index)
 {
-	instanceTransforms		[index] = instanceTransforms		[size - 1];
-	boundingBoxes			[index] = boundingBoxes				[size - 1];
-	enemyBehaviours			[index] = enemyBehaviours			[size - 1];
-	projInstanceTransforms	[index] = projInstanceTransforms	[size - 1];
-	healths					[index] = healths					[size - 1];
+	instanceTransforms		[index] = 			instanceTransforms		[size - 1];
+	boundingBoxes			[index] = 			boundingBoxes				[size - 1];
+	enemyBehaviours			[index] = std::move(enemyBehaviours			[size - 1]);
+	projInstanceTransforms	[index] = 			projInstanceTransforms	[size - 1];
+	healths					[index] = 			healths					[size - 1];
 	instanceTransforms		.pop_back();
 	boundingBoxes			.pop_back();
 	enemyBehaviours			.pop_back();
@@ -103,41 +102,21 @@ void EnemyData::Erase(const ui index)
 	size--;
 }
 
-void EnemyData::Push(const glm::mat4 &instanceTransform, const UntexturedMeshParams &params, EnemyStats &stats, const std::vector<EnemyBehaviuor> &behaviours)
+void EnemyData::Push(const glm::mat4 &instanceTransform, const UntexturedMeshParams &params, EnemyStats &stats, behavoiurPtrVec &behaviours)
 {
 	instanceTransforms		.push_back(instanceTransform);
 	boundingBoxes			.emplace_back(params, instanceTransform);
-	enemyBehaviours			.push_back(behaviours);
+	enemyBehaviours			.push_back(std::move(behaviours));
 	projInstanceTransforms	.emplace_back();
 	healths					.push_back(stats.health);
 	
 	size++;
 }
 
-auto choseBehaviour(const std::vector<EnemyBehaviuor> &behavoiurs, const glm::mat4 &pcModel, const glm::mat4 &enemyModel)
-{
-	const auto bbegin = behavoiurs.cbegin();
-	const auto bend = behavoiurs.cend();
-	const auto chosenIt = bend;
-	const auto defaultIt = bend;
-	for(auto i = bbegin; i != bend; ++i)
-	{
-		if(BehavoiurStatus::CHOSEN == i->EnemyBehaviuorStatus(pcModel, enemyModel))
-			chosenIt = i;
-		else if(BehavoiurStatus::DEFAULT == i->EnemyBehaviuorStatus(pcModel, enemyModel));
-			defaultIt = i;
-	}
-	if(chosenIt != bend)
-		return chosenIt;
-	if(defaultIt != bend)
-		return defaultIt;
-	throw std::runtime_error("ERROR:choseBehaviour: Failed to chose a behaviour");
-}
-
 void EnemyData::Update(const glm::mat4 &pcModel, const ui index)
 {
 	const auto chosenBehavoiurIter = choseBehaviour(enemyBehaviours[index], pcModel, instanceTransforms[index]);
-	chosenBehavoiurIter->Update(pcModel, instanceTransforms[index], projInstanceTransforms[index]);
+	chosenBehavoiurIter->get()->Update(pcModel, instanceTransforms[index], projInstanceTransforms[index]);
 	boundingBoxes[index].minCoords = glm::vec2(instanceTransforms[index] * glm::vec4(boundingBoxes[index].minDimentions, 0, 1));
 	boundingBoxes[index].maxCoords = glm::vec2(instanceTransforms[index] * glm::vec4(boundingBoxes[index].maxDimentions, 0, 1));
 }
@@ -205,10 +184,13 @@ void EnemyManager::Spawn(const glm::mat4 &pcModel)
 	const ft enemyX = _customRand.NextUi() % 2 ? _customRand.NextFloat(pcPos.x - 9.0f,  pcPos.x - 11.0f) : _customRand.NextFloat(pcPos.x + 9.0f, pcPos.x + 11.0f);
 	const ft enemyY = _customRand.NextUi() % 2 ? _customRand.NextFloat(pcPos.y - 9.0f,  pcPos.y - 11.0f) : _customRand.NextFloat(pcPos.y + 9.0f, pcPos.y + 11.0f);
 
-	std::vector<EnemyBehaviuor> behaviours{{ChaseBehaviour(_enemyStats, _timer)}};
+	behavoiurPtrVec behaviours;
+	behaviours.push_back(std::make_unique<ChaseBehaviour>(_enemyStats, _timer));
 	if(!(_customRand.NextUi() % 10))
-		behaviours.emplace_back<ShootBehavoiur>(_enemyStats, _timer);
+	{
+		behaviours.push_back(std::make_unique<ShootBehavoiur>(_enemyStats, _timer));
+	}
 
 	glm::mat4 instanceTransform = _enemyTransform.Model() * glm::translate(glm::vec3(enemyX, enemyY, 0));
-	_enemyData.Push(instanceTransform, _enemyMeshParams, _enemyStats, _timer);
+	_enemyData.Push(instanceTransform, _enemyMeshParams, _enemyStats, behaviours);
 } 
