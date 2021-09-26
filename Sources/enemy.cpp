@@ -15,7 +15,8 @@ BehavoiurStatus EnemyBehaviuor::EnemyBehaviuorStatus(const glm::mat4 &pcModel, c
 		return BehavoiurStatus::NOT_CHOSEN;
 }
 
-void ChaseBehaviour::Update(const glm::mat4 &pcTransform, glm::mat4 &instanceTransform, [[maybe_unused]]std::vector<glm::mat4> &projInstanceTransforms)
+void ChaseBehaviour::Update(const glm::mat4 &pcTransform, glm::mat4 &instanceTransform, std::vector<glm::mat4> &projInstanceTransforms, 
+	const TriBoundingBox &pcBoundingBox, const std::function<void()> intersectionCallback)
 {
 	const glm::vec2 pcPos	{pcTransform 	   * glm::vec4(0,0,0,1)};
 	const glm::vec2 enemyPos{instanceTransform * glm::vec4(0,0,0,1)};
@@ -25,13 +26,30 @@ void ChaseBehaviour::Update(const glm::mat4 &pcTransform, glm::mat4 &instanceTra
 	const glm::mat4 perFrameEnemyTransform = glm::translate(glm::vec3(scaledVecToPc, 0));
 	instanceTransform *= perFrameEnemyTransform;
 	if(!projInstanceTransforms.empty())
+	{
 		helpers::transformMatVec(projInstanceTransforms, _timer.Scale(_enemyStats.shotSpeed));
+		ui intersectionIndex;
+		if(pcBoundingBox.IsThereAnIntersection(projInstanceTransforms, intersectionIndex))
+		{
+			projInstanceTransforms.erase(projInstanceTransforms.begin() + intersectionIndex);
+			intersectionCallback();
+		}
+	}
 }
 
-void ShootBehavoiur::Update(const glm::mat4 &pcTransform, glm::mat4 &instanceTransform, std::vector<glm::mat4> &projInstanceTransforms)
+void ShootBehavoiur::Update(const glm::mat4 &pcTransform, glm::mat4 &instanceTransform, std::vector<glm::mat4> &projInstanceTransforms, 
+	const TriBoundingBox &pcBoundingBox, const std::function<void()> intersectionCallback)
 {
 	if(!projInstanceTransforms.empty())
+	{
 		helpers::transformMatVec(projInstanceTransforms, _timer.Scale(_enemyStats.shotSpeed));
+		ui intersectionIndex;
+		if(pcBoundingBox.IsThereAnIntersection(projInstanceTransforms, intersectionIndex))
+		{
+			projInstanceTransforms.erase(projInstanceTransforms.begin() + intersectionIndex);
+			intersectionCallback();
+		}
+	}
 	if(_timer.HeapIsItTime(_shotClockId))
 	{
 		const glm::vec2 pcPos{pcTransform * glm::vec4(0,0,0,1)};
@@ -118,14 +136,13 @@ Enemy::Enemy(Timer &timer, Shader &enemyShader, EnemyStats &stats, const Untextu
 		_projMeshPtr.reset(new UntexturedInstancedMesh(*_projParamsPtr));
 }
 
-void Enemy::Update(const glm::mat4 &pcModel)
+void Enemy::Update(const glm::mat4 &pcModel, const TriBoundingBox &pcBoundingBox, const std::function<void()> intersectionCallback)
 {
 	for(ui i = 0; i < data.size; ++i)
 	{
 		const auto chosenBehavoiurIter = choseBehaviour(_behaviours, pcModel, data.instanceTransforms[i]);
-		chosenBehavoiurIter->get()->Update(pcModel, data.instanceTransforms[i], data.projInstanceTransforms[i]);
-		data.boundingBoxes[i].minCoords = glm::vec2(data.instanceTransforms[i] * glm::vec4(data.boundingBoxes[i].minDimentions, 0, 1));
-	    data.boundingBoxes[i].maxCoords = glm::vec2(data.instanceTransforms[i] * glm::vec4(data.boundingBoxes[i].maxDimentions, 0, 1));
+		chosenBehavoiurIter->get()->Update(pcModel, data.instanceTransforms[i], data.projInstanceTransforms[i], pcBoundingBox, intersectionCallback);
+		data.boundingBoxes[i].UpdateCoords(data.instanceTransforms[i]);
 	}
 }
 
@@ -210,10 +227,10 @@ void EnemyManager::Draw()
 		enemy.Draw(_camera.ViewProjection());
 }
 
-void EnemyManager::UpdateBehaviour(const glm::mat4 &pcModel)
+void EnemyManager::UpdateBehaviour(const glm::mat4 &pcModel, const TriBoundingBox &pcBoundingBox, const std::function<void()> intersectionCallback)
 {
 	for(auto &enemy : _enemies)
-		enemy.Update(pcModel);
+		enemy.Update(pcModel, pcBoundingBox, intersectionCallback);
 }
 
 std::vector<std::vector<glm::mat4>*> EnemyManager::InstanceTransforms()
@@ -227,8 +244,10 @@ std::vector<std::vector<glm::mat4>*> EnemyManager::InstanceTransforms()
 void EnemyManager::Spawn(const glm::mat4 &pcModel)
 {
 	glm::vec2 pcPos{pcModel * glm::vec4(0,0,0,1)};
-	const ft enemyX = _customRand.NextUi() % 2 ? _customRand.NextFloat(pcPos.x - 9.0f,  pcPos.x - 11.0f) : _customRand.NextFloat(pcPos.x + 9.0f, pcPos.x + 11.0f);
-	const ft enemyY = _customRand.NextUi() % 2 ? _customRand.NextFloat(pcPos.y - 9.0f,  pcPos.y - 11.0f) : _customRand.NextFloat(pcPos.y + 9.0f, pcPos.y + 11.0f);
+	const ft enemyX = _customRand.NextUi() % 2 ? _customRand.NextFloat(pcPos.x - 9.0f, pcPos.x - 11.0f) : 
+												 _customRand.NextFloat(pcPos.x + 9.0f, pcPos.x + 11.0f) ;
+	const ft enemyY = _customRand.NextUi() % 2 ? _customRand.NextFloat(pcPos.y - 9.0f, pcPos.y - 11.0f) : 
+												 _customRand.NextFloat(pcPos.y + 9.0f, pcPos.y + 11.0f) ;
 
 	glm::mat4 instanceTransform = _enemyTransform.Model() * glm::translate(glm::vec3(enemyX, enemyY, 0));
 	if(!(_customRand.NextUi() % 10))

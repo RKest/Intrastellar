@@ -10,6 +10,7 @@
 #include "Core/timer.h"
 #include "Core/helpers.h"
 #include "Core/display.h"
+#include "Core/bounding_box.h"
 
 #include <string>
 #include <execution>
@@ -25,7 +26,7 @@ struct Card
 };
 
 using pcDrawFunc = std::function<void(const std::vector<glm::mat4>&, std::vector<glm::mat4>&, const std::vector<ui>&, 
-    const std::vector<helpers::BoundingBox>&, const glm::mat4&, ui&)>;
+    const std::vector<ReqBoundingBox>&, const glm::mat4&, ui&)>;
 class CardDeck 
 {
 public:
@@ -54,7 +55,7 @@ private:
 
     std::vector<glm::mat4> _cardBorderInstanceTransforms;
     std::vector<glm::mat4> _targetInstanceTransforms;
-    std::vector<helpers::BoundingBox> _cardBoundingBoxes = std::vector<helpers::BoundingBox>(3);
+    std::vector<ReqBoundingBox> _cardBoundingBoxes = std::vector<ReqBoundingBox>(3);
 
     glm::mat4 _cardProjection;
     glm::mat4 _inverseFlippedCardBorderProjection; //Kinda just stumbeled myself upon that one, by all metrics it shouldn't work but it does
@@ -64,7 +65,7 @@ private:
     std::vector<glm::mat4> _pcInstanceTransforms;
     std::vector<glm::mat4> _projInstanceTransforms;
     std::vector<ui> _clockIds = std::vector<ui>(3);
-    std::vector<helpers::BoundingBox> _targetBoundingBoxes = std::vector<helpers::BoundingBox>(3);
+    std::vector<ReqBoundingBox> _targetBoundingBoxes = std::vector<ReqBoundingBox>(3);
     std::vector<PlayerStats> _cardStatsToChose = std::vector<PlayerStats>(3);
     //_cardBorderProection --- Just above here
 	ui _oldestProjectileIndex = 0;

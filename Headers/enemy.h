@@ -10,6 +10,7 @@
 #include "Core/timer.h"
 #include "Core/helpers.h"
 #include "Core/stats.h"
+#include "Core/bounding_box.h"
 
 #include <execution>
 #include <algorithm>
@@ -29,12 +30,9 @@ class EnemyBehaviuor
 {
 public:
 	EnemyBehaviuor(EnemyStats &stats, Timer &timer, const bool isDefault = false);
-	EnemyBehaviuor(EnemyBehaviuor&&) = default;
-	EnemyBehaviuor(const EnemyBehaviuor&) = default;
-	EnemyBehaviuor operator=(const EnemyBehaviuor& rhs) { return EnemyBehaviuor(rhs); }
 	virtual ~EnemyBehaviuor() = default;
-	virtual void Update([[maybe_unused]]const glm::mat4 &pcTransform, [[maybe_unused]]glm::mat4 &instanceTransform, 
-		[[maybe_unused]]std::vector<glm::mat4> &projInstanceTransforms) {};
+	virtual void Update(const glm::mat4 &pcTransform, glm::mat4 &instanceTransform, std::vector<glm::mat4> &projInstanceTransforms, 
+		const TriBoundingBox &pcBoundingBox, const std::function<void()> intersectionCallback) = 0;
 	[[nodiscard]]BehavoiurStatus EnemyBehaviuorStatus(const glm::mat4 &pcModel, const glm::mat4 &enemyModel);
 	inline bool &IsActive() { return _isActive; }
 protected:
@@ -51,7 +49,8 @@ class ChaseBehaviour : public EnemyBehaviuor
 {
 public:
 	ChaseBehaviour(EnemyStats &enemyStats, Timer &timer) : EnemyBehaviuor(enemyStats, timer, true) {};
-	void Update(const glm::mat4 &pcTransform, glm::mat4 &instanceTransform, [[maybe_unused]]std::vector<glm::mat4> &projInstanceTransforms) override;
+	void Update(const glm::mat4 &pcTransform, glm::mat4 &instanceTransform, std::vector<glm::mat4> &projInstanceTransforms, 
+		const TriBoundingBox &pcBoundingBox, const std::function<void()> intersectionCallback) override;
 
 private:
 };
@@ -60,7 +59,8 @@ class ShootBehavoiur : public EnemyBehaviuor
 {
 public:
 	ShootBehavoiur(EnemyStats &enemyStats, Timer &timer) : EnemyBehaviuor(enemyStats, timer) {};
-	void Update(const glm::mat4 &pcTransform, glm::mat4 &instanceTransform, std::vector<glm::mat4> &projInstanceTransforms) override;
+	void Update(const glm::mat4 &pcTransform, glm::mat4 &instanceTransform, std::vector<glm::mat4> &projInstanceTransforms, 
+		const TriBoundingBox &pcBoundingBox, const std::function<void()> intersectionCallback) override;
 
 private:
 	bool HasMetPredicate(const glm::mat4 &pcModel, const glm::mat4 &enemyModel);
@@ -93,7 +93,7 @@ struct EnemyData
 {
 	EnemyData();
 	std::vector<glm::mat4> 				instanceTransforms;
-	std::vector<helpers::BoundingBox>	boundingBoxes;
+	std::vector<ReqBoundingBox>	boundingBoxes;
 	std::vector<si>						healths;
 	behavoiurPtrVec						enemyBehaviours;
 	std::vector<std::vector<glm::mat4>> projInstanceTransforms;
@@ -108,7 +108,7 @@ class Enemy
 public:
 	Enemy(Timer &timer, Shader &enemyShader, EnemyStats &stats, const UntexturedMeshParams &params, behavoiurPtrVec &behaviours, 
 		const glm::vec3 &colour, const ui maxNoInstances, Shader *projShaderPtr = nullptr, const UntexturedMeshParams *projParamsPtr = nullptr);
-	void Update(const glm::mat4 &pcModel);
+	void Update(const glm::mat4 &pcModel, const TriBoundingBox &pcBoundingBox, const std::function<void()> intersectionCallback);
 	void Spawn(const glm::mat4 &instanceTransform);
 	void Draw(const glm::mat4 &cameraProjection);
 	EnemyData data;
@@ -138,7 +138,7 @@ public:
 	void RecordCollisions(const std::vector<glm::mat4> &projectileTransforms, 
 		const std::function<void(ui)> projectileHitCallback, std::function<void(const glm::mat4&, const ui)> fatalityCallback);
 	void RecordPCIntersection(const std::vector<glm::vec2> &pcPositions, const std::function<void()> intersectionCallback);
-	void UpdateBehaviour(const glm::mat4 &pcModel);
+	void UpdateBehaviour(const glm::mat4 &pcModel, const TriBoundingBox &pcBoundingBox, const std::function<void()> intersectionCallback);
 	std::vector<std::vector<glm::mat4>*> InstanceTransforms();
 
 private:

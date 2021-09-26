@@ -49,8 +49,8 @@ CardDeck::CardDeck(Shader &targetShader, helpers::Core &core, const UntexturedMe
 		_pcInstanceTransforms		 .push_back(pcModel);
 		_cardBorderInstanceTransforms.push_back(_cardBorderTransform.Model());
 		_targetInstanceTransforms	 .push_back(targetInstanceTransform);
-		_cardBoundingBoxes  [i] = helpers::BoundingBox(_cardBorderParams, _cardBorderInstanceTransforms[i]);
-		_targetBoundingBoxes[i]	= helpers::BoundingBox(_targetParams, targetInstanceTransform);
+		_cardBoundingBoxes  [i] = ReqBoundingBox(_cardBorderParams, _cardBorderInstanceTransforms[i]);
+		_targetBoundingBoxes[i]	= ReqBoundingBox(_targetParams, targetInstanceTransform);
 	}
 
 	for(ui i = 0; i < _cards.size(); ++i)

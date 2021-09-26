@@ -3,8 +3,8 @@
 #include <iostream>
 
 PlayerCharacter::PlayerCharacter(helpers::Core &core, const UntexturedMeshParams &pcParams, const UntexturedMeshParams &projParams)
-	: _camera(core.camera), _text(core.text), _timer(core.timer), _pcStats(core.stats),
-		_pcMesh(pcParams), _pcCardMesh(pcParams, NO_CARDS), _projMesh(projParams, MAX_PROJ_AMOUNT), _projCardMesh(projParams, CARD_MAX_PROJ_COUNT)
+	: _camera(core.camera), _text(core.text), _timer(core.timer), _pcStats(core.stats), _pcMesh(pcParams), _pcCardMesh(pcParams, NO_CARDS), 
+		_projMesh(projParams, MAX_PROJ_AMOUNT), _projCardMesh(projParams, CARD_MAX_PROJ_COUNT), _pcBoundingBox(pcParams)
 {
 	_projectileShader.Bind();
 	const std::vector<glm::vec3> colours = {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
@@ -41,7 +41,10 @@ void PlayerCharacter::RenderScore()
 void PlayerCharacter::Update(const std::vector<std::vector<glm::mat4>*> &enemyInstanceTransforms)
 {
 	if(_isInvincible && _timer.HeapIsItTime(_invincibilityClockId))
+	{
 		_isInvincible = false;
+		_timer.DestroyHeapClock(_invincibilityClockId);
+	}
 
 	if(_isInvincible)
 		_pcAlphaValue.second = _setAlpha(_timer.RemainingTime(_invincibilityClockId));
@@ -50,6 +53,8 @@ void PlayerCharacter::Update(const std::vector<std::vector<glm::mat4>*> &enemyIn
 
 	for (auto &projTransform : _projInstanceTransforms)
 		projTransform *= _moveProj(enemyInstanceTransforms, projTransform);
+	
+	_pcBoundingBox.UpdateCoords(_pcTransform.Model());
 }
 
 void PlayerCharacter::Draw()
@@ -109,7 +114,7 @@ void PlayerCharacter::_pcIntersection()
 }
 
 void PlayerCharacter::_externDraw(const std::vector<glm::mat4> &pcTransforms, std::vector<glm::mat4> &projTransforms, const std::vector<ui> &clockIds, 
-	const std::vector<helpers::BoundingBox> &targetBoundingBoxes, const glm::mat4 &projection, ui &oldestProjIndex)
+	const std::vector<ReqBoundingBox> &targetBoundingBoxes, const glm::mat4 &projection, ui &oldestProjIndex)
 {
 	ui projIndex;
 	for(auto &targetBoundingBox : targetBoundingBoxes)

@@ -23,21 +23,10 @@ namespace helpers
     std::vector<glm::vec2> transformStdVector(const UntexturedMeshParams &params, const glm::mat4 &model);
     void transformMatVec(std::vector<glm::mat4> &vec, const glm::mat4 &model);
     void transformMatVec(std::vector<glm::mat4> &vec, const ft yTransformVal);
-    struct BoundingBox
-    {
-        BoundingBox() = default;
-        BoundingBox(const UntexturedMeshParams &params, const glm::mat4 &transform = _blankTransform);
-        glm::vec2 minDimentions;
-        glm::vec2 maxDimentions;
-        glm::vec2 minCoords;
-        glm::vec2 maxCoords;
-        bool IsThereAnIntersection(const glm::vec2&) const;
-        bool IsThereAnIntersection(const std::vector<glm::vec2>&) const;
-        bool IsThereAnIntersection(const std::vector<glm::mat4> &transforms, ui &intersectionIndex) const;
-    };
     glm::vec2 mouseCoordsTransformed(const glm::mat4 &transform);
     bool IsLBMPressed();
     ft det(const glm::vec2 &vec1, const glm::vec2 &vec2);
+    ui squishedIntToScreenWidth(ui minValue, ui maxValue, ui value);
 
     template<typename ...T>
     void render(Shader &shader, Mesh &mesh, std::pair<std::string, T> const&... params)
@@ -70,7 +59,6 @@ namespace helpers
         mesh.Update(instanceTransforms, mesh.InstancedBufferPosition());
         mesh.Draw();
     }
-    ui squishedIntToScreenWidth(ui minValue, ui maxValue, ui value);
     template<typename T>
     constexpr void pushToCappedVector(std::vector<T> &cappedVec, const T &el, ui &oldestElIndex, const ui cap)
     {
@@ -104,6 +92,12 @@ namespace helpers
            total_size += sub.size();
          return total_size;
     }
+    
+    template<container_type Cont, typename Call>
+    void forEach(Cont &cont, Call f)
+    {
+        std::for_each(begin(cont), end(cont), f);
+    }
 
     struct Core
     {
@@ -113,9 +107,4 @@ namespace helpers
         PlayerStats &stats;
     };
 
-    // template<container_type Cont, typename Call>
-    // void forEach(Cont &cont, Call f)
-    // {
-    //     std::for_each(begin(cont), end(cont), f);
-    // }
 }

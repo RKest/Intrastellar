@@ -57,10 +57,10 @@ void Text::Render(const std::string &text, ft x, const ft y, const ft scale, con
 	for (std::string::const_iterator c = text.begin(); c != text.end(); ++c)
 	{
 		const Character *character = &characters[*c];
-		const ft xpos = x + character->bearing.x * scale;
-		const ft ypos = y - (character->size.y - character->bearing.y) * scale;
-		const ft width = character->size.x * scale;
-		const ft height = character->size.y * scale;
+		const ft xpos = x + decl_cast(xpos, character->bearing.x) * scale;
+		const ft ypos = y - decl_cast(ypos, (character->size.y 	- character->bearing.y)) * scale;
+		const ft width 	= 	decl_cast(width, character->size.x) * scale;
+		const ft height = 	decl_cast(height, character->size.y) * scale;
 		const ft vertices[6][4] = {
 			{xpos, 		   ypos + height, 0.0f, 0.0f},
 			{xpos, 		   ypos,          0.0f, 1.0f},
@@ -75,7 +75,7 @@ void Text::Render(const std::string &text, ft x, const ft y, const ft scale, con
 		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		glDrawArrays(GL_TRIANGLES, 0, 6);
-		x += (character->advance >> 6) * scale;
+		x += decl_cast(x, (character->advance >> 6)) * scale;
 	}
 
 	glBindVertexArray(0);

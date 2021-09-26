@@ -62,7 +62,7 @@ int main()
 		controler.CaptureKeyboardPresses(playerCharacter.IsAlive());
 		controler.CaptureMouseMovement();
 
-		enemyManager.UpdateBehaviour(pcModel);
+		enemyManager.UpdateBehaviour(pcModel, playerCharacter.PcBoundingBox(), playerCharacter.PCIntersectionCb());
 		if (timer.IsItTime(Timer::ClocksEnum::SPAWN_CLOCK))
 			enemyManager.Spawn(pcModel);
 
