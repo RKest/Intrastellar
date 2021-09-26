@@ -83,14 +83,26 @@ namespace helpers
 			cappedVec.push_back(el);
     }
 
-    template<typename T>
-    const std::vector<T> &flattenVector(const std::vector<std::vector<T>> &stdVec)
+    template <typename T>
+    std::vector<T> flattenVec(const std::vector<std::vector<T>>& v) 
     {
-        return std::accumulate(stdVec.begin(), stdVec.end(), decltype(stdVec)::value_type(),
-            [](auto& dest, auto& src) {
-                dest.insert(dest.end(), src.begin(), src.end());
-                return dest;
-            });
+        std::size_t total_size = 0;
+        for (const auto& sub : v)
+           total_size += sub.size();
+         std::vector<T> result;
+        result.reserve(total_size);
+        for (const auto& sub : v)
+            result.insert(result.end(), sub.begin(), sub.end());
+         return result;
+    }
+
+    template <typename T>
+    std::size_t twoDVecSize(const std::vector<std::vector<T>>& v)
+    {
+        std::size_t total_size = 0;
+        for (const auto& sub : v)
+           total_size += sub.size();
+         return total_size;
     }
 
     struct Core

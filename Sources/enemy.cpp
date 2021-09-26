@@ -1,13 +1,13 @@
 #include "enemy.h"
 
-EnemyBehaviuor::EnemyBehaviuor(EnemyStats &stats, Timer &timer, bool isDefault)
+EnemyBehaviuor::EnemyBehaviuor(EnemyStats &stats, Timer &timer, const bool isDefault)
 	: _enemyStats(stats), _timer(timer), _isDefault(isDefault)
 {
 }
 
 BehavoiurStatus EnemyBehaviuor::EnemyBehaviuorStatus(const glm::mat4 &pcModel, const glm::mat4 &enemyModel)
 {
-	if (_isDefault)
+	if(_isDefault)
 		return BehavoiurStatus::DEFAULT;
 	else if (HasMetPredicate(pcModel, enemyModel))
 		return BehavoiurStatus::CHOSEN;
@@ -24,11 +24,14 @@ void ChaseBehaviour::Update(const glm::mat4 &pcTransform, glm::mat4 &instanceTra
 	const glm::vec2 scaledVecToPc = helpers::scale2dVec(vecToPc, perFrameDistanceTraveled);
 	const glm::mat4 perFrameEnemyTransform = glm::translate(glm::vec3(scaledVecToPc, 0));
 	instanceTransform *= perFrameEnemyTransform;
+	if(!projInstanceTransforms.empty())
+		helpers::transformMatVec(projInstanceTransforms, _timer.Scale(_enemyStats.shotSpeed));
 }
 
 void ShootBehavoiur::Update(const glm::mat4 &pcTransform, glm::mat4 &instanceTransform, std::vector<glm::mat4> &projInstanceTransforms)
 {
-	helpers::transformMatVec(projInstanceTransforms, _timer.Scale(_enemyStats.shotSpeed));
+	if(!projInstanceTransforms.empty())
+		helpers::transformMatVec(projInstanceTransforms, _timer.Scale(_enemyStats.shotSpeed));
 	if(_timer.HeapIsItTime(_shotClockId))
 	{
 		const glm::vec2 pcPos{pcTransform * glm::vec4(0,0,0,1)};
@@ -44,8 +47,7 @@ bool ShootBehavoiur::HasMetPredicate(const glm::mat4 &pcModel, const glm::mat4 &
 {
 	const glm::vec2 pcPos	{pcModel 	* glm::vec4(0,0,0,1)};
 	const glm::vec2 enemyPos{enemyModel * glm::vec4(0,0,0,1)};
-	LOG(glm::distance(pcPos, enemyPos));
-	if(glm::distance(pcPos, enemyPos) < 10.0f)
+	if(glm::distance(pcPos, enemyPos) < 15.0f)
 	{
 		if(!_isActive)
 		{
@@ -65,13 +67,11 @@ bool ShootBehavoiur::HasMetPredicate(const glm::mat4 &pcModel, const glm::mat4 &
 	}
 }
 
-EnemyData::EnemyData(Timer &timer) 
-	: _timer(timer) 
+EnemyData::EnemyData()
 {
 	instanceTransforms		.reserve(MAX_NO_ENEMIES);
 	boundingBoxes	  		.reserve(MAX_NO_ENEMIES);
 	healths			  		.reserve(MAX_NO_ENEMIES);
-	enemyBehaviours	  		.reserve(MAX_NO_ENEMIES);
 	projInstanceTransforms	.reserve(MAX_NO_ENEMIES);
 }
 
@@ -80,7 +80,6 @@ void EnemyData::Clear()
 	instanceTransforms		.clear();
 	boundingBoxes			.clear();
 	healths					.clear();
-	enemyBehaviours			.clear();
 	projInstanceTransforms	.clear();
 
 	size = 0;
@@ -88,59 +87,97 @@ void EnemyData::Clear()
 
 void EnemyData::Erase(const ui index)
 {
-	instanceTransforms		[index] = 			instanceTransforms		[size - 1];
-	boundingBoxes			[index] = 			boundingBoxes				[size - 1];
-	enemyBehaviours			[index] = std::move(enemyBehaviours			[size - 1]);
-	projInstanceTransforms	[index] = 			projInstanceTransforms	[size - 1];
-	healths					[index] = 			healths					[size - 1];
+	instanceTransforms		[index] = instanceTransforms	[size - 1];
+	boundingBoxes			[index] = boundingBoxes			[size - 1];
+	projInstanceTransforms	[index] = projInstanceTransforms[size - 1];
+	healths					[index] = healths				[size - 1];
 	instanceTransforms		.pop_back();
 	boundingBoxes			.pop_back();
-	enemyBehaviours			.pop_back();
 	projInstanceTransforms	.pop_back();
 	healths					.pop_back();
 
 	size--;
 }
 
-void EnemyData::Push(const glm::mat4 &instanceTransform, const UntexturedMeshParams &params, EnemyStats &stats, behavoiurPtrVec &behaviours)
+void EnemyData::Push(const glm::mat4 &instanceTransform, const UntexturedMeshParams &params, EnemyStats &stats)
 {
 	instanceTransforms		.push_back(instanceTransform);
 	boundingBoxes			.emplace_back(params, instanceTransform);
-	enemyBehaviours			.push_back(std::move(behaviours));
 	projInstanceTransforms	.emplace_back();
 	healths					.push_back(stats.health);
 	
 	size++;
 }
 
-void EnemyData::Update(const glm::mat4 &pcModel, const ui index)
+Enemy::Enemy(Timer &timer, Shader &enemyShader, EnemyStats &stats, const UntexturedMeshParams &params, behavoiurPtrVec &behaviours, 
+		const glm::vec3 &colour, const ui maxNoInstances, Shader *projShaderPtr, const UntexturedMeshParams *projParamsPtr)
+	: _timer(timer), _enemyShader(enemyShader), _stats(stats), _params(params), _mesh(_params, maxNoInstances), _behaviours(std::move(behaviours)), 
+		_colourUni("colour", colour), _maxNoInstances(maxNoInstances), _projShaderPtr(projShaderPtr), _projParamsPtr(projParamsPtr)
 {
-	const auto chosenBehavoiurIter = choseBehaviour(enemyBehaviours[index], pcModel, instanceTransforms[index]);
-	chosenBehavoiurIter->get()->Update(pcModel, instanceTransforms[index], projInstanceTransforms[index]);
-	boundingBoxes[index].minCoords = glm::vec2(instanceTransforms[index] * glm::vec4(boundingBoxes[index].minDimentions, 0, 1));
-	boundingBoxes[index].maxCoords = glm::vec2(instanceTransforms[index] * glm::vec4(boundingBoxes[index].maxDimentions, 0, 1));
+	if(_projParamsPtr != nullptr)
+		_projMeshPtr.reset(new UntexturedInstancedMesh(*_projParamsPtr));
 }
 
-EnemyManager::EnemyManager(Shader &enemyShader, helpers::Core &core, const UntexturedMeshParams &params, EnemyStats &enemyStats)
- : _enemyShader(enemyShader), _camera(core.camera), _pcStats(core.stats), _timer(core.timer), _enemyData(core.timer),
- 	 _enemyMeshParams(params), _enemyMesh(params, MAX_NO_ENEMIES), _enemyStats(enemyStats)
+void Enemy::Update(const glm::mat4 &pcModel)
 {
+	for(ui i = 0; i < data.size; ++i)
+	{
+		const auto chosenBehavoiurIter = choseBehaviour(_behaviours, pcModel, data.instanceTransforms[i]);
+		chosenBehavoiurIter->get()->Update(pcModel, data.instanceTransforms[i], data.projInstanceTransforms[i]);
+		data.boundingBoxes[i].minCoords = glm::vec2(data.instanceTransforms[i] * glm::vec4(data.boundingBoxes[i].minDimentions, 0, 1));
+	    data.boundingBoxes[i].maxCoords = glm::vec2(data.instanceTransforms[i] * glm::vec4(data.boundingBoxes[i].maxDimentions, 0, 1));
+	}
+}
+
+void Enemy::Spawn(const glm::mat4 &instanceTransform)
+{
+	if(_maxNoInstances > data.size)
+		data.Push(instanceTransform, _params, _stats);
+}
+
+void Enemy::Draw(const glm::mat4 &cameraProjection)
+{
+	helpers::render(_enemyShader, _mesh, data.instanceTransforms.data(), data.size, _blankTransform, cameraProjection, _colourUni);
+	if(_projShaderPtr != nullptr)
+	{
+		const auto flattenedVec = helpers::flattenVec(data.projInstanceTransforms);
+		const std::size_t noProjectiles = helpers::twoDVecSize(data.projInstanceTransforms);
+		helpers::render(*_projShaderPtr, *_projMeshPtr.get(), flattenedVec.data(), noProjectiles, _blankTransform, cameraProjection);
+	}
+}
+
+EnemyManager::EnemyManager(Shader &enemyShader, helpers::Core &core, const UntexturedMeshParams &params, EnemyStats &enemyStats, 
+	const UntexturedMeshParams &projParams)
+ : _enemyShader(enemyShader), _camera(core.camera), _pcStats(core.stats), _timer(core.timer), _enemyStats(enemyStats)
+{
+	behavoiurPtrVec chaserVec;
+	behavoiurPtrVec shooterVec;
+	_enemies.reserve(EnemyTypeEnum::NO_ENEMY_TYPES);
+	chaserVec .push_back(std::make_unique<ChaseBehaviour>(_enemyStats, _timer));
+	shooterVec.push_back(std::make_unique<ChaseBehaviour>(_enemyStats, _timer));
+	shooterVec.push_back(std::make_unique<ShootBehavoiur>(_enemyStats, _timer));
+	_enemies.emplace_back(_timer, _enemyShader, _enemyStats, params, chaserVec,  glm::vec3(0.25f, 0.57f, 0.38f), MAX_NO_ENEMIES);
+	_enemies.emplace_back(_timer, _enemyShader, _enemyStats, params, shooterVec, glm::vec3(0.63f, 0.16f, 0.16f), MAX_NO_SHOOTER_ENEMIES, 
+		&_enemyProjShader, &projParams);
 }
 
 void EnemyManager::RecordCollisions(const std::vector<glm::mat4> &projectileTransforms,
 	const std::function<void(ui)> projectileHitCallback, std::function<void(const glm::mat4&, const ui)> fatalityCallback)
 {
-	ui collisionIndex;
-	for(ui i = 0; i < _enemyData.size; ++i)
+	for(auto &enemy : _enemies)
 	{
-		if(_enemyData.boundingBoxes[i].IsThereAnIntersection(projectileTransforms, collisionIndex))
+		ui collisionIndex;
+		for(ui i = 0; i < enemy.data.size; ++i)
 		{
-			projectileHitCallback(collisionIndex);
-			_enemyData.healths[i] -= decl_cast(_enemyData.healths, _pcStats.actualDamage);
-			if(_enemyData.healths[i] <= 0)
+			if(enemy.data.boundingBoxes[i].IsThereAnIntersection(projectileTransforms, collisionIndex))
 			{
-				fatalityCallback(_enemyData.instanceTransforms[i], 3);
-				_enemyData.Erase(i);
+				projectileHitCallback(collisionIndex);
+				enemy.data.healths[i] -= decl_cast(enemy.data.healths, _pcStats.actualDamage);
+				if(enemy.data.healths[i] <= 0)
+				{
+					fatalityCallback(enemy.data.instanceTransforms[i], 3);
+					enemy.data.Erase(i);
+				}
 			}
 		}
 	}
@@ -148,49 +185,54 @@ void EnemyManager::RecordCollisions(const std::vector<glm::mat4> &projectileTran
 
 void EnemyManager::RecordPCIntersection(const std::vector<glm::vec2> &pcPositions, const std::function<void()> intersectionCallback)
 {
-	for (auto &enemyBoundingBox : _enemyData.boundingBoxes)
+	for(auto &enemy : _enemies)
 	{
-		if(enemyBoundingBox.IsThereAnIntersection(pcPositions))
+		for (auto &enemyBoundingBox : enemy.data.boundingBoxes)
 		{
-			intersectionCallback();
-			break;
+			if(enemyBoundingBox.IsThereAnIntersection(pcPositions))
+			{
+				intersectionCallback();
+				break;
+			}
 		}
 	}
 }
 
 void EnemyManager::Reset()
 {
-	_enemyData.Clear();
+	for(auto &enemy : _enemies)
+		enemy.data.Clear();
 }
 
 void EnemyManager::Draw()
 {
-	helpers::render(_enemyShader, _enemyMesh, _enemyData.instanceTransforms.data(), _enemyData.instanceTransforms.size(), _blankTransform, 
-		_camera.ViewProjection());
+	for(auto &enemy : _enemies)
+		enemy.Draw(_camera.ViewProjection());
 }
 
 void EnemyManager::UpdateBehaviour(const glm::mat4 &pcModel)
 {
-	for (ui i = 0; i < _enemyData.size; ++i)
-		_enemyData.Update(pcModel, i);
+	for(auto &enemy : _enemies)
+		enemy.Update(pcModel);
+}
+
+std::vector<std::vector<glm::mat4>*> EnemyManager::InstanceTransforms()
+{
+	std::vector<std::vector<glm::mat4>*> enemyInstanceTransforms;
+	for(auto &enemy : _enemies)
+		enemyInstanceTransforms.push_back(&enemy.data.instanceTransforms);
+	return enemyInstanceTransforms;
 }
 
 void EnemyManager::Spawn(const glm::mat4 &pcModel)
 {
-	if(_enemyData.size >= MAX_NO_ENEMIES)
-		return;
-
 	glm::vec2 pcPos{pcModel * glm::vec4(0,0,0,1)};
 	const ft enemyX = _customRand.NextUi() % 2 ? _customRand.NextFloat(pcPos.x - 9.0f,  pcPos.x - 11.0f) : _customRand.NextFloat(pcPos.x + 9.0f, pcPos.x + 11.0f);
 	const ft enemyY = _customRand.NextUi() % 2 ? _customRand.NextFloat(pcPos.y - 9.0f,  pcPos.y - 11.0f) : _customRand.NextFloat(pcPos.y + 9.0f, pcPos.y + 11.0f);
 
-	behavoiurPtrVec behaviours;
-	behaviours.push_back(std::make_unique<ChaseBehaviour>(_enemyStats, _timer));
-	if(!(_customRand.NextUi() % 10))
-	{
-		behaviours.push_back(std::make_unique<ShootBehavoiur>(_enemyStats, _timer));
-	}
-
 	glm::mat4 instanceTransform = _enemyTransform.Model() * glm::translate(glm::vec3(enemyX, enemyY, 0));
-	_enemyData.Push(instanceTransform, _enemyMeshParams, _enemyStats, behaviours);
-} 
+	if(!(_customRand.NextUi() % 10))
+		_enemies[SHOOTER_ENEMY].Spawn(instanceTransform);
+	else
+		_enemies[CHASER_ENEMY] .Spawn(instanceTransform);
+}

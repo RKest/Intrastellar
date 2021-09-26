@@ -106,7 +106,7 @@ struct EnemyStats
 static const EnemyStats defaultEnemyStats{
     0.01,
     0.01f,
-    2000.0,
+    600.0,
     0.0f,
     100
 };

@@ -41,7 +41,7 @@ int main()
 	Timer timer(text, playerStats);
 	helpers::Core core{camera, text, timer, playerStats};
 	ExpManager expManager(core, expParams, expBarParams);
-	EnemyManager enemyManager(enemyShader, core, enemyMeshParams, enemyStats);
+	EnemyManager enemyManager(enemyShader, core, enemyMeshParams, enemyStats, projectileParams);
 	PlayerCharacter playerCharacter(core, pcParams, projectileParams);
 	Controler controler(display, camera, timer, playerCharacter.PcTransform());
 	CardDeck cardDeck(enemyShader, core, overlayParams, cardBorderParams, enemyMeshParams, playerCharacter.ExternDrawCb());

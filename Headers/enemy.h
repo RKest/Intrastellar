@@ -16,7 +16,7 @@
 #include <functional>
 #include <vector>
 #include <memory>
-
+#include <array>
 
 enum BehavoiurStatus
 {
@@ -28,7 +28,7 @@ enum BehavoiurStatus
 class EnemyBehaviuor
 {
 public:
-	EnemyBehaviuor(EnemyStats &stats, Timer &timer, bool isDefault = false);
+	EnemyBehaviuor(EnemyStats &stats, Timer &timer, const bool isDefault = false);
 	EnemyBehaviuor(EnemyBehaviuor&&) = default;
 	EnemyBehaviuor(const EnemyBehaviuor&) = default;
 	EnemyBehaviuor operator=(const EnemyBehaviuor& rhs) { return EnemyBehaviuor(rhs); }
@@ -89,44 +89,48 @@ inline static auto choseBehaviour(behavoiurPtrVec &behavoiurs, const glm::mat4 &
 	throw std::runtime_error("ERROR:choseBehaviour: Failed to chose a behaviour");
 }
 
-class EnemyData
+struct EnemyData
 {
-public:
-	EnemyData(Timer &_timer);
-
+	EnemyData();
 	std::vector<glm::mat4> 				instanceTransforms;
 	std::vector<helpers::BoundingBox>	boundingBoxes;
 	std::vector<si>						healths;
-	std::vector<behavoiurPtrVec>		enemyBehaviours;
+	behavoiurPtrVec						enemyBehaviours;
 	std::vector<std::vector<glm::mat4>> projInstanceTransforms;
-	ui size = 0;
+	size_t size = 0;
 	void Clear();
 	void Erase(const ui index);
-	void Push(const glm::mat4 &instanceTransform, const UntexturedMeshParams &params, EnemyStats &stats, behavoiurPtrVec &behaviours);
-	void Update(const glm::mat4 &pcModel, const ui index);
-private:
-	Timer &_timer;
+	void Push(const glm::mat4 &instanceTransform, const UntexturedMeshParams &params, EnemyStats &stats);
 };
 
 class Enemy
 {
 public:
-	Enemy(Timer &timer, EnemyStats &stats, const UntexturedMeshParams &params, behavoiurPtrVec &behaviours);
-	void Spawn();
-	void Despawn();
+	Enemy(Timer &timer, Shader &enemyShader, EnemyStats &stats, const UntexturedMeshParams &params, behavoiurPtrVec &behaviours, 
+		const glm::vec3 &colour, const ui maxNoInstances, Shader *projShaderPtr = nullptr, const UntexturedMeshParams *projParamsPtr = nullptr);
+	void Update(const glm::mat4 &pcModel);
+	void Spawn(const glm::mat4 &instanceTransform);
+	void Draw(const glm::mat4 &cameraProjection);
+	EnemyData data;
 private:
 	Timer &_timer;
-	EnemyData _data;
+	Shader &_enemyShader;
 	EnemyStats &_stats;
 	const UntexturedMeshParams _params;
 	UntexturedInstancedMesh _mesh;
-
+	behavoiurPtrVec _behaviours;
+	const vecUni _colourUni;
+	const ui _maxNoInstances;
+	Shader *_projShaderPtr;
+	const UntexturedMeshParams *_projParamsPtr;
+	std::unique_ptr<UntexturedInstancedMesh> _projMeshPtr;
 };
 
 class EnemyManager
 {
 public:
-	EnemyManager(Shader &enemyShader, helpers::Core &core, const UntexturedMeshParams &params, EnemyStats &enemyStats);
+	EnemyManager(Shader &enemyShader, helpers::Core &core, const UntexturedMeshParams &params, EnemyStats &enemyStats, 
+		const UntexturedMeshParams &projParams);
 
 	void Reset();
 	void Draw();
@@ -135,19 +139,26 @@ public:
 		const std::function<void(ui)> projectileHitCallback, std::function<void(const glm::mat4&, const ui)> fatalityCallback);
 	void RecordPCIntersection(const std::vector<glm::vec2> &pcPositions, const std::function<void()> intersectionCallback);
 	void UpdateBehaviour(const glm::mat4 &pcModel);
-	inline std::vector<glm::mat4> &InstanceTransforms() { return _enemyData.instanceTransforms; }
+	std::vector<std::vector<glm::mat4>*> InstanceTransforms();
 
 private:
+	enum EnemyTypeEnum
+	{
+		CHASER_ENEMY,
+		SHOOTER_ENEMY,
+
+		NO_ENEMY_TYPES
+	};
+
 	Shader &_enemyShader;
 	Shader _enemyProjShader{"./Shaders/EnemyProjectile"};
 	Camera &_camera;
 	PlayerStats &_pcStats;
 	Timer &_timer;
 	EnemyData _enemyData;
-	const UntexturedMeshParams _enemyMeshParams;
-	UntexturedInstancedMesh _enemyMesh;
 	EnemyStats &_enemyStats;
 	Transform _enemyTransform;
 	CustomRand _customRand{CUSTOM_RAND_SEED};
+	std::vector<Enemy> _enemies;
 
 };

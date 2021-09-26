@@ -38,7 +38,7 @@ void PlayerCharacter::RenderScore()
 	_text.Render(scoreString, 10.0f, static_cast<ft>(SCREEN_HEIGHT) - 40.0f, 1.0f, glm::vec3(1));
 }
 
-void PlayerCharacter::Update(const std::vector<glm::mat4> &enemyInstanceTransforms)
+void PlayerCharacter::Update(const std::vector<std::vector<glm::mat4>*> &enemyInstanceTransforms)
 {
 	if(_isInvincible && _timer.HeapIsItTime(_invincibilityClockId))
 		_isInvincible = false;
@@ -135,21 +135,29 @@ constexpr ft PlayerCharacter::_setAlpha(db remainingInvincibilityTime)
 }
 
 
-glm::mat4 PlayerCharacter::_moveProj(const std::vector<glm::mat4> &enemyInstanceTransforms, const glm::mat4 &projTransform) const
+glm::mat4 PlayerCharacter::_moveProj(const std::vector<std::vector<glm::mat4>*> &enemyInstanceTransforms, const glm::mat4 &projTransform) const
 {
 	const ft maxProjTurningRadius = _timer.Scale(MAX_PROJ_TURNING_RAD);
 	const glm::mat4 perFrameTransform = glm::translate(glm::vec3(0, _timer.Scale(_pcStats.shotSpeed), 0));
 	if(_pcStats.shotHomingStrength == 0.0f)
 		return perFrameTransform; 
-	
+
 	const glm::vec2 projPos{projTransform * glm::vec4(0,0,0,1)};
-	auto closestEnemyMat = std::min_element(enemyInstanceTransforms.cbegin(), enemyInstanceTransforms.cend(), [&projPos](auto &m1, auto &m2)
-		{ return glm::distance(glm::vec2(m1 * glm::vec4(0,0,0,1)), projPos) < glm::distance(glm::vec2(m2 * glm::vec4(0,0,0,1)), projPos); });
+	auto closestEnemyMatIter = enemyInstanceTransforms[0]->cbegin();
+	for(auto &enemyInstanceTransformsVecPtr : enemyInstanceTransforms)
+	{
+		const auto closestEnemyMat = std::min_element(enemyInstanceTransformsVecPtr->cbegin(), enemyInstanceTransformsVecPtr->cend(), [&projPos](auto &m1, auto &m2)
+			{ return glm::distance(glm::vec2(m1 * glm::vec4(0,0,0,1)), projPos) < glm::distance(glm::vec2(m2 * glm::vec4(0,0,0,1)), projPos); });
+		if(glm::distance(glm::vec2(*closestEnemyMatIter * glm::vec4(0,0,0,1)), projPos) > 
+		   glm::distance(glm::vec2(*closestEnemyMat 	* glm::vec4(0,0,0,1)), projPos))
+			closestEnemyMatIter = closestEnemyMat;
+	}
 
-	if(closestEnemyMat == enemyInstanceTransforms.end())
-		return perFrameTransform;
+	for(auto &enemyInstanceTransformsVecPtr : enemyInstanceTransforms)
+		if(closestEnemyMatIter == enemyInstanceTransformsVecPtr->cend())
+			return perFrameTransform;
 
-	const glm::vec2 closestEnemyPos{*closestEnemyMat * glm::vec4(0,0,0,1)};
+	const glm::vec2 closestEnemyPos{*closestEnemyMatIter * glm::vec4(0,0,0,1)};
 	if(glm::distance(projPos, closestEnemyPos) > _pcStats.shotHomingStrength)
 		return perFrameTransform; 
 		
