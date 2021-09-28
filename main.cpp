@@ -41,10 +41,10 @@ int main()
 	Timer timer(text, playerStats);
 	helpers::Core core{camera, text, timer, playerStats};
 	ExpManager expManager(core, expParams, expBarParams);
-	EnemyManager enemyManager(enemyShader, core, enemyMeshParams, enemyStats, projectileParams);
 	PlayerCharacter playerCharacter(core, pcParams, projectileParams);
-	Controler controler(display, camera, timer, playerCharacter.PcTransform());
-	CardDeck cardDeck(enemyShader, core, overlayParams, cardBorderParams, enemyMeshParams, playerCharacter.ExternDrawCb());
+	EnemyManager enemyManager(enemyShader, core, enemyMeshParams, enemyStats, projectileParams, playerCharacter.Interface());
+	Controler controler(display, camera, timer, playerCharacter.Interface()->Transform());
+	CardDeck cardDeck(enemyShader, core, overlayParams, cardBorderParams, enemyMeshParams, playerCharacter.Interface()->ExternDraw());
 
 	const auto render = [&]
 	{
@@ -58,19 +58,17 @@ int main()
 	while (!display.IsClosed())
 	{
 		timer.RecordFrame();
-		const glm::mat4 pcModel = playerCharacter.PcTransform().Model();
+		glm::mat4 pcModel = playerCharacter.Interface()->Transform().Model();
 		controler.CaptureKeyboardPresses(playerCharacter.IsAlive());
 		controler.CaptureMouseMovement();
 
-		enemyManager.UpdateBehaviour(pcModel, playerCharacter.PcBoundingBox(), playerCharacter.PCIntersectionCb());
+		enemyManager.UpdateBehaviour(helpers::transformStdVector(pcParams, pcModel), expManager.CreateExpParticlesCb());
 		if (timer.IsItTime(Timer::ClocksEnum::SPAWN_CLOCK))
-			enemyManager.Spawn(pcModel);
+			enemyManager.Spawn();
 
 		if (timer.IsItTime(Timer::ClocksEnum::SHOT_CLOCK))
-			playerCharacter.Shoot(pcModel);
+			playerCharacter.Shoot();
 		playerCharacter.Update(enemyManager.InstanceTransforms());
-		enemyManager.RecordCollisions(playerCharacter.ProjTransforms(), playerCharacter.ProjHitCb(), expManager.CreateExpParticlesCb());
-		enemyManager.RecordPCIntersection(helpers::transformStdVector(pcParams, pcModel), playerCharacter.PCIntersectionCb());
 		if(expManager.HasThereBeenLevelUp())
 		{
 			playerStats.enemySpawnRate *= 0.5f;
@@ -105,8 +103,8 @@ int main()
 				expManager.Reset();
 				enemyManager.Reset();
 				playerCharacter.Reset();
-				playerCharacter.PcTransform().Pos().x = 0;
-				playerCharacter.PcTransform().Pos().y = 0;
+				playerCharacter.Interface()->Transform().Pos().x = 0;
+				playerCharacter.Interface()->Transform().Pos().y = 0;
 				camera.Pos().x = 0;
 				camera.Pos().y = 0;
 			}

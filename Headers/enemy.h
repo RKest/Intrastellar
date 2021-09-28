@@ -11,6 +11,7 @@
 #include "Core/helpers.h"
 #include "Core/stats.h"
 #include "Core/bounding_box.h"
+#include "player_character.h"
 
 #include <execution>
 #include <algorithm>
@@ -26,19 +27,20 @@ enum BehavoiurStatus
 	DEFAULT
 };
 
+class EnemyManager;
+
 class EnemyBehaviuor
 {
 public:
-	EnemyBehaviuor(EnemyStats &stats, Timer &timer, const bool isDefault = false);
+	EnemyBehaviuor(EnemyManager &manager, bool isDefault = false);
 	virtual ~EnemyBehaviuor() = default;
-	virtual void Update(const glm::mat4 &pcTransform, glm::mat4 &instanceTransform, std::vector<glm::mat4> &projInstanceTransforms, 
-		const TriBoundingBox &pcBoundingBox, const std::function<void()> intersectionCallback) = 0;
-	[[nodiscard]]BehavoiurStatus EnemyBehaviuorStatus(const glm::mat4 &pcModel, const glm::mat4 &enemyModel);
+	virtual void Update(glm::mat4 &instanceTransform, std::vector<glm::mat4> &projInstanceTransforms) = 0;
+	[[nodiscard]]BehavoiurStatus EnemyBehaviuorStatus(const glm::mat4 &enemyModel);
 	inline bool &IsActive() { return _isActive; }
 protected:
-	virtual bool HasMetPredicate([[maybe_unused]]const glm::mat4 &pcModel, [[maybe_unused]]const glm::mat4 &enemyModel) { return true; };
-	EnemyStats &_enemyStats;
-	Timer &_timer;
+	virtual bool HasMetPredicate([[maybe_unused]]const glm::mat4 &enemyModel) { return true; };
+	void UpdateProjs(std::vector<glm::mat4> &projInstanceTransforms);
+	EnemyManager &_manager;
 	bool _isActive{};
 	const bool _isDefault;
 };
@@ -48,9 +50,8 @@ using behavoiurPtrVec = std::vector<std::unique_ptr<EnemyBehaviuor>>;
 class ChaseBehaviour : public EnemyBehaviuor
 {
 public:
-	ChaseBehaviour(EnemyStats &enemyStats, Timer &timer) : EnemyBehaviuor(enemyStats, timer, true) {};
-	void Update(const glm::mat4 &pcTransform, glm::mat4 &instanceTransform, std::vector<glm::mat4> &projInstanceTransforms, 
-		const TriBoundingBox &pcBoundingBox, const std::function<void()> intersectionCallback) override;
+	ChaseBehaviour(EnemyManager &manager) : EnemyBehaviuor(manager, true) {};
+	void Update(glm::mat4 &instanceTransform, std::vector<glm::mat4> &projInstanceTransforms) override;
 
 private:
 };
@@ -58,17 +59,16 @@ private:
 class ShootBehavoiur : public EnemyBehaviuor
 {
 public:
-	ShootBehavoiur(EnemyStats &enemyStats, Timer &timer) : EnemyBehaviuor(enemyStats, timer) {};
-	void Update(const glm::mat4 &pcTransform, glm::mat4 &instanceTransform, std::vector<glm::mat4> &projInstanceTransforms, 
-		const TriBoundingBox &pcBoundingBox, const std::function<void()> intersectionCallback) override;
+	ShootBehavoiur(EnemyManager &manager) : EnemyBehaviuor(manager, false) {};
+	void Update(glm::mat4 &instanceTransform, std::vector<glm::mat4> &projInstanceTransforms) override;
 
 private:
-	bool HasMetPredicate(const glm::mat4 &pcModel, const glm::mat4 &enemyModel);
+	bool HasMetPredicate(const glm::mat4 &enemyModel);
 	ui _latestShotIndex{};
 	ui _shotClockId;
 };
 
-inline static auto choseBehaviour(behavoiurPtrVec &behavoiurs, const glm::mat4 &pcModel, const glm::mat4 &enemyModel)
+inline static auto choseBehaviour(behavoiurPtrVec &behavoiurs, const glm::mat4 &enemyModel)
 {
 	const auto bbegin = behavoiurs.begin();
 	const auto bend = behavoiurs.end();
@@ -76,7 +76,7 @@ inline static auto choseBehaviour(behavoiurPtrVec &behavoiurs, const glm::mat4 &
 	auto defaultIt = bend;
 	for(auto i = bbegin; i != bend; ++i)
 	{
-		const BehavoiurStatus behaviourStatus = i->get()->EnemyBehaviuorStatus(pcModel, enemyModel);
+		const BehavoiurStatus behaviourStatus = i->get()->EnemyBehaviuorStatus(enemyModel);
 		if(BehavoiurStatus::CHOSEN == behaviourStatus)
 			chosenIt = i;
 		else if(BehavoiurStatus::DEFAULT == behaviourStatus)
@@ -93,7 +93,7 @@ struct EnemyData
 {
 	EnemyData();
 	std::vector<glm::mat4> 				instanceTransforms;
-	std::vector<ReqBoundingBox>	boundingBoxes;
+	std::vector<ReqBoundingBox>			boundingBoxes;
 	std::vector<si>						healths;
 	behavoiurPtrVec						enemyBehaviours;
 	std::vector<std::vector<glm::mat4>> projInstanceTransforms;
@@ -106,43 +106,41 @@ struct EnemyData
 class Enemy
 {
 public:
-	Enemy(Timer &timer, Shader &enemyShader, EnemyStats &stats, const UntexturedMeshParams &params, behavoiurPtrVec &behaviours, 
-		const glm::vec3 &colour, const ui maxNoInstances, Shader *projShaderPtr = nullptr, const UntexturedMeshParams *projParamsPtr = nullptr);
-	void Update(const glm::mat4 &pcModel, const TriBoundingBox &pcBoundingBox, const std::function<void()> intersectionCallback);
+	Enemy(EnemyManager &manager, behavoiurPtrVec &behaviours, const glm::vec3 &colour, const ui maxNoInstances);
+	Enemy(const Enemy&) = delete;
+	Enemy(Enemy&&) = default;
+	void Update();
 	void Spawn(const glm::mat4 &instanceTransform);
-	void Draw(const glm::mat4 &cameraProjection);
+	void Draw();
 	EnemyData data;
 private:
-	Timer &_timer;
-	Shader &_enemyShader;
-	EnemyStats &_stats;
-	const UntexturedMeshParams _params;
+	EnemyManager &_manager;
 	UntexturedInstancedMesh _mesh;
+	UntexturedInstancedMesh _projMesh;
 	behavoiurPtrVec _behaviours;
 	const vecUni _colourUni;
 	const ui _maxNoInstances;
-	Shader *_projShaderPtr;
-	const UntexturedMeshParams *_projParamsPtr;
-	std::unique_ptr<UntexturedInstancedMesh> _projMeshPtr;
 };
 
 class EnemyManager
 {
 public:
 	EnemyManager(Shader &enemyShader, helpers::Core &core, const UntexturedMeshParams &params, EnemyStats &enemyStats, 
-		const UntexturedMeshParams &projParams);
+		const UntexturedMeshParams &projParams, IPlayerCharacter *pcInterface);
 
 	void Reset();
 	void Draw();
-	void Spawn(const glm::mat4 &pcModel);
-	void RecordCollisions(const std::vector<glm::mat4> &projectileTransforms, 
-		const std::function<void(ui)> projectileHitCallback, std::function<void(const glm::mat4&, const ui)> fatalityCallback);
-	void RecordPCIntersection(const std::vector<glm::vec2> &pcPositions, const std::function<void()> intersectionCallback);
-	void UpdateBehaviour(const glm::mat4 &pcModel, const TriBoundingBox &pcBoundingBox, const std::function<void()> intersectionCallback);
+	void Spawn();
+	void UpdateBehaviour(const std::vector<glm::vec2> &pcPositions, std::function<void(const glm::mat4&, const ui)> fatalityCallback);
 	std::vector<std::vector<glm::mat4>*> InstanceTransforms();
 
 private:
-	enum EnemyTypeEnum
+	friend class Enemy;
+	friend class EnemyData;
+	friend class EnemyBehaviuor;
+	friend class ChaseBehaviour;
+	friend class ShootBehavoiur;
+	enum EnemyTypeEnum : std::size_t
 	{
 		CHASER_ENEMY,
 		SHOOTER_ENEMY,
@@ -157,6 +155,11 @@ private:
 	Timer &_timer;
 	EnemyData _enemyData;
 	EnemyStats &_enemyStats;
+	const UntexturedMeshParams _enemyParams;
+	const UntexturedMeshParams _enemyProjParams;
+	IPlayerCharacter _pcInterface;
+
+	glm::mat4 _pcModel;
 	Transform _enemyTransform;
 	CustomRand _customRand{CUSTOM_RAND_SEED};
 	std::vector<Enemy> _enemies;

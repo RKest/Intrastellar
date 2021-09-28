@@ -109,3 +109,5 @@ constexpr T decl_cast([[maybe_unused]]const T &to, const U &from)
 {
    return static_cast<T>(from);
 }
+
+#define DECL_INST(name, val) decltype(val) name = val

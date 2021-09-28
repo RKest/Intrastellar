@@ -4,12 +4,18 @@
 
 PlayerCharacter::PlayerCharacter(helpers::Core &core, const UntexturedMeshParams &pcParams, const UntexturedMeshParams &projParams)
 	: _camera(core.camera), _text(core.text), _timer(core.timer), _pcStats(core.stats), _pcMesh(pcParams), _pcCardMesh(pcParams, NO_CARDS), 
-		_projMesh(projParams, MAX_PROJ_AMOUNT), _projCardMesh(projParams, CARD_MAX_PROJ_COUNT), _pcBoundingBox(pcParams)
+		_projMesh(projParams, MAX_PROJ_AMOUNT), _projCardMesh(projParams, CARD_MAX_PROJ_COUNT), _pcBoundingBox(pcParams), 
+		_pcInterface(new IPlayerCharacter(this))
 {
 	_projectileShader.Bind();
 	const std::vector<glm::vec3> colours = {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
 	for (ui i = 0; i < colours.size(); ++i)
 		_projectileShader.SetUni("colours[" + std::to_string(i) + ']', colours[i]);
+}
+
+PlayerCharacter::~PlayerCharacter()
+{
+	delete _pcInterface;
 }
 
 void PlayerCharacter::Reset()
@@ -64,8 +70,9 @@ void PlayerCharacter::Draw()
 	helpers::render(_pcShader, _pcMesh, _pcTransform.Model(), _camera.ViewProjection(), _pcAlphaValue);
 }
 
-void PlayerCharacter::Shoot(const glm::mat4 &originTransform)
+void PlayerCharacter::Shoot()
 {
+	const glm::mat4 originTransform = _pcTransform.Model();
 	if(_pcStats.noShots == 1)
     	helpers::pushToCappedVector(_projInstanceTransforms, originTransform, _oldestProjectileIndex, MAX_PROJ_AMOUNT);
 	else if (_pcStats.noShots % 2 == 0)
@@ -147,6 +154,9 @@ glm::mat4 PlayerCharacter::_moveProj(const std::vector<std::vector<glm::mat4>*> 
 	if(_pcStats.shotHomingStrength == 0.0f)
 		return perFrameTransform; 
 
+	if(enemyInstanceTransforms.empty())
+		return perFrameTransform;
+		
 	const glm::vec2 projPos{projTransform * glm::vec4(0,0,0,1)};
 	auto closestEnemyMatIter = enemyInstanceTransforms[0]->cbegin();
 	for(auto &enemyInstanceTransformsVecPtr : enemyInstanceTransforms)

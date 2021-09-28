@@ -17,7 +17,7 @@ public:
 
     inline glm::vec3 &Pos() { return position; }
     inline glm::vec3 &Fwd() { return forward; }
-    inline glm::vec3 &Up() { return up; }
+    inline glm::vec3 &Up()  { return up; }
 
 
     inline glm::mat4 ViewProjection() const
