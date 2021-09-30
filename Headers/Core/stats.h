@@ -104,9 +104,9 @@ struct EnemyStats
 };
 
 static const EnemyStats defaultEnemyStats{
-    0.01,
-    0.01f,
-    600.0,
-    0.0f,
-    100
+    0.01,   //speed
+    0.01f,  //shotSpeed
+    300.0,  //shotDelay
+    0.0f,   //shotRange
+    100     //health
 };

@@ -72,42 +72,63 @@ bool ShootBehavoiur::HasMetPredicate(const glm::mat4 &enemyModel)
 	}
 }
 
+OrbiterBehaviour::OrbiterBehaviour(EnemyManager &manager) : EnemyBehaviuor(manager, true) 
+{
+	manager._timer.InitHeapClock(_shotClockId, manager._enemyStats.shotDelay);
+}
+
 void OrbiterBehaviour::Update(glm::mat4 &instanceTransform, std::vector<glm::mat4> &projInstanceTransforms)
 {
+	const glm::vec2 enemyPos{instanceTransform * glm::vec4(0,0,0,1)};
 	const ft distanceFromTheCenter = 5.0f;
 	const ft circAroundTheCenter = distanceFromTheCenter * TAU;
 	const ft scaledProjDistanceToTravelPerFrame = static_cast<ft>(_manager._timer.Scale(_manager._enemyStats.speed));
-	const ft fractionOfTheCircTraveledPerFrame = circAroundTheCenter / scaledProjDistanceToTravelPerFrame;
-	const ft projAngleToTurn = TAU * fractionOfTheCircTraveledPerFrame;
 	const glm::mat4 localTransform = helpers::transformTowards(instanceTransform, _manager._pcModel, scaledProjDistanceToTravelPerFrame);
-	instanceTransform *= localTransform;
-	for(auto &projTransform : projInstanceTransforms)
-		projTransform *= localTransform;
-
 	const size_t noProjectiles = projInstanceTransforms.size();
 	if(noProjectiles < MAX_PROJ_AMOUNT_PER_ORBIT && _manager._timer.HeapIsItTime(_shotClockId))
 	{
 		projInstanceTransforms.push_back(instanceTransform);
 	}
 	const ft desieredAngle = TAU / static_cast<ft>(noProjectiles);
-	std::vector<ft> projAngles;
-	for(auto &projTransform : projInstanceTransforms)
+	std::vector<std::pair<ft, std::reference_wrapper<glm::mat4>>> orbitProjData;
+	std::vector<std::reference_wrapper<glm::mat4>> movingToOrbitProjData;
+	orbitProjData.reserve(noProjectiles);
+	movingToOrbitProjData.reserve(noProjectiles);
+
+	for(auto &projInstanceTransforms : projInstanceTransforms)
 	{
-		projAngles.push_back(helpers::angleBetweenPoints(projTransform, instanceTransform));
+		const glm::vec2 projPos{projInstanceTransforms * glm::vec4(0,0,0,1)};
+		if(glm::distance(projPos, enemyPos) < distanceFromTheCenter)
+			movingToOrbitProjData.push_back(projInstanceTransforms);
+		else
+		{
+			const ft projAngle = helpers::angleBetweenPoints(projInstanceTransforms, instanceTransform);
+			orbitProjData.emplace_back(projAngle, projInstanceTransforms);
+		}
 	}
-	std::sort(begin(projAngles), end(projAngles));
-	const auto projBegin = begin(projAngles);
-	const auto projEnd = end(projAngles);
+
+	std::sort(begin(orbitProjData), end(orbitProjData), 
+		[](auto &el1, auto &el2){ return el1.first > el2.first; });
+
+	const auto projBegin = begin(orbitProjData);
+	const auto projEnd = end(orbitProjData);
 	for(auto i = projBegin; i != projEnd; ++i)
 	{
 		const auto next = (i + 1) != projEnd ? i + 1 : projBegin;
-		const ft angleToNext = ((TAU + *next) - (TAU + *i)) % TAU;
-		if(angleToNext < desieredAngle)		
-	} 
+		const ft angleToNext = helpers::angleDiff(i->first, next->first);
+		const ft distanceToTravel = angleToNext < desieredAngle ? scaledProjDistanceToTravelPerFrame * 1.2f : scaledProjDistanceToTravelPerFrame;
+		const ft fractionOfTheCircTraveledPerFrame = distanceToTravel / circAroundTheCenter;
+		const ft projAngleToTurn = TAU * fractionOfTheCircTraveledPerFrame;
+		const glm::mat4 localProjTransform = glm::translate(glm::vec3(0.0f, distanceToTravel, 0.0f))* glm::rotate(projAngleToTurn, glm::vec3(0,0,1));
+		i->second.get() = localTransform * i->second.get() * localProjTransform;
+	}
+	for(auto &wrap : movingToOrbitProjData)
+	{
+		const glm::mat4 localProjTransform = glm::translate(glm::vec3(0.0f, scaledProjDistanceToTravelPerFrame, 0.0f));
+		wrap.get() *= localProjTransform;
+	}
 
-
-
-
+	instanceTransform *= localTransform;
 }
 
 EnemyData::EnemyData()
@@ -193,12 +214,15 @@ EnemyManager::EnemyManager(Shader &enemyShader, helpers::Core &core, const Untex
 {
 	behavoiurPtrVec chaserVec;
 	behavoiurPtrVec shooterVec;
+	behavoiurPtrVec orbiterVec;
 	_enemies.reserve(EnemyTypeEnum::NO_ENEMY_TYPES);
 	chaserVec .push_back(std::make_unique<ChaseBehaviour>(*this));
 	shooterVec.push_back(std::make_unique<ChaseBehaviour>(*this));
 	shooterVec.push_back(std::make_unique<ShootBehavoiur>(*this));
+	orbiterVec.push_back(std::make_unique<OrbiterBehaviour>(*this));
 	_enemies.emplace_back(*this, chaserVec,  glm::vec3(0.25f, 0.57f, 0.38f), MAX_NO_ENEMIES);
 	_enemies.emplace_back(*this, shooterVec, glm::vec3(0.63f, 0.16f, 0.16f), MAX_NO_SHOOTER_ENEMIES);
+	_enemies.emplace_back(*this, orbiterVec, glm::vec3(0.94f, 0.90f, .055f), MAX_NO_ORBITER_ENEMIES);
 }
 
 void EnemyManager::Reset()
@@ -266,6 +290,8 @@ void EnemyManager::Spawn()
 	const glm::mat4 instanceTransform = _enemyTransform.Model() * glm::translate(glm::vec3(enemyX, enemyY, 0));
 	if(!(_customRand.NextUi() % 10))
 		_enemies[SHOOTER_ENEMY].Spawn(instanceTransform);
+	else if (!(_customRand.NextUi() % 10))
+		_enemies[ORBITER_ENEMY].Spawn(instanceTransform);
 	else
 		_enemies[CHASER_ENEMY] .Spawn(instanceTransform);
 }

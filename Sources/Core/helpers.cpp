@@ -76,14 +76,15 @@ ft helpers::det(const glm::vec2 &vec1, const glm::vec2 &vec2)
     return vec1.x * vec2.y - vec1.y * vec2.x;
 }
 
-ft angleBetweenPoints(const glm::mat4 &from, const glm::mat4 &to, const glm:vec2 &up = glm::vec2(1.0f, 0.0f))
+ft helpers::angleBetweenPoints(const glm::mat4 &from, const glm::mat4 &to, const glm::vec2 &up)
 {
 	const glm::vec2 toPos{to * glm::vec4(0,0,0,1)};
 	const glm::vec2 fromPos = glm::normalize(glm::vec2(glm::inverse(from) * glm::vec4(toPos, 0, 1)));
 	const ft angle = -glm::atan(glm::dot(up, fromPos), helpers::det(up, toPos));
+	return angle;
 }
 
-const glm::mat4 helpers::transformTowards(const glm::mat4 &from, const glm::mat4 &to, const ft byHowMutch)
+glm::mat4 helpers::transformTowards(const glm::mat4 &from, const glm::mat4 &to, const ft byHowMutch)
 {
 	const glm::vec2 toPos	{to * glm::vec4(0,0,0,1)};
 	const glm::vec2 fromPos {from * glm::vec4(0,0,0,1)};
@@ -91,4 +92,13 @@ const glm::mat4 helpers::transformTowards(const glm::mat4 &from, const glm::mat4
 	const glm::vec2 scaledVecBetween = helpers::scale2dVec(vecBetween, byHowMutch);
 	const glm::mat4 localTransform = glm::translate(glm::vec3(scaledVecBetween , 0));
 	return localTransform;
+}
+
+ft helpers::angleDiff(const ft a, const ft b)
+{
+	const ft delta = std::abs(a - b);
+	if(delta > PI)
+		return TAU - delta;
+	else
+		return delta;
 }

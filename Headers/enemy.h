@@ -71,13 +71,13 @@ private:
 class OrbiterBehaviour : public EnemyBehaviuor
 {
 public:
-	OrbiterBehaviour(EnemyManager &manger) : EnemyBehaviuor(manager, true) {}
+	OrbiterBehaviour(EnemyManager &manager);
 	void Update(glm::mat4 &instanceTransform, std::vector<glm::mat4> &projInstanceTransforms) override;
 
 private:
 	ui _latestShotIndex{};
 	ui _shotClockId;
-}
+};
 
 inline static auto choseBehaviour(behavoiurPtrVec &behavoiurs, const glm::mat4 &enemyModel)
 {
@@ -151,10 +151,12 @@ private:
 	friend class EnemyBehaviuor;
 	friend class ChaseBehaviour;
 	friend class ShootBehavoiur;
+	friend class OrbiterBehaviour;
 	enum EnemyTypeEnum : std::size_t
 	{
 		CHASER_ENEMY,
 		SHOOTER_ENEMY,
+		ORBITER_ENEMY,
 
 		NO_ENEMY_TYPES
 	};
