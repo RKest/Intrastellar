@@ -32,13 +32,7 @@ void EnemyBehaviuor::UpdateProjs(std::vector<glm::mat4> &projInstanceTransforms)
 
 void ChaseBehaviour::Update(glm::mat4 &instanceTransform, std::vector<glm::mat4> &projInstanceTransforms)
 {
-	const glm::vec2 pcPos	{_manager._pcModel * glm::vec4(0,0,0,1)};
-	const glm::vec2 enemyPos{instanceTransform * glm::vec4(0,0,0,1)};
-	const glm::vec2 vecToPc {pcPos - enemyPos};
-	const ft perFrameDistanceTraveled = decl_cast(perFrameDistanceTraveled, _manager._timer.Scale(_manager._enemyStats.speed));
-	const glm::vec2 scaledVecToPc = helpers::scale2dVec(vecToPc, perFrameDistanceTraveled);
-	const glm::mat4 perFrameEnemyTransform = glm::translate(glm::vec3(scaledVecToPc, 0));
-	instanceTransform *= perFrameEnemyTransform;
+	instanceTransform *= helpers::transformTowards(instanceTransform, _manager._pcModel, static_cast<ft>(_manager._timer.Scale(_manager._enemyStats.speed)));
 	EnemyBehaviuor::UpdateProjs(projInstanceTransforms);
 }
 
@@ -76,6 +70,44 @@ bool ShootBehavoiur::HasMetPredicate(const glm::mat4 &enemyModel)
 		}
 		return false;
 	}
+}
+
+void OrbiterBehaviour::Update(glm::mat4 &instanceTransform, std::vector<glm::mat4> &projInstanceTransforms)
+{
+	const ft distanceFromTheCenter = 5.0f;
+	const ft circAroundTheCenter = distanceFromTheCenter * TAU;
+	const ft scaledProjDistanceToTravelPerFrame = static_cast<ft>(_manager._timer.Scale(_manager._enemyStats.speed));
+	const ft fractionOfTheCircTraveledPerFrame = circAroundTheCenter / scaledProjDistanceToTravelPerFrame;
+	const ft projAngleToTurn = TAU * fractionOfTheCircTraveledPerFrame;
+	const glm::mat4 localTransform = helpers::transformTowards(instanceTransform, _manager._pcModel, scaledProjDistanceToTravelPerFrame);
+	instanceTransform *= localTransform;
+	for(auto &projTransform : projInstanceTransforms)
+		projTransform *= localTransform;
+
+	const size_t noProjectiles = projInstanceTransforms.size();
+	if(noProjectiles < MAX_PROJ_AMOUNT_PER_ORBIT && _manager._timer.HeapIsItTime(_shotClockId))
+	{
+		projInstanceTransforms.push_back(instanceTransform);
+	}
+	const ft desieredAngle = TAU / static_cast<ft>(noProjectiles);
+	std::vector<ft> projAngles;
+	for(auto &projTransform : projInstanceTransforms)
+	{
+		projAngles.push_back(helpers::angleBetweenPoints(projTransform, instanceTransform));
+	}
+	std::sort(begin(projAngles), end(projAngles));
+	const auto projBegin = begin(projAngles);
+	const auto projEnd = end(projAngles);
+	for(auto i = projBegin; i != projEnd; ++i)
+	{
+		const auto next = (i + 1) != projEnd ? i + 1 : projBegin;
+		const ft angleToNext = ((TAU + *next) - (TAU + *i)) % TAU;
+		if(angleToNext < desieredAngle)		
+	} 
+
+
+
+
 }
 
 EnemyData::EnemyData()

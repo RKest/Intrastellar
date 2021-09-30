@@ -38,6 +38,7 @@ constexpr ui MAX_NO_SHOOTER_ENEMIES = 5;
 
 constexpr ui MAX_ENEMY_PROJ_AMOUNT = 300;
 constexpr ui MAX_PROJ_AMOUNT_PER_ENEMY = 10;
+constexpr ui MAX_PROJ_AMOUNT_PER_ORBIT = 4;
 
 constexpr ui CARD_MAX_PROJ_COUNT = 300;
 constexpr ui NO_CARDS = 3;

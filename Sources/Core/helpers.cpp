@@ -82,3 +82,13 @@ ft angleBetweenPoints(const glm::mat4 &from, const glm::mat4 &to, const glm:vec2
 	const glm::vec2 fromPos = glm::normalize(glm::vec2(glm::inverse(from) * glm::vec4(toPos, 0, 1)));
 	const ft angle = -glm::atan(glm::dot(up, fromPos), helpers::det(up, toPos));
 }
+
+const glm::mat4 helpers::transformTowards(const glm::mat4 &from, const glm::mat4 &to, const ft byHowMutch)
+{
+	const glm::vec2 toPos	{to * glm::vec4(0,0,0,1)};
+	const glm::vec2 fromPos {from * glm::vec4(0,0,0,1)};
+	const glm::vec2 vecBetween{toPos - fromPos};
+	const glm::vec2 scaledVecBetween = helpers::scale2dVec(vecBetween, byHowMutch);
+	const glm::mat4 localTransform = glm::translate(glm::vec3(scaledVecBetween , 0));
+	return localTransform;
+}

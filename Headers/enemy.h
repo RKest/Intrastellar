@@ -50,7 +50,7 @@ using behavoiurPtrVec = std::vector<std::unique_ptr<EnemyBehaviuor>>;
 class ChaseBehaviour : public EnemyBehaviuor
 {
 public:
-	ChaseBehaviour(EnemyManager &manager) : EnemyBehaviuor(manager, true) {};
+	ChaseBehaviour(EnemyManager &manager) : EnemyBehaviuor(manager, true) {}
 	void Update(glm::mat4 &instanceTransform, std::vector<glm::mat4> &projInstanceTransforms) override;
 
 private:
@@ -59,7 +59,7 @@ private:
 class ShootBehavoiur : public EnemyBehaviuor
 {
 public:
-	ShootBehavoiur(EnemyManager &manager) : EnemyBehaviuor(manager, false) {};
+	ShootBehavoiur(EnemyManager &manager) : EnemyBehaviuor(manager, false) {}
 	void Update(glm::mat4 &instanceTransform, std::vector<glm::mat4> &projInstanceTransforms) override;
 
 private:
@@ -67,6 +67,17 @@ private:
 	ui _latestShotIndex{};
 	ui _shotClockId;
 };
+
+class OrbiterBehaviour : public EnemyBehaviuor
+{
+public:
+	OrbiterBehaviour(EnemyManager &manger) : EnemyBehaviuor(manager, true) {}
+	void Update(glm::mat4 &instanceTransform, std::vector<glm::mat4> &projInstanceTransforms) override;
+
+private:
+	ui _latestShotIndex{};
+	ui _shotClockId;
+}
 
 inline static auto choseBehaviour(behavoiurPtrVec &behavoiurs, const glm::mat4 &enemyModel)
 {
