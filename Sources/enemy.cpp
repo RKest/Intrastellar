@@ -47,9 +47,7 @@ void ShootBehavoiur::Update(glm::mat4 &instanceTransform, std::vector<glm::mat4>
 	EnemyBehaviuor::UpdateProjs(projInstanceTransforms);
 	if(_manager._timer.HeapIsItTime(_shotClockId))
 	{
-		const glm::vec2 pcPos{_manager._pcModel * glm::vec4(0,0,0,1)};
-		const glm::vec2 enemyVec = glm::normalize(glm::vec2(glm::inverse(instanceTransform) * glm::vec4(pcPos, 0, 1)));
-		const ft angle = -glm::atan(glm::dot({1.0, 0.0}, enemyVec), helpers::det({1.0, 0.0}, enemyVec));
+		const ft angle = helpers::angleBetweenPoints(instanceTransform, _manager._pcModel);
 		const glm::mat4 aimTransform = glm::rotate(angle, glm::vec3(0,0,1));
 		const glm::mat4 initProjTransform = instanceTransform * aimTransform;
 		helpers::pushToCappedVector(projInstanceTransforms, initProjTransform, _latestShotIndex, MAX_PROJ_AMOUNT_PER_ENEMY);

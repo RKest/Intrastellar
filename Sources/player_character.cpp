@@ -176,8 +176,7 @@ glm::mat4 PlayerCharacter::_moveProj(const std::vector<std::vector<glm::mat4>*> 
 	if(glm::distance(projPos, closestEnemyPos) > _pcStats.shotHomingStrength)
 		return perFrameTransform; 
 		
-	const glm::vec2 enemyVec = glm::normalize(glm::vec2(glm::inverse(projTransform) * glm::vec4(closestEnemyPos,0,1)));
-	const ft angle = -glm::atan(glm::dot({1.0, 0.0}, enemyVec), helpers::det({1.0, 0.0}, enemyVec));
+	const ft angle = helpers::angleBetweenPoints(projTransform, *closestEnemyMatIter);
 	if(angle < maxProjTurningRadius)
 		return glm::rotate(angle, glm::vec3(0,0,1)) * perFrameTransform;
 	if(TAU - angle < maxProjTurningRadius)
