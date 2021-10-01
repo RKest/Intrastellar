@@ -81,6 +81,7 @@ void OrbiterBehaviour::Update(glm::mat4 &instanceTransform, std::vector<glm::mat
 {
 	const glm::vec2 enemyPos{instanceTransform * glm::vec4(0,0,0,1)};
 	const ft distanceFromTheCenter = 5.0f;
+	const ft haltDistanceFromTheCenter = distanceFromTheCenter / 2.0f;
 	const ft circAroundTheCenter = distanceFromTheCenter * TAU;
 	const ft scaledProjDistanceToTravelPerFrame = static_cast<ft>(_manager._timer.Scale(_manager._enemyStats.speed));
 	const glm::mat4 localTransform = helpers::transformTowards(instanceTransform, _manager._pcModel, scaledProjDistanceToTravelPerFrame);
@@ -98,8 +99,10 @@ void OrbiterBehaviour::Update(glm::mat4 &instanceTransform, std::vector<glm::mat
 	for(auto &projInstanceTransforms : projInstanceTransforms)
 	{
 		const glm::vec2 projPos{projInstanceTransforms * glm::vec4(0,0,0,1)};
-		if(glm::distance(projPos, enemyPos) < distanceFromTheCenter)
+		if(glm::distance(projPos, enemyPos) < haltDistanceFromTheCenter)
+		{
 			movingToOrbitProjData.push_back(projInstanceTransforms);
+		}
 		else
 		{
 			const ft projAngle = helpers::angleBetweenPoints(projInstanceTransforms, instanceTransform);

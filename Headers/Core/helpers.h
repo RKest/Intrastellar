@@ -29,7 +29,8 @@ namespace helpers
     ui squishedIntToScreenWidth(ui minValue, ui maxValue, ui value);
     ft angleBetweenPoints(const glm::mat4 &from, const glm::mat4 &to, const glm::vec2 &up = glm::vec2(1.0f, 0.0f));
     glm::mat4 transformTowards(const glm::mat4 &from, const glm::mat4 &to, const ft byHowMutch);
-    ft angleDiff(const ft a, const ft b);    
+    ft angleDiff(const ft a, const ft b); 
+    ft rotTransformAngle(const glm::mat4 &matrix);
 
     template<typename ...T>
     void render(Shader &shader, Mesh &mesh, std::pair<std::string, T> const&... params)

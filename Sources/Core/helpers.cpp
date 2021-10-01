@@ -102,3 +102,6 @@ ft helpers::angleDiff(const ft a, const ft b)
 	else
 		return delta;
 }
+ft helpers::rotTransformAngle(const glm::mat4 &matrix); {
+	return glm::atan(matrix[0][1], matrix[0][0]);
+}
