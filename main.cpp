@@ -10,6 +10,12 @@
 
 int main()
 {
+
+	std::cout << glm::radians(90.0f) << '\n';
+	std::cout << glm::radians(180.0f) << '\n';
+	std::cout << glm::radians(270.0f) << '\n';
+	std::cout << glm::radians(360.0f) << '\n';
+
 	Display display(SCREEN_WIDTH, SCREEN_HEIGHT, "Intrastellar");
 	Camera camera(glm::vec3(0, 0, -20), 70.0f, display.Aspect(), 0.01f, 1000.0f);
 
@@ -78,6 +84,8 @@ int main()
 		render();
 		expManager.UpdateExpParticles(pcModel);
 		display.Update();
+
+		usleep(20000);
 
 		while (cardDeck.AreCarsDrawn() && !display.IsClosed())
 		{
