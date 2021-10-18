@@ -128,7 +128,7 @@ void OrbiterBehaviour::Update(glm::mat4 &instanceTransform, std::vector<glm::mat
 		const ft desieredAngle = desieredAngleBetweenShots * decl_cast(desieredAngle, distanceFromBegin);
 		const ft angleToNext = isLast ? TAU - projBegin->first + i->first : helpers::angleDiff(i->first, next->first);
 		const ft differenceToDesieredAngle = helpers::angleDiff(angleToNext, desieredAngle);
-		const ft angleToAdd = minAngleToTravel + _manager._timer.Scale(differenceToDesieredAngle);
+		const ft angleToAdd = minAngleToTravel + _manager._timer.Scale(differenceToDesieredAngle / unscaledTicksToReachDesieredAngel);
 		const ft nextFrameAngle = i->first + angleToAdd;
 		const glm::mat4 nextFrameRotationTransform = instanceTransform * glm::rotate(nextFrameAngle, glm::vec3(0,0,1)) * 
 			glm::translate(glm::vec3(0.0f, distanceFromTheCenter + 0.1f, 0.0f));
