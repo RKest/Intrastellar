@@ -90,7 +90,7 @@ void OrbiterBehaviour::Update(glm::mat4 &instanceTransform, std::vector<glm::mat
 	{
 		projInstanceTransforms.push_back(instanceTransform);
 	}
-	const ft desieredAngle = TAU / static_cast<ft>(noProjectiles);
+	const ft desieredAngleBetweenShots = TAU / static_cast<ft>(noProjectiles);
 	std::vector<std::pair<ft, std::reference_wrapper<glm::mat4>>> orbitProjData;
 	std::vector<std::reference_wrapper<glm::mat4>> movingToOrbitProjData;
 	orbitProjData.reserve(noProjectiles);
@@ -118,23 +118,21 @@ void OrbiterBehaviour::Update(glm::mat4 &instanceTransform, std::vector<glm::mat
 
 	const auto projBegin = begin(orbitProjData);
 	const auto projEnd = end(orbitProjData);
-	const ft angleToTravel 			  = TAU * scaledProjDistanceToTravelPerFrame / circAroundTheCenter;
-	const ft acceleratedAngleToTravel = TAU * scaledProjDistanceToTravelPerFrame * 1.2f / circAroundTheCenter;
+	const ft minAngleToTravel 			  = TAU * scaledProjDistanceToTravelPerFrame / circAroundTheCenter;
+	const ft unscaledTicksToReachDesieredAngel = 10.0f;
 	for(auto i = projBegin; i != projEnd; ++i)
 	{
-		const auto next = (i + 1) != projEnd ? std::make_pair(i + 1, true) : std::make_pair(projBegin, false);
-		const ft angleToNext = next.second ? helpers::angleDiff(i->first, next.first->first) : TAU + i->first - next.first->first;
-		const ft angleToAdd = angleToNext < desieredAngle ? acceleratedAngleToTravel : angleToTravel;
-		std::cout << angleToNext << '\n';
+		const bool isLast = (i + 1) == projEnd;
+		const auto distanceFromBegin = std::distance(projBegin, i);
+		const auto next = isLast ? projBegin : i + 1;
+		const ft desieredAngle = desieredAngleBetweenShots * decl_cast(desieredAngle, distanceFromBegin);
+		const ft angleToNext = isLast ? TAU - projBegin->first + i->first : helpers::angleDiff(i->first, next->first);
+		const ft differenceToDesieredAngle = helpers::angleDiff(angleToNext, desieredAngle);
+		const ft angleToAdd = minAngleToTravel + _manager._timer.Scale(differenceToDesieredAngle);
 		const ft nextFrameAngle = i->first + angleToAdd;
 		const glm::mat4 nextFrameRotationTransform = instanceTransform * glm::rotate(nextFrameAngle, glm::vec3(0,0,1)) * 
 			glm::translate(glm::vec3(0.0f, distanceFromTheCenter + 0.1f, 0.0f));
 
-		ft projAngle = glm::orientedAngle(glm::vec2(0, 1), 
-			glm::normalize(glm::vec2(glm::inverse(instanceTransform) * nextFrameRotationTransform * glm::vec4(0,0,0,1))));
-		if(projAngle < 0)
-			projAngle = TAU + projAngle;
-		
 		const glm::mat4 nextFrameTransform = nextFrameRotationTransform;
 		i->second.get() = nextFrameTransform;
 	}
