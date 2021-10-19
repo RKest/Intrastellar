@@ -85,8 +85,6 @@ int main()
 		expManager.UpdateExpParticles(pcModel);
 		display.Update();
 
-		usleep(20000);
-
 		while (cardDeck.AreCarsDrawn() && !display.IsClosed())
 		{
 			timer.RecordFrame();

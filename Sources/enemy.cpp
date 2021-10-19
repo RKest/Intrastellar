@@ -79,12 +79,8 @@ OrbiterBehaviour::OrbiterBehaviour(EnemyManager &manager) : EnemyBehaviuor(manag
 
 void OrbiterBehaviour::Update(glm::mat4 &instanceTransform, std::vector<glm::mat4> &projInstanceTransforms)
 {
+	const ft scaledProjDistanceToTravelPerFrame = decl_cast(scaledProjDistanceToTravelPerFrame, _manager._timer.Scale(_manager._enemyStats.speed));
 	const glm::vec2 enemyPos{instanceTransform * glm::vec4(0,0,0,1)};
-	const ft distanceFromTheCenter = 10.0f;
-	const ft circAroundTheCenter = distanceFromTheCenter * TAU;
-	const ft scaledProjDistanceToTravelPerFrame = static_cast<ft>(_manager._timer.Scale(_manager._enemyStats.speed));
-	const glm::mat4 localProjTransform = glm::translate(glm::vec3(0.0f, scaledProjDistanceToTravelPerFrame, 0.0f));
-	const glm::mat4 localTransform = helpers::transformTowards(instanceTransform, _manager._pcModel, scaledProjDistanceToTravelPerFrame);
 	const size_t noProjectiles = projInstanceTransforms.size();
 	if(noProjectiles < MAX_PROJ_AMOUNT_PER_ORBIT && _manager._timer.HeapIsItTime(_shotClockId))
 	{
@@ -99,39 +95,37 @@ void OrbiterBehaviour::Update(glm::mat4 &instanceTransform, std::vector<glm::mat
 	for(auto &projInstanceTransform : projInstanceTransforms)
 	{
 		const glm::vec2 projPos{projInstanceTransform * glm::vec4(0,0,0,1)};
-		if(glm::distance(projPos, enemyPos) < distanceFromTheCenter)
+		if(glm::distance(projPos, enemyPos) < ENEMY_ORBIT_RADIUS)
 		{
 			movingToOrbitProjData.push_back(projInstanceTransform);
 		}
 		else
 		{
-			ft projAngle = glm::orientedAngle(glm::vec2(0, 1), 
+			const ft orientedProjAngle = glm::orientedAngle(glm::vec2(0, 1), 
 				glm::normalize(glm::vec2(glm::inverse(instanceTransform) * projInstanceTransform * glm::vec4(0,0,0,1))));
-			if(projAngle < 0)
-				projAngle = TAU + projAngle;
+			const ft projAngle = orientedProjAngle < 0 ? TAU + orientedProjAngle : orientedProjAngle;
 			orbitProjData.emplace_back(projAngle, projInstanceTransform);
 		}
 	}
 
 	std::sort(begin(orbitProjData), end(orbitProjData), 
-		[](auto &el1, auto &el2){ return el1.first > el2.first; });
+		[](auto &el1, auto &el2){ return el1.first < el2.first; });
 
 	const auto projBegin = begin(orbitProjData);
 	const auto projEnd = end(orbitProjData);
-	const ft minAngleToTravel 			  = TAU * scaledProjDistanceToTravelPerFrame / circAroundTheCenter;
-	const ft unscaledTicksToReachDesieredAngel = 10.0f;
+	const ft minAngleToTravel = TAU * scaledProjDistanceToTravelPerFrame / ENEMY_ORBIT_CIRC;
+	instanceTransform *= helpers::transformTowards(instanceTransform, _manager._pcModel, scaledProjDistanceToTravelPerFrame);
 	for(auto i = projBegin; i != projEnd; ++i)
 	{
-		const bool isLast = (i + 1) == projEnd;
-		const auto distanceFromBegin = std::distance(projBegin, i);
-		const auto next = isLast ? projBegin : i + 1;
-		const ft desieredAngle = desieredAngleBetweenShots * decl_cast(desieredAngle, distanceFromBegin);
-		const ft angleToNext = isLast ? TAU - projBegin->first + i->first : helpers::angleDiff(i->first, next->first);
-		const ft differenceToDesieredAngle = helpers::angleDiff(angleToNext, desieredAngle);
-		const ft angleToAdd = minAngleToTravel + _manager._timer.Scale(differenceToDesieredAngle / unscaledTicksToReachDesieredAngel);
+		const ui distanceFromBegin = decl_cast(distanceFromBegin, std::distance(projBegin, i));
+		const ft desieredAngleFromFirst = desieredAngleBetweenShots * decl_cast(desieredAngleFromFirst, distanceFromBegin);
+		const ft desieredAngle = projBegin->first + desieredAngleFromFirst;
+		const ft angleDifference = desieredAngle - i->first;
+		const ft absAngleDifference = angleDifference < -minAngleToTravel ? -minAngleToTravel : angleDifference;
+		const ft cappedAngleDifference = angleDifference < ENEMY_ORBIT_MIN_ADJUST_ANGLE ? absAngleDifference : absAngleDifference / ENEMY_ORBIT_TICS_TO_DESIERED_ANGLE; 
+		const ft angleToAdd = minAngleToTravel + _manager._timer.Scale(cappedAngleDifference);
 		const ft nextFrameAngle = i->first + angleToAdd;
-		const glm::mat4 nextFrameRotationTransform = instanceTransform * glm::rotate(nextFrameAngle, glm::vec3(0,0,1)) * 
-			glm::translate(glm::vec3(0.0f, distanceFromTheCenter + 0.1f, 0.0f));
+		const glm::mat4 nextFrameRotationTransform = instanceTransform * glm::rotate(nextFrameAngle, glm::vec3(0,0,1)) * ENEMY_ORBIT_TO_ORBIT_TRANSLATE;
 
 		const glm::mat4 nextFrameTransform = nextFrameRotationTransform;
 		i->second.get() = nextFrameTransform;
@@ -139,10 +133,9 @@ void OrbiterBehaviour::Update(glm::mat4 &instanceTransform, std::vector<glm::mat
 
 	for(auto &wrap : movingToOrbitProjData)
 	{
-		wrap.get() *= localProjTransform;
+		wrap.get() *=  glm::translate(glm::vec3(0.0f, scaledProjDistanceToTravelPerFrame, 0.0f));
 	}
 
-	// instanceTransform *= localTransform;
 }
 
 EnemyData::EnemyData()

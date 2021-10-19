@@ -27,31 +27,37 @@ constexpr size_t ARR_SIZE(T (&)[N]) {
 
 [[maybe_unused]]constexpr std::array UNIFORMS = {"transform", "projection"};
 
-constexpr ui CUSTOM_RAND_SEED = 982347557;
-constexpr ui SCREEN_WIDTH = 960;
-constexpr ui SCREEN_HEIGHT = 540;
-constexpr ft SCREEN_ASPECT = static_cast<ft>(SCREEN_WIDTH) / static_cast<ft>(SCREEN_HEIGHT);
+constexpr const ui CUSTOM_RAND_SEED = 982347557;
+constexpr const ui SCREEN_WIDTH = 960;
+constexpr const ui SCREEN_HEIGHT = 540;
+constexpr const ft SCREEN_ASPECT = static_cast<ft>(SCREEN_WIDTH) / static_cast<ft>(SCREEN_HEIGHT);
 
 //Shooter 
-constexpr ui MAX_PROJ_AMOUNT = 100;
-constexpr ui MAX_NO_ENEMIES = 1;
-constexpr ui MAX_NO_SHOOTER_ENEMIES = 1;
-constexpr ui MAX_NO_ORBITER_ENEMIES = 1;
+constexpr const ui MAX_PROJ_AMOUNT = 100;
+constexpr const ui MAX_NO_ENEMIES = 1;
+constexpr const ui MAX_NO_SHOOTER_ENEMIES = 1;
+constexpr const ui MAX_NO_ORBITER_ENEMIES = 1;
 
-constexpr ui MAX_ENEMY_PROJ_AMOUNT = 300;
-constexpr ui MAX_PROJ_AMOUNT_PER_ENEMY = 10;
-constexpr ui MAX_PROJ_AMOUNT_PER_ORBIT = 4;
+constexpr const ui MAX_ENEMY_PROJ_AMOUNT = 300;
+constexpr const ui MAX_PROJ_AMOUNT_PER_ENEMY = 10;
+constexpr const ui MAX_PROJ_AMOUNT_PER_ORBIT = 4;
 
-constexpr ui CARD_MAX_PROJ_COUNT = 300;
-constexpr ui NO_CARDS = 3;
-constexpr ui MAX_EXP_PART_NO = 200;
+constexpr const ui CARD_MAX_PROJ_COUNT = 300;
+constexpr const ui NO_CARDS = 3;
+constexpr const ui MAX_EXP_PART_NO = 200;
 
-constexpr ft TAU = 2.0f * glm::pi<ft>();
-constexpr db TAU_d = 2.0 * glm::pi<db>();
-constexpr ft PI = glm::pi<ft>();
-constexpr db PI_d = glm::pi<db>();
-constexpr ft MAX_PROJ_TURNING_RAD = glm::radians(1.0f);
-constexpr ft DEF_ANGLE_BETWEEN_SHOTS = glm::radians(15.0f);
+constexpr const ft TAU = 2.0f * glm::pi<ft>();
+constexpr const db TAU_d = 2.0 * glm::pi<db>();
+constexpr const ft PI = glm::pi<ft>();
+constexpr const db PI_d = glm::pi<db>();
+constexpr const ft MAX_PROJ_TURNING_RAD = glm::radians(1.0f);
+constexpr const ft DEF_ANGLE_BETWEEN_SHOTS = glm::radians(15.0f);
+
+constexpr const ft ENEMY_ORBIT_RADIUS = 5.0f;
+constexpr const ft ENEMY_ORBIT_MIN_ADJUST_ANGLE = 0.001F;
+constexpr const ft ENEMY_ORBIT_CIRC = ENEMY_ORBIT_RADIUS * TAU;
+constexpr const ft ENEMY_ORBIT_TICS_TO_DESIERED_ANGLE = 1000.0F;
+const glm::mat4    ENEMY_ORBIT_TO_ORBIT_TRANSLATE = glm::translate(glm::vec3(0.0f, ENEMY_ORBIT_RADIUS + 0.1f, 0.0f));
 
 inline size_t _dummy_size_t;
 inline bool _dummy_bool;
