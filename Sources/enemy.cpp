@@ -219,16 +219,16 @@ EnemyManager::EnemyManager(Shader &enemyShader, helpers::Core &core, const Untex
  : _enemyShader(enemyShader), _camera(core.camera), _pcStats(core.stats), _timer(core.timer), _enemyStats(enemyStats), 
  	_enemyParams(params), _enemyProjParams(projParams), _pcInterface(pcInterface)
 {
-	// behavoiurPtrVec chaserVec;
-	// behavoiurPtrVec shooterVec;
+	behavoiurPtrVec chaserVec;
+	behavoiurPtrVec shooterVec;
 	behavoiurPtrVec orbiterVec;
 	_enemies.reserve(EnemyTypeEnum::NO_ENEMY_TYPES);
-	// chaserVec .push_back(std::make_unique<ChaseBehaviour>(*this));
-	// shooterVec.push_back(std::make_unique<ChaseBehaviour>(*this));
-	// shooterVec.push_back(std::make_unique<ShootBehavoiur>(*this));
+	chaserVec .push_back(std::make_unique<ChaseBehaviour>(*this));
+	shooterVec.push_back(std::make_unique<ChaseBehaviour>(*this));
+	shooterVec.push_back(std::make_unique<ShootBehavoiur>(*this));
 	orbiterVec.push_back(std::make_unique<OrbiterBehaviour>(*this));
-	// _enemies.emplace_back(*this, chaserVec,  glm::vec3(0.25f, 0.57f, 0.38f), MAX_NO_ENEMIES);
-	// _enemies.emplace_back(*this, shooterVec, glm::vec3(0.63f, 0.16f, 0.16f), MAX_NO_SHOOTER_ENEMIES);
+	_enemies.emplace_back(*this, chaserVec,  glm::vec3(0.25f, 0.57f, 0.38f), MAX_NO_ENEMIES);
+	_enemies.emplace_back(*this, shooterVec, glm::vec3(0.63f, 0.16f, 0.16f), MAX_NO_SHOOTER_ENEMIES);
 	_enemies.emplace_back(*this, orbiterVec, glm::vec3(0.94f, 0.90f, .055f), MAX_NO_ORBITER_ENEMIES);
 }
 

@@ -34,9 +34,9 @@ constexpr const ft SCREEN_ASPECT = static_cast<ft>(SCREEN_WIDTH) / static_cast<f
 
 //Shooter 
 constexpr const ui MAX_PROJ_AMOUNT = 100;
-constexpr const ui MAX_NO_ENEMIES = 1;
-constexpr const ui MAX_NO_SHOOTER_ENEMIES = 1;
-constexpr const ui MAX_NO_ORBITER_ENEMIES = 1;
+constexpr const ui MAX_NO_ENEMIES = 50;
+constexpr const ui MAX_NO_SHOOTER_ENEMIES = 5;
+constexpr const ui MAX_NO_ORBITER_ENEMIES = 5;
 
 constexpr const ui MAX_ENEMY_PROJ_AMOUNT = 300;
 constexpr const ui MAX_PROJ_AMOUNT_PER_ENEMY = 10;
@@ -57,7 +57,7 @@ constexpr const ft ENEMY_ORBIT_RADIUS = 5.0f;
 constexpr const ft ENEMY_ORBIT_MIN_ADJUST_ANGLE = 0.001F;
 constexpr const ft ENEMY_ORBIT_CIRC = ENEMY_ORBIT_RADIUS * TAU;
 constexpr const ft ENEMY_ORBIT_TICS_TO_DESIERED_ANGLE = 1000.0F;
-const glm::mat4    ENEMY_ORBIT_TO_ORBIT_TRANSLATE = glm::translate(glm::vec3(0.0f, ENEMY_ORBIT_RADIUS + 0.1f, 0.0f));
+constexpr const glm::mat4 ENEMY_ORBIT_TO_ORBIT_TRANSLATE{{1.0f,0.0f,0.0f,0.0f}, {0.0f,1.0f,0.0f,0.0f},{0.0f, 0.0f, 1.0f, 0.0f},{0.0f, ENEMY_ORBIT_RADIUS + 0.1f, 0.0f, 1.0f}};
 
 inline size_t _dummy_size_t;
 inline bool _dummy_bool;
