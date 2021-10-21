@@ -12,9 +12,19 @@
 static glm::mat4 dummyMat = glm::translate(glm::vec3(0,4,0));
 #endif
 
+
 struct UntexturedMeshParams
 {
     const glm::vec3 *positions;
+    const ui *indices;
+    const ui noVertices;
+    const ui noIndices;
+};
+
+struct TexturedMeshParams
+{
+    const glm::vec3 *positions;
+    const glm::vec2 *texCoords;
     const ui *indices;
     const ui noVertices;
     const ui noIndices;
@@ -52,6 +62,7 @@ public:
     //Templating didn't work
     void Update(const glm::mat4 *matrices, GLuint bufferAtPos);
     void Update(const glm::mat3 *matrices, GLuint bufferAtPos);
+    void Update(const ui *texIndices, GLuint bufferAtPos);
     void Draw() override;
 
     inline void SetInstanceCount(ui arg) { instanceCount = arg; }
@@ -74,6 +85,24 @@ private:
     enum
     {
         POSITION_VB,
+        INDEX_VB,
+
+        NO_BUFFERS
+    };
+
+    GLuint vertexArrayBuffers[NO_BUFFERS];
+};
+
+class TexturedMesh : public Mesh
+{
+public:
+    TexturedMesh(const TexturedMeshParams &params);
+private:
+    VAB vab;
+    enum
+    {
+        POSITION_VB,
+        TEXCOORD_VB,
         INDEX_VB,
 
         NO_BUFFERS
@@ -114,6 +143,28 @@ private:
         POSITION_VB,
         INDEX_VB,
         INSTANCE_TRANSFORM_VB,
+
+        NO_BUFFERS
+    };
+
+    GLuint vertexArrayBuffers[NO_BUFFERS];
+};
+
+class TexturedInstancedMesh : public InstancedMesh
+{
+public:
+    TexturedInstancedMesh(const TexturedMeshParams &params, ui maxNoInstances, ui transformMatSize = 4);
+    inline GLuint InstancedBufferPosition()     { return vertexArrayBuffers[INSTANCE_TRANSFORM_VB]; }
+    inline GLuint InstancedBufferTexPosition()  { return vertexArrayBuffers[INSTANCE_TEXINDEX_VB]; }
+private:
+    VAB vab;
+    enum
+    {
+        POSITION_VB,
+        TEXCOORD_VB,
+        INDEX_VB,
+        INSTANCE_TRANSFORM_VB,
+        INSTANCE_TEXINDEX_VB,
 
         NO_BUFFERS
     };

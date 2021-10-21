@@ -60,6 +60,8 @@ constexpr const ft ENEMY_ORBIT_CIRC = ENEMY_ORBIT_RADIUS * TAU;
 constexpr const ft ENEMY_ORBIT_TICS_TO_DESIERED_ANGLE = 1000.0F;
 constexpr const glm::mat4 ENEMY_ORBIT_TO_ORBIT_TRANSLATE{{1.0f,0.0f,0.0f,0.0f}, {0.0f,1.0f,0.0f,0.0f},{0.0f, 0.0f, 1.0f, 0.0f},{0.0f, ENEMY_ORBIT_RADIUS + 0.1f, 0.0f, 1.0f}};
 
+constexpr const ui WEAPONS_NO_WEAPONS = 10;
+
 inline size_t _dummy_size_t;
 inline bool _dummy_bool;
 inline const glm::mat4 _blankTransform = glm::mat4(1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1);

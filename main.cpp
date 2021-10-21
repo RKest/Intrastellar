@@ -5,6 +5,7 @@
 #include "exp_manager.h"
 #include "enemy.h"
 #include "card_deck.h"
+#include "weapons.h"
 
 #include "glm/gtx/string_cast.hpp"
 
@@ -26,14 +27,19 @@ int main()
 	const ui overlayIndices[] = {0, 1, 2, 2, 3, 0};
 	const glm::vec3 expBarVertices[] = {{0,0,0}, {0,1,0}, {1,0,0}, {1,1,0}};
 	const ui expBarIndices[] = {0, 2, 1, 2, 3, 1};
+	const glm::vec3 weaponIconVertices[] = {{1, 0, 0}, {1, 1, 0}, {0, 1, 0}, {0, 0, 0}};
+	const glm::vec2 weaponIconTexcoords[] = {{}, {}, {}, {}};
+	const ui weaponIconIndices[] = {2, 1, 0, 0, 3, 2};
 
-	const UntexturedMeshParams pcParams = {pcVertices, pcIndices, ARR_SIZE(pcVertices), ARR_SIZE(pcIndices)};
-	const UntexturedMeshParams enemyMeshParams = {enemyVertices, enemyIndices, ARR_SIZE(enemyVertices), ARR_SIZE(enemyIndices)};
+	const UntexturedMeshParams pcParams 		= {pcVertices, pcIndices, ARR_SIZE(pcVertices), ARR_SIZE(pcIndices)};
+	const UntexturedMeshParams enemyMeshParams 	= {enemyVertices, enemyIndices, ARR_SIZE(enemyVertices), ARR_SIZE(enemyIndices)};
 	const UntexturedMeshParams projectileParams = {projectileVertices, projectileIndices, ARR_SIZE(projectileVertices), ARR_SIZE(projectileIndices)};
-	const UntexturedMeshParams expParams = {expVertices, expIndices, ARR_SIZE(expVertices), ARR_SIZE(expIndices)};
-	const UntexturedMeshParams overlayParams = {overlayVertices, overlayIndices, ARR_SIZE(overlayVertices), ARR_SIZE(overlayIndices)};
+	const UntexturedMeshParams expParams 		= {expVertices, expIndices, ARR_SIZE(expVertices), ARR_SIZE(expIndices)};
+	const UntexturedMeshParams overlayParams 	= {overlayVertices, overlayIndices, ARR_SIZE(overlayVertices), ARR_SIZE(overlayIndices)};
 	MESH_PARAMS_FROM_PATH("./Resources/OBJs/card-border-1.obj", cardBorderParams);
-	const UntexturedMeshParams expBarParams = {expBarVertices, expBarIndices, ARR_SIZE(expBarVertices), ARR_SIZE(expBarIndices)};
+	const UntexturedMeshParams expBarParams 	= {expBarVertices, expBarIndices, ARR_SIZE(expBarVertices), ARR_SIZE(expBarIndices)};
+	const UntexturedMeshParams weaponIconParams = {weaponIconVertices, weaponIconIndices, ARR_SIZE(weaponIconVertices), ARR_SIZE(weaponIconIndices)};
+
 
 	PlayerStats playerStats = defaultStats;
 	EnemyStats enemyStats = defaultEnemyStats;
@@ -45,6 +51,7 @@ int main()
 	EnemyManager enemyManager(enemyShader, core, enemyMeshParams, enemyStats, projectileParams, playerCharacter.Interface());
 	Controler controler(display, camera, timer, playerCharacter.Interface()->Transform());
 	CardDeck cardDeck(enemyShader, core, overlayParams, cardBorderParams, enemyMeshParams, playerCharacter.Interface()->ExternDraw());
+	WeaponsManager weaponsManager(core, weaponIconParams, overlayParams);
 
 	const auto render = [&]
 	{

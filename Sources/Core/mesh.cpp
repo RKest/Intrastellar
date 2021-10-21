@@ -74,6 +74,15 @@ void InstancedMesh::Update(const glm::mat3 *matrices, GLuint bufferAtPos)
     glBindVertexArray(0);
 }
 
+void InstancedMesh::Update(const ui *texIndices, GLuint bufferAtPos)
+{
+    glBindVertexArray(vertexArrayObject);
+    const size_t sz = sizeof(texIndices[0]) * instanceCount;
+    glBindBuffer(GL_ARRAY_BUFFER, bufferAtPos);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sz, texIndices);
+    glBindVertexArray(0);
+}
+
 UntexturedMesh::UntexturedMesh(const UntexturedMeshParams &params)
     : vab(vertexArrayBuffers)
 {
@@ -81,6 +90,19 @@ UntexturedMesh::UntexturedMesh(const UntexturedMeshParams &params)
     glGenBuffers(NO_BUFFERS, vertexArrayBuffers);
 
     vab.Init(params.positions, params.noVertices, POSITION_VB);
+    vab.Index(params.indices, params.noIndices, INDEX_VB);
+
+    glBindVertexArray(0);
+}
+
+TexturedMesh::TexturedMesh(const TexturedMeshParams &params)
+    : vab(vertexArrayBuffers)
+{
+    SetDrawCount(params.noIndices);
+    glGenBuffers(NO_BUFFERS, vertexArrayBuffers);
+
+    vab.Init(params.positions, params.noVertices, POSITION_VB);
+    vab.Init(params.texCoords, params.noVertices, TEXCOORD_VB);
     vab.Index(params.indices, params.noIndices, INDEX_VB);
 
     glBindVertexArray(0);
@@ -116,6 +138,21 @@ UntexturedInstancedMesh::UntexturedInstancedMesh(const UntexturedMeshParams &par
     vab.Init(params.positions, params.noVertices, POSITION_VB);
     vab.Index(params.indices, params.noIndices, INDEX_VB);
     vab.Instance(vertexArrayBuffers, INSTANCE_TRANSFORM_VB, transformMatSize, maxNoInstances);
+
+    glBindVertexArray(0);
+}
+
+TexturedInstancedMesh::TexturedInstancedMesh(const TexturedMeshParams &params, ui maxNoInstances, ui transformMatSize)
+    : vab(vertexArrayBuffers)
+{
+    SetDrawCount(params.noIndices);
+    glGenBuffers(NO_BUFFERS, vertexArrayBuffers);
+
+    vab.Init(params.positions, params.noVertices, POSITION_VB);
+    vab.Init(params.texCoords, params.noVertices, TEXCOORD_VB);
+    vab.Index(params.indices, params.noIndices, INDEX_VB);
+    vab.Instance(vertexArrayBuffers, INSTANCE_TRANSFORM_VB, transformMatSize, maxNoInstances);
+    vab.Instance(vertexArrayBuffers, INSTANCE_TEXINDEX_VB, 1, maxNoInstances);
 
     glBindVertexArray(0);
 }

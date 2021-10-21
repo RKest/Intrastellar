@@ -73,7 +73,7 @@ void OrbiterBehaviour::Update(glm::mat4 &instanceTransform, std::vector<glm::mat
 {
 	CheckForProjIntersection(projInstanceTransforms);
 
-	const ft scaledProjDistanceToTravelPerFrame = decl_cast(scaledProjDistanceToTravelPerFrame, _manager._timer.Scale(_manager._enemyStats.speed));
+	const ft scaledProjDistanceToTravelPerFrame = decl_cast(scaledProjDistanceToTravelPerFrame, _manager._timer.Scale(_manager._enePmyStats.speed));
 	const glm::vec2 enemyPos{instanceTransform * glm::vec4(0,0,0,1)};
 	const size_t noProjectiles = projInstanceTransforms.size();
 	if(noProjectiles < MAX_PROJ_AMOUNT_PER_ORBIT && _manager._timer.HeapIsItTime(_shotClockId))
