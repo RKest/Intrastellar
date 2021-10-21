@@ -17,7 +17,7 @@ public:
     // void RenderText(const std::string &text, SDL_Rect textBox);
     // TTF_Font* LoadFont(const std::string &path);
 
-    enum { W, A, S, D, LCTRL, SPACE};
+    enum { W, A, S, D, LCTRL, SPACE, TAB};
     SDL_Scancode *KeyScancodeMap();
 
     bool IsClosed();
@@ -41,7 +41,7 @@ private:
     int mouseXOffset = 0, mouseYOffset = 0;
     bool mouseEventFilter = false;
 
-    SDL_Scancode keyScancodeMap[6] = { SDL_SCANCODE_W, SDL_SCANCODE_A, SDL_SCANCODE_S, SDL_SCANCODE_D, SDL_SCANCODE_LCTRL, SDL_SCANCODE_SPACE };
+    SDL_Scancode keyScancodeMap[] = { SDL_SCANCODE_W, SDL_SCANCODE_A, SDL_SCANCODE_S, SDL_SCANCODE_D, SDL_SCANCODE_LCTRL, SDL_SCANCODE_SPACE, SDL_SCANCODE_TAB };
 
     const Uint8 *keys = SDL_GetKeyboardState(NULL);
 
