@@ -200,16 +200,18 @@ void Enemy::Update()
 		const auto chosenBehavoiurIter = choseBehaviour(_behaviours, data.instanceTransforms[i]);
 		chosenBehavoiurIter->get()->Update(data.instanceTransforms[i], data.projInstanceTransforms[i]);
 		data.boundingBoxes[i].UpdateCoords(data.instanceTransforms[i]);
-		for(auto& pair : data.clockIdOrphanedProjsPairs)
+	}
+	for(ui i = 0; i < data.clockIdOrphanedProjsPairs.size(); ++i)
+	{
+		if(_manager._timer.HeapIsItTime(data.clockIdOrphanedProjsPairs[i].first))
 		{
-			if(_manager._timer.HeapIsItTime(pair.first))
-			{
-				pair.second[i] = pair.second[pair.second.size() - 1];
-				pair.second.pop_back();
-			}
-			helpers::transformMatVec(pair.second, _manager._timer.Scale(_manager._enemyStats.shotSpeed));
-			_manager.checkForProjIntersection(pair.second);
+			const size_t noOrphanedProjs = data.clockIdOrphanedProjsPairs.size();
+			if(i != noOrphanedProjs - 1)
+				data.clockIdOrphanedProjsPairs[i] = data.clockIdOrphanedProjsPairs[noOrphanedProjs - 1];
+			data.clockIdOrphanedProjsPairs.pop_back();
 		}
+		helpers::transformMatVec(data.clockIdOrphanedProjsPairs[i].second, _manager._timer.Scale(_manager._enemyStats.shotSpeed));
+		_manager.checkForProjIntersection(data.clockIdOrphanedProjsPairs[i].second);
 	}
 }
 
