@@ -40,6 +40,7 @@ public:
 protected:
 	virtual bool HasMetPredicate([[maybe_unused]]const glm::mat4 &enemyModel) { return true; };
 	void UpdateProjs(std::vector<glm::mat4> &projInstanceTransforms);
+	void CheckForProjIntersection(std::vector<glm::mat4> &projInstanceTransforms);
 	EnemyManager &_manager;
 	bool _isActive{};
 	const bool _isDefault;

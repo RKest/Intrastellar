@@ -18,9 +18,14 @@ BehavoiurStatus EnemyBehaviuor::EnemyBehaviuorStatus(const glm::mat4 &enemyModel
 
 void EnemyBehaviuor::UpdateProjs(std::vector<glm::mat4> &projInstanceTransforms)
 {
+	helpers::transformMatVec(projInstanceTransforms, _manager._timer.Scale(_manager._enemyStats.shotSpeed));
+	CheckForProjIntersection(projInstanceTransforms);
+}
+
+void EnemyBehaviuor::CheckForProjIntersection(std::vector<glm::mat4> &projInstanceTransforms)
+{
 	if(!projInstanceTransforms.empty())
 	{
-		helpers::transformMatVec(projInstanceTransforms, _manager._timer.Scale(_manager._enemyStats.shotSpeed));
 		ui intersectionIndex;
 		if(_manager._pcInterface.BoundingBox().IsThereAnIntersection(projInstanceTransforms, intersectionIndex))
 		{
@@ -28,6 +33,7 @@ void EnemyBehaviuor::UpdateProjs(std::vector<glm::mat4> &projInstanceTransforms)
 			(_manager._pcInterface.HitCb())();
 		}
 	}
+	
 }
 
 void ChaseBehaviour::Update(glm::mat4 &instanceTransform, std::vector<glm::mat4> &projInstanceTransforms)
@@ -79,6 +85,8 @@ OrbiterBehaviour::OrbiterBehaviour(EnemyManager &manager) : EnemyBehaviuor(manag
 
 void OrbiterBehaviour::Update(glm::mat4 &instanceTransform, std::vector<glm::mat4> &projInstanceTransforms)
 {
+	CheckForProjIntersection(projInstanceTransforms);
+
 	const ft scaledProjDistanceToTravelPerFrame = decl_cast(scaledProjDistanceToTravelPerFrame, _manager._timer.Scale(_manager._enemyStats.speed));
 	const glm::vec2 enemyPos{instanceTransform * glm::vec4(0,0,0,1)};
 	const size_t noProjectiles = projInstanceTransforms.size();
