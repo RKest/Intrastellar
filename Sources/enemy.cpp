@@ -19,21 +19,7 @@ BehavoiurStatus EnemyBehaviuor::EnemyBehaviuorStatus(const glm::mat4 &enemyModel
 void EnemyBehaviuor::UpdateProjs(std::vector<glm::mat4> &projInstanceTransforms)
 {
 	helpers::transformMatVec(projInstanceTransforms, _manager._timer.Scale(_manager._enemyStats.shotSpeed));
-	CheckForProjIntersection(projInstanceTransforms);
-}
-
-void EnemyBehaviuor::CheckForProjIntersection(std::vector<glm::mat4> &projInstanceTransforms)
-{
-	if(!projInstanceTransforms.empty())
-	{
-		ui intersectionIndex;
-		if(_manager._pcInterface.BoundingBox().IsThereAnIntersection(projInstanceTransforms, intersectionIndex))
-		{
-			projInstanceTransforms.erase(projInstanceTransforms.begin() + intersectionIndex);
-			(_manager._pcInterface.HitCb())();
-		}
-	}
-	
+	_manager.checkForProjIntersection(projInstanceTransforms);
 }
 
 void ChaseBehaviour::Update(glm::mat4 &instanceTransform, std::vector<glm::mat4> &projInstanceTransforms)
@@ -166,6 +152,12 @@ void EnemyData::Clear()
 
 void EnemyData::Erase(const ui index)
 {
+	ui orphanedProjClockId;
+	_manager._timer.InitHeapClock(orphanedProjClockId, ENEMY_ORPHANDED_PROJ_LIFETIME);
+	clockIdOrphanedProjsPairs.emplace_back(orphanedProjClockId, std::vector<glm::mat4>());
+	clockIdOrphanedProjsPairs.second.insert(end(clockIdOrphanedProjsPairs.second), 
+		std::make_move_iterator(begin(projInstanceTransforms[index]), std::make_move_iterator(end(projInstanceTransforms[index]))));
+
 	instanceTransforms		[index] = instanceTransforms	[size - 1];
 	boundingBoxes			[index] = boundingBoxes			[size - 1];
 	projInstanceTransforms	[index] = projInstanceTransforms[size - 1];
@@ -177,6 +169,13 @@ void EnemyData::Erase(const ui index)
 
 	size--;
 }
+
+void EnemyData::EraseProjectiles(const ui index)
+{
+	projInstanceTransforms[index] = projInstanceTransforms[projInstanceTransforms.size() - 1];
+	projInstanceTransforms.pop_back();
+}
+
 
 void EnemyData::Push(const glm::mat4 &instanceTransform, const UntexturedMeshParams &params, EnemyStats &stats)
 {
@@ -201,6 +200,16 @@ void Enemy::Update()
 		const auto chosenBehavoiurIter = choseBehaviour(_behaviours, data.instanceTransforms[i]);
 		chosenBehavoiurIter->get()->Update(data.instanceTransforms[i], data.projInstanceTransforms[i]);
 		data.boundingBoxes[i].UpdateCoords(data.instanceTransforms[i]);
+		for(auto& pair : data.clockIdOrphanedProjsPairs)
+		{
+			if(_manager._timer.HeapIsItTime(pair.first))
+			{
+				pair.second[i] = pair.second[pair.second.size() - 1];
+				pair.second.pop_back();
+			}
+			helpers::transformMatVec(pair.second, _manager._timer.Scale(_manager._enemyStats.shotSpeed));
+			_manager.checkForProjIntersection(pair.second);
+		}
 	}
 }
 
@@ -309,4 +318,17 @@ void EnemyManager::Spawn()
 		_enemies[ORBITER_ENEMY].Spawn(instanceTransform);
 	else
 		_enemies[CHASER_ENEMY] .Spawn(instanceTransform);
+}
+
+void EnemyManager::checkForProjIntersection(std::vector<glm::mat4> &projInstanceTransforms)
+{
+	if(!projInstanceTransforms.empty())
+	{
+		ui intersectionIndex;
+		if(_pcInterface.BoundingBox().IsThereAnIntersection(projInstanceTransforms, intersectionIndex))
+		{
+			projInstanceTransforms.erase(projInstanceTransforms.begin() + intersectionIndex);
+			(_pcInterface.HitCb())();
+		}
+	}
 }

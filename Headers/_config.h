@@ -53,6 +53,7 @@ constexpr const db PI_d = glm::pi<db>();
 constexpr const ft MAX_PROJ_TURNING_RAD = glm::radians(1.0f);
 constexpr const ft DEF_ANGLE_BETWEEN_SHOTS = glm::radians(15.0f);
 
+constexpr const db ENEMY_ORPHANDED_PROJ_LIFETIME = 5000.0;
 constexpr const ft ENEMY_ORBIT_RADIUS = 5.0f;
 constexpr const ft ENEMY_ORBIT_MIN_ADJUST_ANGLE = 0.001F;
 constexpr const ft ENEMY_ORBIT_CIRC = ENEMY_ORBIT_RADIUS * TAU;

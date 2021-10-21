@@ -19,6 +19,8 @@
 #include <vector>
 #include <memory>
 #include <array>
+#include <iterator>
+
 
 enum BehavoiurStatus
 {
@@ -40,7 +42,6 @@ public:
 protected:
 	virtual bool HasMetPredicate([[maybe_unused]]const glm::mat4 &enemyModel) { return true; };
 	void UpdateProjs(std::vector<glm::mat4> &projInstanceTransforms);
-	void CheckForProjIntersection(std::vector<glm::mat4> &projInstanceTransforms);
 	EnemyManager &_manager;
 	bool _isActive{};
 	const bool _isDefault;
@@ -101,17 +102,20 @@ inline static auto choseBehaviour(behavoiurPtrVec &behavoiurs, const glm::mat4 &
 	throw std::runtime_error("ERROR:choseBehaviour: Failed to chose a behaviour");
 }
 
+using orphanedProjPair_t = std::pair<ui, std::vector<glm::mat4>>;
 struct EnemyData
 {
 	EnemyData();
-	std::vector<glm::mat4> 				instanceTransforms;
-	std::vector<ReqBoundingBox>			boundingBoxes;
-	std::vector<si>						healths;
-	behavoiurPtrVec						enemyBehaviours;
-	std::vector<std::vector<glm::mat4>> projInstanceTransforms;
+	std::vector<glm::mat4>					instanceTransforms;
+	std::vector<ReqBoundingBox>				boundingBoxes;
+	std::vector<si>							healths;
+	behavoiurPtrVec							enemyBehaviours;
+	std::vector<std::vector<glm::mat4>>		projInstanceTransforms;
+	std::vector<orphanedProjPair_t> 		clockIdOrphanedProjsPairs;
 	size_t size = 0;
 	void Clear();
 	void Erase(const ui index);
+	void EraseProjectiles(const ui index);
 	void Push(const glm::mat4 &instanceTransform, const UntexturedMeshParams &params, EnemyStats &stats);
 };
 
@@ -177,5 +181,7 @@ private:
 	Transform _enemyTransform;
 	CustomRand _customRand{CUSTOM_RAND_SEED};
 	std::vector<Enemy> _enemies;
+
+	void checkForProjIntersection(std::vector<glm::mat4> &projInstanceTransforms);
 
 };
