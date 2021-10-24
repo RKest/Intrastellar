@@ -5,11 +5,11 @@ Clock::Clock(db &clockDelay, timePt &latestFrameTimePoint)
 {
 }
 
-bool Clock::IsItTime()
+bool Clock::IsItTime(const db scalingFactor)
 {
-	if(std::chrono::duration_cast<std::chrono::milliseconds>(latestFrameTimePoint - lastRecordedPoint) > clockDelay)
+	if(std::chrono::duration_cast<milliDuration>(latestFrameTimePoint - lastRecordedPoint) > clockDelay)
 	{
-		clockDelay = static_cast<milliDuration>(clockDelayDB);
+		clockDelay = static_cast<milliDuration>(clockDelayDB / scalingFactor);
 		lastRecordedPoint = latestFrameTimePoint;
 		return true;
 	}
@@ -19,8 +19,7 @@ bool Clock::IsItTime()
 
 db Clock::RemainingTime()
 {
-	return clockDelayDB - decl_cast(clockDelayDB, 
-		std::chrono::duration_cast<std::chrono::milliseconds>(latestFrameTimePoint - lastRecordedPoint).count());
+	return clockDelay.count() - std::chrono::duration_cast<milliDuration>(latestFrameTimePoint - lastRecordedPoint).count();
 }
 
 Timer::Timer(Text &text, PlayerStats &stats)
@@ -30,10 +29,21 @@ Timer::Timer(Text &text, PlayerStats &stats)
 	clocks.push_back(Clock(stats.shotDelay, lastFramePt));
 	clocks.push_back(Clock(stats.enemySpawnRate, lastFramePt));
 }
-
+void Timer::SetScalingFactor(const db arg)
+{
+	if(scalingFactor != arg)
+	{
+		const db remainingScaleChange = scalingFactor * arg;
+		for(Clock &clock: clocks)
+		{
+			clock.clockDelay = static_cast<milliDuration>(clock.RemainingTime() * remainingScaleChange);
+		}
+		scalingFactor = arg;
+	}
+}
 bool Timer::IsItTime(ClocksEnum onWhichClock)
 {
-	return clocks[onWhichClock].IsItTime();
+	return clocks[onWhichClock].IsItTime(scalingFactor);
 }
 
 db Timer::RemainingTime(ui heapClockId)
@@ -86,7 +96,7 @@ void Timer::DestroyHeapClock(const ui heapClockId)
 bool Timer::HeapIsItTime(const ui heapClockId)
 {
 	assert(heapClocks.size() >= heapClockId && heapClocks[heapClockId] != nullptr);
-	return heapClocks[heapClockId]->IsItTime();
+	return heapClocks[heapClockId]->IsItTime(scalingFactor);
 }
 
 Timer::~Timer()

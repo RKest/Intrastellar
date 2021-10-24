@@ -71,15 +71,14 @@ OrbiterBehaviour::OrbiterBehaviour(EnemyManager &manager) : EnemyBehaviuor(manag
 
 void OrbiterBehaviour::Update(glm::mat4 &instanceTransform, std::vector<glm::mat4> &projInstanceTransforms)
 {
-	CheckForProjIntersection(projInstanceTransforms);
+	_manager.checkForProjIntersection(projInstanceTransforms);
 
-	const ft scaledProjDistanceToTravelPerFrame = decl_cast(scaledProjDistanceToTravelPerFrame, _manager._timer.Scale(_manager._enePmyStats.speed));
+	const ft scaledProjDistanceToTravelPerFrame = decl_cast(scaledProjDistanceToTravelPerFrame, _manager._timer.Scale(_manager._enemyStats.shotSpeed));
 	const glm::vec2 enemyPos{instanceTransform * glm::vec4(0,0,0,1)};
 	const size_t noProjectiles = projInstanceTransforms.size();
 	if(noProjectiles < MAX_PROJ_AMOUNT_PER_ORBIT && _manager._timer.HeapIsItTime(_shotClockId))
-	{
 		projInstanceTransforms.push_back(instanceTransform);
-	}
+		
 	const ft desieredAngleBetweenShots = TAU / static_cast<ft>(noProjectiles);
 	std::vector<std::pair<ft, std::reference_wrapper<glm::mat4>>> orbitProjData;
 	std::vector<std::reference_wrapper<glm::mat4>> movingToOrbitProjData;
@@ -95,9 +94,7 @@ void OrbiterBehaviour::Update(glm::mat4 &instanceTransform, std::vector<glm::mat
 		}
 		else
 		{
-			const ft orientedProjAngle = glm::orientedAngle(glm::vec2(0, 1), 
-				glm::normalize(glm::vec2(glm::inverse(instanceTransform) * projInstanceTransform * glm::vec4(0,0,0,1))));
-			const ft projAngle = orientedProjAngle < 0 ? TAU + orientedProjAngle : orientedProjAngle;
+			const ft projAngle = helpers::angleBetweenPoints(instanceTransform, projInstanceTransform);
 			orbitProjData.emplace_back(projAngle, projInstanceTransform);
 		}
 	}
@@ -116,11 +113,11 @@ void OrbiterBehaviour::Update(glm::mat4 &instanceTransform, std::vector<glm::mat
 		const ft desieredAngle = projBegin->first + desieredAngleFromFirst;
 		const ft angleDifference = desieredAngle - i->first;
 		const ft absAngleDifference = angleDifference < -minAngleToTravel ? -minAngleToTravel : angleDifference;
-		const ft cappedAngleDifference = angleDifference < ENEMY_ORBIT_MIN_ADJUST_ANGLE ? absAngleDifference : absAngleDifference / ENEMY_ORBIT_TICS_TO_DESIERED_ANGLE; 
+		const ft cappedAngleDifference = absAngleDifference / ENEMY_ORBIT_TICS_TO_DESIERED_ANGLE; 
 		const ft angleToAdd = minAngleToTravel + _manager._timer.Scale(cappedAngleDifference);
 		const ft nextFrameAngle = i->first + angleToAdd;
-		const glm::mat4 nextFrameRotationTransform = instanceTransform * glm::rotate(nextFrameAngle, glm::vec3(0,0,1)) * ENEMY_ORBIT_TO_ORBIT_TRANSLATE;
 
+		const glm::mat4 nextFrameRotationTransform = instanceTransform * glm::rotate(nextFrameAngle, glm::vec3(0,0,1)) * ENEMY_ORBIT_TO_ORBIT_TRANSLATE;
 		const glm::mat4 nextFrameTransform = nextFrameRotationTransform;
 		i->second.get() = nextFrameTransform;
 	}
@@ -132,7 +129,7 @@ void OrbiterBehaviour::Update(glm::mat4 &instanceTransform, std::vector<glm::mat
 
 }
 
-EnemyData::EnemyData()
+EnemyData::EnemyData(EnemyManager &manager) : _manager(manager)
 {
 	instanceTransforms		.reserve(MAX_NO_ENEMIES);
 	boundingBoxes	  		.reserve(MAX_NO_ENEMIES);
@@ -142,10 +139,14 @@ EnemyData::EnemyData()
 
 void EnemyData::Clear()
 {
-	instanceTransforms		.clear();
-	boundingBoxes			.clear();
-	healths					.clear();
-	projInstanceTransforms	.clear();
+	for(auto &pair : clockIdOrphanedProjsPairs)
+		_manager._timer.DestroyHeapClock(pair.first);
+
+	instanceTransforms			.clear();
+	boundingBoxes				.clear();
+	healths						.clear();
+	projInstanceTransforms		.clear();
+	clockIdOrphanedProjsPairs	.clear();
 
 	size = 0;
 }
@@ -155,8 +156,8 @@ void EnemyData::Erase(const ui index)
 	ui orphanedProjClockId;
 	_manager._timer.InitHeapClock(orphanedProjClockId, ENEMY_ORPHANDED_PROJ_LIFETIME);
 	clockIdOrphanedProjsPairs.emplace_back(orphanedProjClockId, std::vector<glm::mat4>());
-	clockIdOrphanedProjsPairs.second.insert(end(clockIdOrphanedProjsPairs.second), 
-		std::make_move_iterator(begin(projInstanceTransforms[index]), std::make_move_iterator(end(projInstanceTransforms[index]))));
+	clockIdOrphanedProjsPairs.back().second.insert(end(clockIdOrphanedProjsPairs.back().second), 
+		begin(projInstanceTransforms[index]), end(projInstanceTransforms[index]));
 
 	instanceTransforms		[index] = instanceTransforms	[size - 1];
 	boundingBoxes			[index] = boundingBoxes			[size - 1];
@@ -170,13 +171,6 @@ void EnemyData::Erase(const ui index)
 	size--;
 }
 
-void EnemyData::EraseProjectiles(const ui index)
-{
-	projInstanceTransforms[index] = projInstanceTransforms[projInstanceTransforms.size() - 1];
-	projInstanceTransforms.pop_back();
-}
-
-
 void EnemyData::Push(const glm::mat4 &instanceTransform, const UntexturedMeshParams &params, EnemyStats &stats)
 {
 	instanceTransforms		.push_back(instanceTransform);
@@ -189,7 +183,7 @@ void EnemyData::Push(const glm::mat4 &instanceTransform, const UntexturedMeshPar
 
 Enemy::Enemy(EnemyManager &manager, behavoiurPtrVec &behaviours, const glm::vec3 &colour, const ui maxNoInstances)
 	: _manager(manager), _mesh(manager._enemyParams, maxNoInstances), _projMesh(_manager._enemyProjParams, MAX_ENEMY_PROJ_AMOUNT),
-		_behaviours(std::move(behaviours)), _colourUni("colour", colour), _maxNoInstances(maxNoInstances)
+		_behaviours(std::move(behaviours)), _colourUni("colour", colour), _maxNoInstances(maxNoInstances), data(manager)
 {
 }
 
@@ -225,11 +219,15 @@ void Enemy::Draw()
 {
 	helpers::render(_manager._enemyShader, _mesh, data.instanceTransforms.data(), data.size, _blankTransform, _manager._camera.ViewProjection(), 
 		_colourUni);
-	if(!data.projInstanceTransforms.empty())
+	if(!data.clockIdOrphanedProjsPairs.empty() || !data.projInstanceTransforms.empty())
 	{
 		const auto flattenedVec = helpers::flattenVec(data.projInstanceTransforms);
-		const std::size_t noProjectiles = helpers::twoDVecSize(data.projInstanceTransforms);
-		helpers::render(_manager._enemyProjShader, _projMesh, flattenedVec.data(), noProjectiles, _blankTransform, _manager._camera.ViewProjection());
+		std::vector<glm::mat4> projectilesVector;
+		std::for_each(begin(data.clockIdOrphanedProjsPairs), end(data.clockIdOrphanedProjsPairs),
+			[&projectilesVector](auto& pair){ projectilesVector.insert(projectilesVector.end(), pair.second.begin(), pair.second.end()); });
+		projectilesVector.insert(end(projectilesVector), begin(flattenedVec), end(flattenedVec));
+		helpers::render(_manager._enemyProjShader, _projMesh, projectilesVector.data(), projectilesVector.size(), _blankTransform, 
+			_manager._camera.ViewProjection());
 	}
 }
 

@@ -34,13 +34,13 @@ constexpr const ft SCREEN_ASPECT = static_cast<ft>(SCREEN_WIDTH) / static_cast<f
 
 //Shooter 
 constexpr const ui MAX_PROJ_AMOUNT = 100;
-constexpr const ui MAX_NO_ENEMIES = 50;
-constexpr const ui MAX_NO_SHOOTER_ENEMIES = 5;
-constexpr const ui MAX_NO_ORBITER_ENEMIES = 5;
+constexpr const ui MAX_NO_ENEMIES = 1;
+constexpr const ui MAX_NO_SHOOTER_ENEMIES = 1;
+constexpr const ui MAX_NO_ORBITER_ENEMIES = 1;
 
 constexpr const ui MAX_ENEMY_PROJ_AMOUNT = 300;
 constexpr const ui MAX_PROJ_AMOUNT_PER_ENEMY = 10;
-constexpr const ui MAX_PROJ_AMOUNT_PER_ORBIT = 4;
+constexpr const ui MAX_PROJ_AMOUNT_PER_ORBIT = 20;
 
 constexpr const ui CARD_MAX_PROJ_COUNT = 300;
 constexpr const ui NO_CARDS = 3;
@@ -53,17 +53,19 @@ constexpr const db PI_d = glm::pi<db>();
 constexpr const ft MAX_PROJ_TURNING_RAD = glm::radians(1.0f);
 constexpr const ft DEF_ANGLE_BETWEEN_SHOTS = glm::radians(15.0f);
 
-constexpr const db ENEMY_ORPHANDED_PROJ_LIFETIME = 5000.0;
+inline db ENEMY_ORPHANDED_PROJ_LIFETIME = 5000.0;
 constexpr const ft ENEMY_ORBIT_RADIUS = 5.0f;
-constexpr const ft ENEMY_ORBIT_MIN_ADJUST_ANGLE = 0.001F;
 constexpr const ft ENEMY_ORBIT_CIRC = ENEMY_ORBIT_RADIUS * TAU;
 constexpr const ft ENEMY_ORBIT_TICS_TO_DESIERED_ANGLE = 1000.0F;
-constexpr const glm::mat4 ENEMY_ORBIT_TO_ORBIT_TRANSLATE{{1.0f,0.0f,0.0f,0.0f}, {0.0f,1.0f,0.0f,0.0f},{0.0f, 0.0f, 1.0f, 0.0f},{0.0f, ENEMY_ORBIT_RADIUS + 0.1f, 0.0f, 1.0f}};
+constexpr const glm::mat4 ENEMY_ORBIT_TO_ORBIT_TRANSLATE{{0.0f,1.0f,0.0f,0.0f}, {-1.0f,0.0f,0.0f,0.0f},{0.0f, 0.0f, 1.0f, 0.0f},{0.0f, ENEMY_ORBIT_RADIUS + 0.1f, 0.0f, 1.0f}};
 
+//Same in the file:///home/max/Documents/Intrastellar/Shaders/WeaponIcon/VS.glsl
 constexpr const ui WEAPONS_NO_WEAPONS = 10;
+constexpr const ft WEAPONS_ICON_DIMS = static_cast<ft>(SCREEN_HEIGHT) / static_cast<ft>(WEAPONS_NO_WEAPONS);
 
 inline size_t _dummy_size_t;
 inline bool _dummy_bool;
+inline si _dummy_si;
 inline const glm::mat4 _blankTransform = glm::mat4(1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1);
 template<typename T, typename ...Ts>
 void _log(T first, Ts ...rest)

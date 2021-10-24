@@ -27,8 +27,8 @@ int main()
 	const ui overlayIndices[] = {0, 1, 2, 2, 3, 0};
 	const glm::vec3 expBarVertices[] = {{0,0,0}, {0,1,0}, {1,0,0}, {1,1,0}};
 	const ui expBarIndices[] = {0, 2, 1, 2, 3, 1};
-	const glm::vec3 weaponIconVertices[] = {{1, 0, 0}, {1, 1, 0}, {0, 1, 0}, {0, 0, 0}};
-	const glm::vec2 weaponIconTexcoords[] = {{}, {}, {}, {}};
+	const glm::vec3 weaponIconVertices[] = {{WEAPONS_ICON_DIMS, 0, 0}, {WEAPONS_ICON_DIMS, WEAPONS_ICON_DIMS, 0}, {0, WEAPONS_ICON_DIMS, 0}, {0, 0, 0}};
+	const glm::vec2 weaponIconTexcoords[] = {{1, 1}, {1, 0}, {0, 0}, {0, 1}};
 	const ui weaponIconIndices[] = {2, 1, 0, 0, 3, 2};
 
 	const UntexturedMeshParams pcParams 		= {pcVertices, pcIndices, ARR_SIZE(pcVertices), ARR_SIZE(pcIndices)};
@@ -38,14 +38,13 @@ int main()
 	const UntexturedMeshParams overlayParams 	= {overlayVertices, overlayIndices, ARR_SIZE(overlayVertices), ARR_SIZE(overlayIndices)};
 	MESH_PARAMS_FROM_PATH("./Resources/OBJs/card-border-1.obj", cardBorderParams);
 	const UntexturedMeshParams expBarParams 	= {expBarVertices, expBarIndices, ARR_SIZE(expBarVertices), ARR_SIZE(expBarIndices)};
-	const UntexturedMeshParams weaponIconParams = {weaponIconVertices, weaponIconIndices, ARR_SIZE(weaponIconVertices), ARR_SIZE(weaponIconIndices)};
-
+	const TexturedMeshParams weaponIconParams 	= {weaponIconVertices, weaponIconTexcoords, weaponIconIndices, ARR_SIZE(weaponIconVertices), ARR_SIZE(weaponIconIndices)};
 
 	PlayerStats playerStats = defaultStats;
 	EnemyStats enemyStats = defaultEnemyStats;
 	Text text("./Resources/Fonts/slkscr.ttf", SCREEN_WIDTH, SCREEN_HEIGHT);
 	Timer timer(text, playerStats);
-	helpers::Core core{camera, text, timer, playerStats};
+	helpers::Core core{display, camera, text, timer, playerStats};
 	ExpManager expManager(core, expParams, expBarParams);
 	PlayerCharacter playerCharacter(core, pcParams, projectileParams);
 	EnemyManager enemyManager(enemyShader, core, enemyMeshParams, enemyStats, projectileParams, playerCharacter.Interface());
@@ -57,8 +56,9 @@ int main()
 	{
 		display.Clear(0.1f, 0.1f, 0.2f, 1.0f);
 		enemyManager.Draw();
-		playerCharacter.RenderScore();
 		playerCharacter.Draw();
+		weaponsManager.Draw();
+		playerCharacter.RenderScore();
 		timer.RenderFPS();
 	};
 
@@ -69,7 +69,6 @@ int main()
 		controler.CaptureKeyboardPresses(playerCharacter.IsAlive());
 		controler.CaptureMouseMovement();
 
-		enemyManager.UpdateBehaviour(helpers::transformStdVector(pcParams, pcModel), expManager.CreateExpParticlesCb());
 		if (timer.IsItTime(Timer::ClocksEnum::SPAWN_CLOCK))
 			enemyManager.Spawn();
 
@@ -81,7 +80,7 @@ int main()
 			playerStats.enemySpawnRate *= 0.5f;
 			cardDeck.RollCards();
 		}
-			
+		enemyManager.UpdateBehaviour(helpers::transformStdVector(pcParams, pcModel), expManager.CreateExpParticlesCb());
 		render();
 		expManager.UpdateExpParticles(pcModel);
 		display.Update();
@@ -93,6 +92,8 @@ int main()
 			cardDeck.DrawCards();
 			display.Update();
 		}
+
+		usleep(10000);
 
 		while (!playerCharacter.IsAlive() && !display.IsClosed())
 		{

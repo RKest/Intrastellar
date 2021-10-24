@@ -155,7 +155,6 @@ class TexturedInstancedMesh : public InstancedMesh
 public:
     TexturedInstancedMesh(const TexturedMeshParams &params, ui maxNoInstances, ui transformMatSize = 4);
     inline GLuint InstancedBufferPosition()     { return vertexArrayBuffers[INSTANCE_TRANSFORM_VB]; }
-    inline GLuint InstancedBufferTexPosition()  { return vertexArrayBuffers[INSTANCE_TEXINDEX_VB]; }
 private:
     VAB vab;
     enum
@@ -164,7 +163,6 @@ private:
         TEXCOORD_VB,
         INDEX_VB,
         INSTANCE_TRANSFORM_VB,
-        INSTANCE_TEXINDEX_VB,
 
         NO_BUFFERS
     };

@@ -41,7 +41,7 @@ private:
     int mouseXOffset = 0, mouseYOffset = 0;
     bool mouseEventFilter = false;
 
-    SDL_Scancode keyScancodeMap[] = { SDL_SCANCODE_W, SDL_SCANCODE_A, SDL_SCANCODE_S, SDL_SCANCODE_D, SDL_SCANCODE_LCTRL, SDL_SCANCODE_SPACE, SDL_SCANCODE_TAB };
+    SDL_Scancode keyScancodeMap[7] = { SDL_SCANCODE_W, SDL_SCANCODE_A, SDL_SCANCODE_S, SDL_SCANCODE_D, SDL_SCANCODE_LCTRL, SDL_SCANCODE_SPACE, SDL_SCANCODE_TAB };
 
     const Uint8 *keys = SDL_GetKeyboardState(NULL);
 

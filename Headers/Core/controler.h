@@ -16,6 +16,7 @@ public:
     : display(display), camera(camera), timer(timer), transform(transform) {};
     void CaptureMouseMovement();
     void CaptureKeyboardPresses(bool &isPcAlive);
+    inline bool IsTabPressed() { return display.ReadKeyboardState(codes[display.TAB]); }
 
 protected:
 private:

@@ -78,9 +78,8 @@ ft helpers::det(const glm::vec2 &vec1, const glm::vec2 &vec2)
 
 ft helpers::angleBetweenPoints(const glm::mat4 &from, const glm::mat4 &to, const glm::vec2 &up)
 {
-	const glm::vec2 toPos{to * glm::vec4(0,0,0,1)};
-	const glm::vec2 fromPos = glm::normalize(glm::vec2(glm::inverse(from) * glm::vec4(toPos, 0, 1)));
-	const ft angle = -glm::atan(glm::dot(up, fromPos), helpers::det(up, toPos));
+	const ft orientedAngle = glm::orientedAngle(up, glm::normalize(glm::vec2(glm::inverse(from) * to * glm::vec4(0,0,0,1))));
+	const ft angle = orientedAngle < 0 ? TAU + orientedAngle : orientedAngle;
 	return angle;
 }
 

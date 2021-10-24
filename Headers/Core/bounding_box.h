@@ -15,6 +15,7 @@ struct ReqBoundingBox : public BoundingBox
 {
 	ReqBoundingBox() = default;
 	ReqBoundingBox(const UntexturedMeshParams &params, const glm::mat4 &transform = _blankTransform);
+	ReqBoundingBox(const TexturedMeshParams &params, const glm::mat4 &transform = _blankTransform);
 	glm::vec2 minDimentions;
 	glm::vec2 maxDimentions;
 	glm::vec2 minCoords;

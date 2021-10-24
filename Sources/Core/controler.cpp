@@ -4,6 +4,8 @@
 
 void Controler::CaptureMouseMovement()
 {
+    if(display.ReadKeyboardState(codes[display.TAB]))
+        return;
     int xCoord, yCoord;
     display.FetchMouseState(xCoord, yCoord);
     const ft halfDisplayWidth = (ft)display.width / 2;

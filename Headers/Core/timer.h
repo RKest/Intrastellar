@@ -11,13 +11,12 @@ using _clock = std::chrono::steady_clock;
 using milliDuration = std::chrono::duration<db, std::milli>;
 using timePt = _clock::time_point;
 
-class Clock
+struct Clock
 {
-public:
 	Clock(db &clockDelay, timePt &latestFrameTimePoint);
-	bool IsItTime();
+	bool IsItTime(const db scalingFactor);
 	db RemainingTime();
-private:
+
 	db &clockDelayDB;
 	milliDuration clockDelay;
 	timePt &latestFrameTimePoint;
@@ -43,10 +42,11 @@ public:
 	void RenderFPS();
 	void RecordFrame();
 	bool IsItTime(ClocksEnum onWhichClock);
+	void SetScalingFactor(const db arg);
 	template<typename T>
 	inline T Scale(T number)
 	{
-		return number * static_cast<T>(lastFrameDuration.count());
+		return (number * static_cast<T>(lastFrameDuration.count() * scalingFactor));
 	}
 	~Timer();
 
@@ -60,6 +60,8 @@ private:
 	std::vector<Clock> clocks;
 	ui newestHeapClockId = 0;
 	std::vector<Clock *> heapClocks;
+
+	db scalingFactor = 1.0;
 
 	//FPS
 	milliDuration fpsDuration = milliDuration(0.0);

@@ -27,7 +27,7 @@ namespace helpers
     bool IsLBMPressed();
     ft det(const glm::vec2 &vec1, const glm::vec2 &vec2);
     ui squishedIntToScreenWidth(ui minValue, ui maxValue, ui value);
-    ft angleBetweenPoints(const glm::mat4 &from, const glm::mat4 &to, const glm::vec2 &up = glm::vec2(1.0f, 0.0f));
+    ft angleBetweenPoints(const glm::mat4 &from, const glm::mat4 &to, const glm::vec2 &up = glm::vec2(0.0f, 1.0f));
     glm::mat4 transformTowards(const glm::mat4 &from, const glm::mat4 &to, const ft byHowMutch);
     ft angleDiff(const ft a, const ft b); 
     ft rotTransformAngle(const glm::mat4 &matrix);
@@ -105,6 +105,7 @@ namespace helpers
 
     struct Core
     {
+        Display &display;
         Camera &camera;
         Text &text;
         Timer &timer;

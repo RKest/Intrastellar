@@ -105,7 +105,7 @@ inline static auto choseBehaviour(behavoiurPtrVec &behavoiurs, const glm::mat4 &
 using orphanedProjPair_t = std::pair<ui, std::vector<glm::mat4>>;
 struct EnemyData
 {
-	EnemyData();
+	EnemyData(EnemyManager &manager);
 	std::vector<glm::mat4>					instanceTransforms;
 	std::vector<ReqBoundingBox>				boundingBoxes;
 	std::vector<si>							healths;
@@ -115,8 +115,9 @@ struct EnemyData
 	size_t size = 0;
 	void Clear();
 	void Erase(const ui index);
-	void EraseProjectiles(const ui index);
 	void Push(const glm::mat4 &instanceTransform, const UntexturedMeshParams &params, EnemyStats &stats);
+private:
+	EnemyManager &_manager;
 };
 
 class Enemy
@@ -171,7 +172,7 @@ private:
 	Camera &_camera;
 	PlayerStats &_pcStats;
 	Timer &_timer;
-	EnemyData _enemyData;
+	EnemyData _enemyData{*this};
 	EnemyStats &_enemyStats;
 	const UntexturedMeshParams _enemyParams;
 	const UntexturedMeshParams _enemyProjParams;

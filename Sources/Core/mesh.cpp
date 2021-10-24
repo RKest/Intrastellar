@@ -74,15 +74,6 @@ void InstancedMesh::Update(const glm::mat3 *matrices, GLuint bufferAtPos)
     glBindVertexArray(0);
 }
 
-void InstancedMesh::Update(const ui *texIndices, GLuint bufferAtPos)
-{
-    glBindVertexArray(vertexArrayObject);
-    const size_t sz = sizeof(texIndices[0]) * instanceCount;
-    glBindBuffer(GL_ARRAY_BUFFER, bufferAtPos);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, sz, texIndices);
-    glBindVertexArray(0);
-}
-
 UntexturedMesh::UntexturedMesh(const UntexturedMeshParams &params)
     : vab(vertexArrayBuffers)
 {
@@ -152,7 +143,6 @@ TexturedInstancedMesh::TexturedInstancedMesh(const TexturedMeshParams &params, u
     vab.Init(params.texCoords, params.noVertices, TEXCOORD_VB);
     vab.Index(params.indices, params.noIndices, INDEX_VB);
     vab.Instance(vertexArrayBuffers, INSTANCE_TRANSFORM_VB, transformMatSize, maxNoInstances);
-    vab.Instance(vertexArrayBuffers, INSTANCE_TEXINDEX_VB, 1, maxNoInstances);
 
     glBindVertexArray(0);
 }

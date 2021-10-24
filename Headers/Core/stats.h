@@ -43,6 +43,23 @@ struct PlayerStats
             currHP = maxHP;
         Recalculate();
     }
+    void operator-=(const PlayerStats &lval)
+    {
+        shotDelay -= lval.shotDelay;
+        shotDelayMultiplayar /= lval.shotDelayMultiplayar;
+        shotDamage -= lval.shotDamage;
+        shotDanageMultiplayer /= lval.shotDanageMultiplayer;
+        shotSpeed -= lval.shotSpeed;
+        noShots -= lval.noShots;
+        shotVariance -= lval.shotVariance;
+        shotHomingStrength -= lval.shotHomingStrength;
+        maxHP -= lval.maxHP;
+        currHP -= lval.currHP;
+        enemySpawnRate -= lval.enemySpawnRate;
+        if (currHP > maxHP)
+            currHP = maxHP;
+        Recalculate();
+    }
     PlayerStats operator+(const PlayerStats &lval) const
     {
         return PlayerStats(
