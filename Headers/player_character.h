@@ -56,9 +56,13 @@ private:
 	db _invincibilityDuration{400.0};
 	ui _invincibilityClockId;
 
-	std::vector<glm::mat4> _projInstanceTransforms;
+	std::vector<glm::mat4> 								_projInstanceTransforms;
+	std::vector<ui>									 	_noLeftProjPiercings;
+	std::vector<std::reference_wrapper<BoundingBox>> 	_alreadyHitBoundingBoxes;
 
 	ui _oldestProjectileIndex{};
+	ui _oldestProjectileIndexForPiercingPurouses{};
+	ui _oldestProjectileIndexForBoxesPurpouses{};
 	ui _enemiesShotCounter{};
 
 	void _projHit(const ui index);

@@ -72,36 +72,49 @@ void PlayerCharacter::Draw()
 
 void PlayerCharacter::Shoot()
 {
+	const auto pushProj = [this, MAX_PROJ_AMOUNT](const glm::mat4& transform)
+	{
+    	helpers::pushToCappedVector(_projInstanceTransforms, transform, _oldestProjectileIndex, MAX_PROJ_AMOUNT);
+		helpers::pushToCappedVector(_noLeftProjPiercings, _pcStats.noPiercings, _oldestProjectileIndexForPiercingPurouses, MAX_PROJ_AMOUNT);
+		helpers::pushToCappedVector(_alreadyHitBoundingBoxes, declval(decltype(_alreadyHitBoundingBoxes)), _oldestProjectileIndexForBoxesPurpouses, MAX_PROJ_AMOUNT);
+	}
+
 	const glm::mat4 originTransform = _pcTransform.Model();
 	if(_pcStats.noShots == 1)
-    	helpers::pushToCappedVector(_projInstanceTransforms, originTransform, _oldestProjectileIndex, MAX_PROJ_AMOUNT);
+	{
+		pushProj(originTransform);
+	}
 	else if (_pcStats.noShots % 2 == 0)
 	{
 		for (ui i = 0; i < _pcStats.noShots >> 1; ++i)
 		{
-			helpers::pushToCappedVector(_projInstanceTransforms, originTransform * glm::translate(glm::vec3(0.1,0,0)) * 
-				glm::rotate(	   static_cast<ft>(i) * DEF_ANGLE_BETWEEN_SHOTS, glm::vec3(0,0,1)), _oldestProjectileIndex, MAX_PROJ_AMOUNT);
-			helpers::pushToCappedVector(_projInstanceTransforms, originTransform * glm::translate(glm::vec3(0.1,0,0)) * 
-				glm::rotate(TAU - (static_cast<ft>(i) * DEF_ANGLE_BETWEEN_SHOTS), glm::vec3(0,0,1)), _oldestProjectileIndex, MAX_PROJ_AMOUNT);
+			const ft shotAngle = static_cast<ft>(i) * DEF_ANGLE_BETWEEN_SHOTS;
+			pushProj(originTransform * glm::translate(glm::vec3(0.1,0,0)) * glm::rotate(shotAngle, glm::vec3(0,0,1)));
+			pushProj(originTransform * glm::translate(glm::vec3(0.1,0,0)) * glm::rotate(TAU - shotAngle, glm::vec3(0,0,1)));
 		}
 	}
 	else
 	{
-		helpers::pushToCappedVector(_projInstanceTransforms, originTransform, _oldestProjectileIndex, MAX_PROJ_AMOUNT);
+		pushProj(originTransform);
 		for (ui i = 1; i <= _pcStats.noShots >> 1; ++i)
 		{
-			helpers::pushToCappedVector(_projInstanceTransforms, originTransform * glm::rotate(static_cast<ft>(i) * DEF_ANGLE_BETWEEN_SHOTS, 
-				glm::vec3(0,0,1)), _oldestProjectileIndex, MAX_PROJ_AMOUNT);
-			helpers::pushToCappedVector(_projInstanceTransforms, originTransform * glm::rotate(TAU - (static_cast<ft>(i) * DEF_ANGLE_BETWEEN_SHOTS), 
-				glm::vec3(0,0,1)), _oldestProjectileIndex, MAX_PROJ_AMOUNT);
+			const ft shotAngle = static_cast<ft>(i) * DEF_ANGLE_BETWEEN_SHOTS;
+			pushProj(originTransform * glm::rotate(shotAngle, glm::vec3(0,0,1)));
+			pushProj(originTransform * glm::rotate(TAU - shotAngle, glm::vec3(0,0,1)));
 		}
 	}
 }
 
 void PlayerCharacter::_projHit(const ui index)
 {
-	_projInstanceTransforms[index] = _projInstanceTransforms.back();
-	_projInstanceTransforms.pop_back();
+	_noLeftProjPiercings[index] -= 1;
+	if(!_noLeftProjPiercings[index])
+	{
+		_projInstanceTransforms	[index] = _projInstanceTransforms	.back();
+		_noLeftProjPiercings	[index] = _noLeftProjPiercings		.back();
+		_projInstanceTransforms									.pop_back();
+		_noLeftProjPiercings									.pop_back();
+	}
 	_enemiesShotCounter++;
 }
 
