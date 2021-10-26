@@ -21,7 +21,9 @@ PlayerCharacter::~PlayerCharacter()
 void PlayerCharacter::Reset()
 {
 	_projInstanceTransforms.clear();
-	_oldestProjectileIndex = 0;
+	_oldestProjectileIndex0 = 0;
+	_oldestProjectileIndex1 = 0;
+	_oldestProjectileIndex2 = 0;
 	_enemiesShotCounter = 0;
 	_pcStats = defaultStats;
 }
@@ -72,12 +74,12 @@ void PlayerCharacter::Draw()
 
 void PlayerCharacter::Shoot()
 {
-	const auto pushProj = [this, MAX_PROJ_AMOUNT](const glm::mat4& transform)
+	const auto pushProj = [this](const glm::mat4& transform)
 	{
-    	helpers::pushToCappedVector(_projInstanceTransforms, transform, _oldestProjectileIndex, MAX_PROJ_AMOUNT);
-		helpers::pushToCappedVector(_noLeftProjPiercings, _pcStats.noPiercings, _oldestProjectileIndexForPiercingPurouses, MAX_PROJ_AMOUNT);
-		helpers::pushToCappedVector(_alreadyHitBoundingBoxes, declval(decltype(_alreadyHitBoundingBoxes)), _oldestProjectileIndexForBoxesPurpouses, MAX_PROJ_AMOUNT);
-	}
+    	helpers::pushToCappedVector(_projInstanceTransforms, transform, _oldestProjectileIndex0, MAX_PROJ_AMOUNT);
+		helpers::pushToCappedVector(_noLeftProjPiercings, _pcStats.noPiercings, _oldestProjectileIndex1, MAX_PROJ_AMOUNT);
+		helpers::pushToCappedVector(_alreadyHitEnemyIds, std::vector<ui>(), _oldestProjectileIndex2, MAX_PROJ_AMOUNT);
+	};
 
 	const glm::mat4 originTransform = _pcTransform.Model();
 	if(_pcStats.noShots == 1)
@@ -105,17 +107,26 @@ void PlayerCharacter::Shoot()
 	}
 }
 
-void PlayerCharacter::_projHit(const ui index)
+bool PlayerCharacter::_projHit(const ui projIndex, const ui enemyIndex)
 {
-	_noLeftProjPiercings[index] -= 1;
-	if(!_noLeftProjPiercings[index])
+	if(!helpers::contains(_alreadyHitEnemyIds[projIndex], enemyIndex))
 	{
-		_projInstanceTransforms	[index] = _projInstanceTransforms	.back();
-		_noLeftProjPiercings	[index] = _noLeftProjPiercings		.back();
-		_projInstanceTransforms									.pop_back();
-		_noLeftProjPiercings									.pop_back();
+		_noLeftProjPiercings[projIndex] -= 1;
+		if(!_noLeftProjPiercings[projIndex])
+		{
+			_projInstanceTransforms	[projIndex] = _projInstanceTransforms	.back();
+			_noLeftProjPiercings	[projIndex] = _noLeftProjPiercings		.back();
+			_alreadyHitEnemyIds		[projIndex] = _alreadyHitEnemyIds		.back();
+			_projInstanceTransforms											.pop_back();
+			_noLeftProjPiercings											.pop_back();
+			_alreadyHitEnemyIds												.pop_back();
+		}
+		else
+			_alreadyHitEnemyIds[projIndex].push_back(enemyIndex);
+		_enemiesShotCounter++;
+		return true;
 	}
-	_enemiesShotCounter++;
+	return false;
 }
 
 void PlayerCharacter::_pcIntersection()

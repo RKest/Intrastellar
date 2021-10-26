@@ -56,16 +56,16 @@ private:
 	db _invincibilityDuration{400.0};
 	ui _invincibilityClockId;
 
-	std::vector<glm::mat4> 								_projInstanceTransforms;
-	std::vector<ui>									 	_noLeftProjPiercings;
-	std::vector<std::reference_wrapper<BoundingBox>> 	_alreadyHitBoundingBoxes;
+	std::vector<glm::mat4> 			_projInstanceTransforms;
+	std::vector<ui>					_noLeftProjPiercings;
+	std::vector<std::vector<ui>> 	_alreadyHitEnemyIds;
 
-	ui _oldestProjectileIndex{};
-	ui _oldestProjectileIndexForPiercingPurouses{};
-	ui _oldestProjectileIndexForBoxesPurpouses{};
+	ui _oldestProjectileIndex0{};
+	ui _oldestProjectileIndex1{};
+	ui _oldestProjectileIndex2{};
 	ui _enemiesShotCounter{};
 
-	void _projHit(const ui index);
+	bool _projHit(const ui projIndex, const ui enemyIndex);
 	void _pcIntersection();
 	void _externDraw(const std::vector<glm::mat4> &pcTransforms, std::vector<glm::mat4> &projTransforms, const std::vector<ui> &clockIds, 
 	const std::vector<ReqBoundingBox> &targetBoundingBoxes, const glm::mat4 &projection, ui &oldestProjIndex);
@@ -87,7 +87,7 @@ struct IPlayerCharacter
 
 private:
 	PlayerCharacter *_pcPtr;
-	DECL_INST(pcProjHitCb, std::bind(&PlayerCharacter::_projHit, _pcPtr, _1));
+	DECL_INST(pcProjHitCb, std::bind(&PlayerCharacter::_projHit, _pcPtr, _1, _2));
 	DECL_INST(pcHitCb,	   std::bind(&PlayerCharacter::_pcIntersection, _pcPtr));
 	DECL_INST(externDraw,  std::bind(&PlayerCharacter::_externDraw, _pcPtr, _1, _2, _3, _4, _5, _6));
 };

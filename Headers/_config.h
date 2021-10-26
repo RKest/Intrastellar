@@ -34,9 +34,9 @@ constexpr const ft SCREEN_ASPECT = static_cast<ft>(SCREEN_WIDTH) / static_cast<f
 
 //Shooter 
 constexpr const ui MAX_PROJ_AMOUNT = 100;
-constexpr const ui MAX_NO_ENEMIES = 1;
-constexpr const ui MAX_NO_SHOOTER_ENEMIES = 1;
-constexpr const ui MAX_NO_ORBITER_ENEMIES = 1;
+constexpr const ui MAX_NO_ENEMIES = 50;
+constexpr const ui MAX_NO_SHOOTER_ENEMIES = 5;
+constexpr const ui MAX_NO_ORBITER_ENEMIES = 5;
 
 constexpr const ui MAX_ENEMY_PROJ_AMOUNT = 300;
 constexpr const ui MAX_PROJ_AMOUNT_PER_ENEMY = 10;

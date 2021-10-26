@@ -103,6 +103,12 @@ namespace helpers
         std::for_each(begin(cont), end(cont), f);
     }
 
+    template<container_type Cont, typename T>
+    bool contains(const Cont &cont, const T &arg)
+    {
+        return std::find(cbegin(cont), cend(cont), arg) != cend(cont);
+    }
+
     struct Core
     {
         Display &display;

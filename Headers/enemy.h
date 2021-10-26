@@ -112,6 +112,7 @@ struct EnemyData
 	behavoiurPtrVec							enemyBehaviours;
 	std::vector<std::vector<glm::mat4>>		projInstanceTransforms;
 	std::vector<orphanedProjPair_t> 		clockIdOrphanedProjsPairs;
+	std::vector<ui>							ids;
 	size_t size = 0;
 	void Clear();
 	void Erase(const ui index);
@@ -150,6 +151,7 @@ public:
 	void Spawn();
 	void UpdateBehaviour(const std::vector<glm::vec2> &pcPositions, std::function<void(const glm::mat4&, const ui)> fatalityCallback);
 	std::vector<std::vector<glm::mat4>*> InstanceTransforms();
+	inline ui NextId() { return _newestEnemyId++; }
 
 private:
 	friend class Enemy;
@@ -182,6 +184,8 @@ private:
 	Transform _enemyTransform;
 	CustomRand _customRand{CUSTOM_RAND_SEED};
 	std::vector<Enemy> _enemies;
+
+	ui _newestEnemyId = 0;
 
 	void checkForProjIntersection(std::vector<glm::mat4> &projInstanceTransforms);
 

@@ -135,6 +135,7 @@ EnemyData::EnemyData(EnemyManager &manager) : _manager(manager)
 	boundingBoxes	  		.reserve(MAX_NO_ENEMIES);
 	healths			  		.reserve(MAX_NO_ENEMIES);
 	projInstanceTransforms	.reserve(MAX_NO_ENEMIES);
+	ids						.reserve(MAX_NO_ENEMIES);
 }
 
 void EnemyData::Clear()
@@ -147,6 +148,7 @@ void EnemyData::Clear()
 	healths						.clear();
 	projInstanceTransforms		.clear();
 	clockIdOrphanedProjsPairs	.clear();
+	ids							.clear();
 
 	size = 0;
 }
@@ -163,10 +165,12 @@ void EnemyData::Erase(const ui index)
 	boundingBoxes			[index] = boundingBoxes			[size - 1];
 	projInstanceTransforms	[index] = projInstanceTransforms[size - 1];
 	healths					[index] = healths				[size - 1];
+	ids						[index] = ids					[size - 1];
 	instanceTransforms		.pop_back();
 	boundingBoxes			.pop_back();
 	projInstanceTransforms	.pop_back();
 	healths					.pop_back();
+	ids						.pop_back();
 
 	size--;
 }
@@ -177,6 +181,7 @@ void EnemyData::Push(const glm::mat4 &instanceTransform, const UntexturedMeshPar
 	boundingBoxes			.emplace_back(params, instanceTransform);
 	projInstanceTransforms	.emplace_back();
 	healths					.push_back(stats.health);
+	ids						.push_back(_manager.NextId());
 	
 	size++;
 }
@@ -281,12 +286,14 @@ void EnemyManager::UpdateBehaviour(const std::vector<glm::vec2> &pcPositions, st
 		{
 			if(enemy.data.boundingBoxes[i].IsThereAnIntersection(_pcInterface.ProjTransforms(), collisionIndex))
 			{
-				(_pcInterface.ProjHitCb())(collisionIndex);
-				enemy.data.healths[i] -= decl_cast(enemy.data.healths, _pcStats.actualDamage);
-				if(enemy.data.healths[i] <= 0)
+				if((_pcInterface.ProjHitCb())(collisionIndex, enemy.data.ids[i]))
 				{
-					fatalityCallback(enemy.data.instanceTransforms[i], 3);
-					enemy.data.Erase(i);
+					enemy.data.healths[i] -= decl_cast(enemy.data.healths, _pcStats.actualDamage);
+					if(enemy.data.healths[i] <= 0)
+					{
+						fatalityCallback(enemy.data.instanceTransforms[i], 3);
+						enemy.data.Erase(i);
+					}
 				}
 			}
 		}

@@ -29,9 +29,9 @@ WeaponsManager::WeaponsManager(helpers::Core &core, const TexturedMeshParams &ic
         stbi_image_free(imageData);
     }
 
-    _weaponStatAltarations[Weapons::ROCKET_LAUNCHER]    += stat_altarations::SHOT_HOMING_STRENGTH(2.0f) + stat_altarations::SHOT_SPEED(-0.1f) + 
+    _weaponStatAltarations[Weapons::ROCKET_LAUNCHER]    += stat_altarations::SHOT_HOMING_STRENGTH(2.0f) + stat_altarations::SHOT_SPEED(-0.01f) + 
         stat_altarations::SHOT_DELAY_MULTIPLAYER(0.7f);
-    _weaponStatAltarations[Weapons::LASER]              += stat_altarations::SHOT_SPEED(1.0f);
+    _weaponStatAltarations[Weapons::LASER]              += stat_altarations::SHOT_SPEED(0.05f) + stat_altarations::NO_PIERCINGS(99);
 }
 
 void WeaponsManager::Draw()
