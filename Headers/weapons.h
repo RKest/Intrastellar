@@ -40,10 +40,15 @@ private:
 
     GLuint          _textures               [WEAPONS_NO_WEAPONS];
     glm::mat4       _instanceTransforms     [WEAPONS_NO_WEAPONS];
+    glm::mat4       _baseInstanceTransforms [WEAPONS_NO_WEAPONS];
     ReqBoundingBox  _boundingBoxes          [WEAPONS_NO_WEAPONS];
     PlayerStats     _weaponStatAltarations  [WEAPONS_NO_WEAPONS];
 
-    uiUni _selectedWeaponIndexUni{"chosenWeaponInx", 0};
+    uiUni _selectedWeaponIndexUni   {"chosenWeaponInx", 0};
+    ftUni _overlayAlpthaUni         {"overlayAlpha", 0.0f};       
+    ui _weaponTransitionClockId{};
+    db _scaledTransitionTime = WEAPONS_OVERLAY_TRANSITION_TIME;
+    bool _isWeaopnsTabVisible{};
     bool _isLBMPressed{};
     const glm::mat4 _projection                 = glm::ortho(0.0f, static_cast<ft>(SCREEN_WIDTH), 0.0f, static_cast<ft>(SCREEN_HEIGHT));
     const glm::mat4 _inverseFlippedProjection   = glm::inverse(glm::ortho(0.0f, static_cast<ft>(SCREEN_WIDTH), static_cast<ft>(SCREEN_HEIGHT), 0.0f));

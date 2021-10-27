@@ -74,7 +74,7 @@ void CardDeck::RollCards()
 			rAcc += _cards[i].weight;
 			if(rAcc > r)
 			{
-				if(std::find(_chosenCardIndices.begin(), _chosenCardIndices.end(), i) == _chosenCardIndices.end())
+				if(helpers::contains(_chosenCardIndices, i))
 				{
 					_cardShotDelays[rolledCards] = _stats.actualShotDelay + _cards[i].statAltarations.actualShotDelay;
 					_timer.InitHeapClock(_clockIds[rolledCards], _cardShotDelays[rolledCards]);

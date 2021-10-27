@@ -4,13 +4,14 @@ WeaponsManager::WeaponsManager(helpers::Core &core, const TexturedMeshParams &ic
     : _display(core.display), _timer(core.timer), _pcStats(core.stats), _iconMesh(iconMeshParams, WEAPONS_NO_WEAPONS), _overlayMesh(overlayMeshParams)
 {
     constexpr const char *basePath = "./Resources/Textures/WeaponIcons/";
-    constexpr const ft iconRealestate = WEAPONS_ICON_DIMS + 1.0f;
-    constexpr const ft leftIconMargin = (SCREEN_WIDTH - iconRealestate * static_cast<ft>(WEAPONS_NO_WEAPONS)) / 2.0f;
+    constexpr const ft baseLeftIconMargin = (SCREEN_WIDTH - _iconRealestate * static_cast<ft>(WEAPONS_NO_WEAPONS)) / 2.0f;
     glGenTextures(WEAPONS_NO_WEAPONS, _textures);
     for (ui i = 0; i < WEAPONS_NO_WEAPONS; ++i)
     {
-        _instanceTransforms [i] = glm::translate(glm::vec3(leftIconMargin + (static_cast<ft>(i) * iconRealestate), -SCREEN_ASPECT / 2.0f, 0.0f));
-        _boundingBoxes      [i] = ReqBoundingBox(iconMeshParams, _instanceTransforms[i]);
+        const ft leftIconMargin = baseLeftIconMargin + (static_cast<ft>(i) * _iconRealestate);
+        _baseInstanceTransforms [i] = glm::translate(glm::vec3(leftIconMargin, 0.0f, 0.0f));
+        _instanceTransforms     [i] = glm::translate(glm::vec3(leftIconMargin, -_iconRealestate, 0.0f));
+        _boundingBoxes          [i] = ReqBoundingBox(iconMeshParams, _instanceTransforms[i]);
 
         si width, height, noComponents;
         const std::string fullPath = basePath + std::to_string(i + 1) + ".png";
@@ -38,6 +39,32 @@ void WeaponsManager::Draw()
 {
     if(_display.ReadKeyboardState(_display.KeyScancodeMap()[_display.TAB]))
     {
+        if(!_isWeaopnsTabVisible)
+        {
+            _isWeaopnsTabVisible = true;
+            _scaledTransitionTime = WEAPONS_OVERLAY_TRANSITION_TIME * static_cast<db>(1.0f * overlayAlpha.second)
+            _timer.InitHeapClock(_weaponTransitionClockId, _scaledTransitionTime);
+        }
+        else
+        {
+            if(_timer.HeapIsItTime(_weaponTransitionClockId))
+            {
+                for(ui i = 0; i < WEAPONS_NO_WEAPONS; ++i)
+                {
+                    _instanceTransforms[i] = _baseInstanceTransforms[i];
+                    _overlayAlpthaUni.second = 1.0f; 
+                }
+                _timer.DestroyHeapClock(_weaponTransitionClockId);
+            }
+            else
+            {
+                const db remainingClockTime = _timer.RemainingTime(_weaponTransitionClockId);
+                const db remainingTimeFraction = remainingClockTime / WEAPONS_OVERLAY_TRANSITION_TIME;
+                const ft hiddenIconDimY = _iconRealestate - _iconRealestate * decl_cast(hiddenIconDimY, remainingTimeFraction);
+                _instanceTransforms[i] = _baseInstanceTransforms[i] * glm::translate(glm::vec3(0.0f, -hiddenIconDimY, 0.0f));
+                _overlayAlpthaUni.second = decl_cast(_overlayAlpthaUni.second, remainingTimeFraction);
+            }
+        }
         ui tempSelectedWeaponIndex = _selectedWeaponIndexUni.second;
         _timer.SetScalingFactor(0.05);
         for(ui i = 0; i < WEAPONS_NO_WEAPONS; ++i)
@@ -47,31 +74,32 @@ void WeaponsManager::Draw()
             if(_boundingBoxes[i].IsThereAnIntersection(helpers::mouseCoordsTransformed(_inverseFlippedProjection)))
                 tempSelectedWeaponIndex = i;
         }
-        bool localIsLBMPressed;
-        _display.FetchMouseState(_dummy_si, _dummy_si, localIsLBMPressed);
-        if(_isLBMPressed && !localIsLBMPressed)
+        bool tempIsLBMPressed = helpers::IsLBMPressed();
+        if(_isLBMPressed && !tempIsLBMPressed)
         {
             _pcStats -= _weaponStatAltarations[_selectedWeaponIndexUni.second];
             _selectedWeaponIndexUni.second = tempSelectedWeaponIndex;
             _pcStats += _weaponStatAltarations[_selectedWeaponIndexUni.second];
         }
-        _isLBMPressed = localIsLBMPressed;
+        _isLBMPressed = tempIsLBMPressed;
 
         helpers::render(_overlayShader, _overlayMesh);
         
         _weaponIconShader.Bind();
         _weaponIconShader.Update(_blankTransform, _projection);
-        _weaponIconShader.SetUnis(_selectedWeaponIndexUni);
         for(ui i = 0; i < WEAPONS_NO_WEAPONS; ++i)
             _weaponIconShader.SetUni("samps[" + std::to_string(i) + "]", i);
-        _weaponIconShader.SetUni(_selectedWeaponIndexUni.first, tempSelectedWeaponIndex);
+        _weaponIconShader.SetUnis(_overlayAlpthaUni, uiUni(_selectedWeaponIndexUni.first, tempSelectedWeaponIndex));
         _iconMesh.SetInstanceCount(WEAPONS_NO_WEAPONS);
         _iconMesh.Update(_instanceTransforms, _iconMesh.InstancedBufferPosition());
         _iconMesh.Draw();
 
     }
     else
+    {
+        _isWeaopnsTabVisible = false;
         _timer.SetScalingFactor(1.0);
+    }
 }
 
 WeaponsManager::~WeaponsManager()

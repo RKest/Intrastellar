@@ -10,6 +10,7 @@ in flat int v_texInx;
 out vec4 out_colour;
 
 uniform int chosenWeaponInx;
+uniform float overlayAlpha;
 uniform sampler2D samps[WEAPONS_NO_WEAOPNS];
 
 void main() {
@@ -17,11 +18,11 @@ void main() {
 	{
 		vec3 tex = texture(samps[v_texInx], v_texCoords).rgb;
 		vec3 invertedTex = vec3(1.0 - tex.r, 1.0 - tex.g, 1.0 - tex.b);
-		out_colour = vec4(invertedTex, 1);
+		out_colour = vec4(invertedTex, overlayAlpha);
 	}
 	else
 	{
 		vec3 tex = texture(samps[v_texInx], v_texCoords).rgb;
-		out_colour = vec4(tex, 1);
+		out_colour = vec4(tex, overlayAlpha);
 	}
 }

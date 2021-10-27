@@ -45,6 +45,7 @@ constexpr const ui MAX_PROJ_AMOUNT_PER_ORBIT = 20;
 constexpr const ui CARD_MAX_PROJ_COUNT = 300;
 constexpr const ui NO_CARDS = 3;
 constexpr const ui MAX_EXP_PART_NO = 200;
+constexpr const db CARDS_OVERLAY_TRANSITION_TIME = 200.0;
 
 constexpr const ft TAU = 2.0f * glm::pi<ft>();
 constexpr const db TAU_d = 2.0 * glm::pi<db>();
@@ -62,6 +63,9 @@ constexpr const glm::mat4 ENEMY_ORBIT_TO_ORBIT_TRANSLATE{{0.0f,1.0f,0.0f,0.0f}, 
 //Same in the file:///home/max/Documents/Intrastellar/Shaders/WeaponIcon/VS.glsl
 constexpr const ui WEAPONS_NO_WEAPONS = 10;
 constexpr const ft WEAPONS_ICON_DIMS = static_cast<ft>(SCREEN_HEIGHT) / static_cast<ft>(WEAPONS_NO_WEAPONS);
+
+//Overlay
+constexpr const db WEAPONS_OVERLAY_TRANSITION_TIME = 40.0;
 
 inline size_t _dummy_size_t;
 inline bool _dummy_bool;
