@@ -68,6 +68,5 @@ private:
 	std::list<ui> pastFPSValues;
 	ui framesThisSecond = 0;
 	const ui maxPolledFrames = 5;
-    constexpr const ft _iconRealestate = WEAPONS_ICON_DIMS + 1.0f;
 };
 

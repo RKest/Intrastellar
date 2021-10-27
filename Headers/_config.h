@@ -65,7 +65,7 @@ constexpr const ui WEAPONS_NO_WEAPONS = 10;
 constexpr const ft WEAPONS_ICON_DIMS = static_cast<ft>(SCREEN_HEIGHT) / static_cast<ft>(WEAPONS_NO_WEAPONS);
 
 //Overlay
-constexpr const db WEAPONS_OVERLAY_TRANSITION_TIME = 40.0;
+constexpr const db WEAPONS_OVERLAY_TRANSITION_TIME = 2000.0;
 
 inline size_t _dummy_size_t;
 inline bool _dummy_bool;

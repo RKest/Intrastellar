@@ -95,7 +95,8 @@ void Timer::DestroyHeapClock(const ui heapClockId)
 
 bool Timer::HeapIsItTime(const ui heapClockId)
 {
-	assert(heapClocks.size() >= heapClockId && heapClocks[heapClockId] != nullptr);
+	assert(heapClocks.size() >= heapClockId);
+	assert(heapClocks[heapClockId] != nullptr);
 	return heapClocks[heapClockId]->IsItTime(scalingFactor);
 }
 

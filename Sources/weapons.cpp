@@ -4,13 +4,13 @@ WeaponsManager::WeaponsManager(helpers::Core &core, const TexturedMeshParams &ic
     : _display(core.display), _timer(core.timer), _pcStats(core.stats), _iconMesh(iconMeshParams, WEAPONS_NO_WEAPONS), _overlayMesh(overlayMeshParams)
 {
     constexpr const char *basePath = "./Resources/Textures/WeaponIcons/";
-    constexpr const ft baseLeftIconMargin = (SCREEN_WIDTH - _iconRealestate * static_cast<ft>(WEAPONS_NO_WEAPONS)) / 2.0f;
+    const ft baseLeftIconMargin = (SCREEN_WIDTH - _iconRealestate * static_cast<ft>(WEAPONS_NO_WEAPONS)) / 2.0f;
     glGenTextures(WEAPONS_NO_WEAPONS, _textures);
     for (ui i = 0; i < WEAPONS_NO_WEAPONS; ++i)
     {
         const ft leftIconMargin = baseLeftIconMargin + (static_cast<ft>(i) * _iconRealestate);
         _baseInstanceTransforms [i] = glm::translate(glm::vec3(leftIconMargin, 0.0f, 0.0f));
-        _instanceTransforms     [i] = glm::translate(glm::vec3(leftIconMargin, -_iconRealestate, 0.0f));
+        _instanceTransforms     [i] = glm::translate(glm::vec3(leftIconMargin, 0.0f, 0.0f));
         _boundingBoxes          [i] = ReqBoundingBox(iconMeshParams, _instanceTransforms[i]);
 
         si width, height, noComponents;
@@ -42,10 +42,10 @@ void WeaponsManager::Draw()
         if(!_isWeaopnsTabVisible)
         {
             _isWeaopnsTabVisible = true;
-            _scaledTransitionTime = WEAPONS_OVERLAY_TRANSITION_TIME * static_cast<db>(1.0f * overlayAlpha.second)
+            _scaledTransitionTime = WEAPONS_OVERLAY_TRANSITION_TIME * static_cast<db>(1.0f * _overlayAlpthaUni.second);
             _timer.InitHeapClock(_weaponTransitionClockId, _scaledTransitionTime);
         }
-        else
+        else if(!_isWeaponsFullyDrawn)
         {
             if(_timer.HeapIsItTime(_weaponTransitionClockId))
             {
@@ -55,13 +55,15 @@ void WeaponsManager::Draw()
                     _overlayAlpthaUni.second = 1.0f; 
                 }
                 _timer.DestroyHeapClock(_weaponTransitionClockId);
+                _isWeaponsFullyDrawn = true;
             }
             else
             {
                 const db remainingClockTime = _timer.RemainingTime(_weaponTransitionClockId);
                 const db remainingTimeFraction = remainingClockTime / WEAPONS_OVERLAY_TRANSITION_TIME;
-                const ft hiddenIconDimY = _iconRealestate - _iconRealestate * decl_cast(hiddenIconDimY, remainingTimeFraction);
-                _instanceTransforms[i] = _baseInstanceTransforms[i] * glm::translate(glm::vec3(0.0f, -hiddenIconDimY, 0.0f));
+                const ft hiddenIconDimY = - _iconRealestate * decl_cast(hiddenIconDimY, remainingTimeFraction);
+                for(ui i = 0; i < WEAPONS_NO_WEAPONS; ++i)
+                    _instanceTransforms[i] = _baseInstanceTransforms[i] * glm::translate(glm::vec3(0.0f, hiddenIconDimY, 0.0f));
                 _overlayAlpthaUni.second = decl_cast(_overlayAlpthaUni.second, remainingTimeFraction);
             }
         }
@@ -89,7 +91,7 @@ void WeaponsManager::Draw()
         _weaponIconShader.Update(_blankTransform, _projection);
         for(ui i = 0; i < WEAPONS_NO_WEAPONS; ++i)
             _weaponIconShader.SetUni("samps[" + std::to_string(i) + "]", i);
-        _weaponIconShader.SetUnis(_overlayAlpthaUni, uiUni(_selectedWeaponIndexUni.first, tempSelectedWeaponIndex));
+        _weaponIconShader.SetUni(_selectedWeaponIndexUni.first, tempSelectedWeaponIndex);
         _iconMesh.SetInstanceCount(WEAPONS_NO_WEAPONS);
         _iconMesh.Update(_instanceTransforms, _iconMesh.InstancedBufferPosition());
         _iconMesh.Draw();
@@ -97,7 +99,14 @@ void WeaponsManager::Draw()
     }
     else
     {
+        if(_isWeaopnsTabVisible)
+        {
+            _timer.DestroyHeapClock(_weaponTransitionClockId);
+            for(ui i = 0; i < WEAPONS_NO_WEAPONS; ++i)
+                _instanceTransforms[i] = _baseInstanceTransforms[i];
+        }
         _isWeaopnsTabVisible = false;
+        _isWeaponsFullyDrawn = false;
         _timer.SetScalingFactor(1.0);
     }
 }
