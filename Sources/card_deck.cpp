@@ -10,7 +10,7 @@ void CardDeck::DrawCards()
 	if(!_areCardsFullyDrawn)
 	{
 		const db remainingTime = _timer.RemainingTime(_overlayAlphaClockId);
-		const db remainingTimeFraction = remainingTime / _overlayTransitionTime;
+		const db remainingTimeFraction = 1.0 - remainingTime / _overlayTransitionTime;
 		const ft overlayAlpha = decl_cast(overlayAlpha, remainingTimeFraction) * OVERLAY_MAX_APLHA;
 		_overlayAlphaUni.second = overlayAlpha;
 		if(_timer.HeapIsItTime(_overlayAlphaClockId))
@@ -81,6 +81,7 @@ void CardDeck::RollCards()
 	_chosenCardIndices[2] = 9999;
 	ui rolledCards = 0;
 	ui rAcc = 0;
+	_timer.InitHeapClock(_overlayAlphaClockId, _overlayTransitionTime);
 	while (rolledCards < NO_CARDS)
 	{
 		const auto r = _customRand.NextU32(0, _cardWeightSum);
@@ -89,7 +90,7 @@ void CardDeck::RollCards()
 			rAcc += _cards[i].weight;
 			if(rAcc > r)
 			{
-				if(helpers::contains(_chosenCardIndices, i))
+				if(!helpers::contains(_chosenCardIndices, i))
 				{
 					_cardShotDelays[rolledCards] = _stats.actualShotDelay + _cards[i].statAltarations.actualShotDelay;
 					_timer.InitHeapClock(_clockIds[rolledCards], _cardShotDelays[rolledCards]);
@@ -99,7 +100,6 @@ void CardDeck::RollCards()
 				break;
 			}
 		}
-		_timer.InitHeapClock(_overlayAlphaClockId, _overlayTransitionTime);
 	}
 }
 

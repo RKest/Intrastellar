@@ -65,6 +65,8 @@ public:
     void Update(const ui *texIndices, GLuint bufferAtPos);
     void Draw() override;
 
+    inline virtual GLuint InstancedBufferPosition() const = 0;
+
     inline void SetInstanceCount(ui arg) { instanceCount = arg; }
 
 protected:
@@ -134,7 +136,7 @@ class UntexturedInstancedMesh : public InstancedMesh
 {
 public:
     UntexturedInstancedMesh(const UntexturedMeshParams &params, ui maxNoInstances = 10, ui transformMatSize = 4);
-    inline GLuint InstancedBufferPosition() { return vertexArrayBuffers[INSTANCE_TRANSFORM_VB]; }
+    inline GLuint InstancedBufferPosition() const override { return vertexArrayBuffers[INSTANCE_TRANSFORM_VB]; }
 
 private:
     VAB vab;
@@ -154,7 +156,7 @@ class TexturedInstancedMesh : public InstancedMesh
 {
 public:
     TexturedInstancedMesh(const TexturedMeshParams &params, ui maxNoInstances, ui transformMatSize = 4);
-    inline GLuint InstancedBufferPosition()     { return vertexArrayBuffers[INSTANCE_TRANSFORM_VB]; }
+    inline GLuint InstancedBufferPosition() const override { return vertexArrayBuffers[INSTANCE_TRANSFORM_VB]; }
 private:
     VAB vab;
     enum

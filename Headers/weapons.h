@@ -12,6 +12,23 @@
 
 #include <string>
 
+using samplerArray_t = std::array<uiUni, WEAPONS_NO_WEAPONS>;
+
+namespace wpn_samp
+{
+    uiUni initSmaplerUni(ui i)
+    {
+        return uiUni(std::string("samps[" + std::to_string(i) + "]"), i);
+    }
+
+    template <size_t ...I>
+    samplerArray_t makeSampArr(std::index_sequence<I...>)
+    {
+        return samplerArray_t {{ initSmaplerUni(I)... }};
+    }
+}
+
+
 class WeaponsManager
 {
 public:
@@ -43,6 +60,7 @@ private:
     glm::mat4       _baseInstanceTransforms [WEAPONS_NO_WEAPONS];
     ReqBoundingBox  _boundingBoxes          [WEAPONS_NO_WEAPONS];
     PlayerStats     _weaponStatAltarations  [WEAPONS_NO_WEAPONS];
+    samplerArray_t  _samplerIds = wpn_samp::makeSampArr(std::make_index_sequence<WEAPONS_NO_WEAPONS>{}); 
 
     uiUni _selectedWeaponIndexUni   {"chosenWeaponInx", 0};
     ftUni _overlayAlpthaUni         {"overlayAlpha", 0.0f};

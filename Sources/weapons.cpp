@@ -9,10 +9,10 @@ WeaponsManager::WeaponsManager(helpers::Core &core, const TexturedMeshParams &ic
     for (ui i = 0; i < WEAPONS_NO_WEAPONS; ++i)
     {
         const ft leftIconMargin = baseLeftIconMargin + (static_cast<ft>(i) * _iconRealestate);
-        _baseInstanceTransforms [i] = glm::translate(glm::vec3(leftIconMargin, _iconRealestate, 0.0f));
-        _instanceTransforms     [i] = _baseInstanceTransforms[i];
+        _baseInstanceTransforms [i] = glm::translate(glm::vec3(leftIconMargin, -_iconRealestate, 0.0f));
+        _instanceTransforms     [i] = glm::translate(glm::vec3(leftIconMargin, 0.0f, 0.0f));
         _boundingBoxes          [i] = ReqBoundingBox(iconMeshParams, _instanceTransforms[i]);
-
+        _instanceTransforms     [i] = _baseInstanceTransforms[i];
         si width, height, noComponents;
         const std::string fullPath = basePath + std::to_string(i + 1) + ".png";
         stbi_uc *imageData = stbi_load(fullPath.c_str(), &width, &height, &noComponents, 4);
@@ -51,8 +51,8 @@ void WeaponsManager::Draw()
             {
                 for(ui i = 0; i < WEAPONS_NO_WEAPONS; ++i)
                 {
-                    _instanceTransforms[i] = _baseInstanceTransforms[i] * glm::translate(glm::vec3(0.0f, -_iconRealestate, 0.0f));
-                    _overlayAlpthaUni.second = 1.0f; 
+                    _instanceTransforms[i] = _baseInstanceTransforms[i] * glm::translate(glm::vec3(0.0f, _iconRealestate, 0.0f));
+                    _overlayAlpthaUni.second = OVERLAY_MAX_APLHA; 
                 }
                 _timer.DestroyHeapClock(_weaponTransitionClockId);
                 _isWeaponsFullyDrawn = true;
@@ -60,9 +60,9 @@ void WeaponsManager::Draw()
             else
             {
                 const db remainingClockTime = _timer.RemainingTime(_weaponTransitionClockId);
-                const db remainingTimeFraction = remainingClockTime / WEAPONS_OVERLAY_TRANSITION_TIME;
+                const db remainingTimeFraction = 1.0 - remainingClockTime / _scaledTransitionTime;
                 const ft overlayAlpha = decl_cast(overlayAlpha, remainingTimeFraction) * OVERLAY_MAX_APLHA;
-                const ft hiddenIconDimY = - _iconRealestate * decl_cast(hiddenIconDimY, remainingTimeFraction);
+                const ft hiddenIconDimY =  _iconRealestate * decl_cast(hiddenIconDimY, remainingTimeFraction);
                 for(ui i = 0; i < WEAPONS_NO_WEAPONS; ++i)
                     _instanceTransforms[i] = _baseInstanceTransforms[i] * glm::translate(glm::vec3(0.0f, hiddenIconDimY, 0.0f));
                 _overlayAlpthaUni.second = overlayAlpha;
@@ -86,17 +86,10 @@ void WeaponsManager::Draw()
         }
         _isLBMPressed = tempIsLBMPressed;
 
-        helpers::render(_overlayShader, _overlayMesh, _overlayAlphaUni);
-        
+        helpers::render(_overlayShader, _overlayMesh, _overlayAlpthaUni);
         _weaponIconShader.Bind();
-        _weaponIconShader.Update(_blankTransform, _projection);
-        for(ui i = 0; i < WEAPONS_NO_WEAPONS; ++i)
-            _weaponIconShader.SetUni("samps[" + std::to_string(i) + "]", i);
         _weaponIconShader.SetUni(_selectedWeaponIndexUni.first, tempSelectedWeaponIndex);
-        _iconMesh.SetInstanceCount(WEAPONS_NO_WEAPONS);
-        _iconMesh.Update(_instanceTransforms, _iconMesh.InstancedBufferPosition());
-        _iconMesh.Draw();
-
+        helpers::render(_weaponIconShader, _iconMesh, _instanceTransforms, WEAPONS_NO_WEAPONS, _blankTransform, _projection, _samplerIds);
     }
     else
     {

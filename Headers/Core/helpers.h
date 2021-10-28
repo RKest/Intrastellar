@@ -33,7 +33,7 @@ namespace helpers
     ft rotTransformAngle(const glm::mat4 &matrix);
 
     template<typename ...T>
-    void render(Shader &shader, Mesh &mesh, std::pair<std::string, T> const&... params)
+    void render(Shader &shader, Mesh &mesh, std::pair<const std::string, T> const&... params)
     {
         shader.Bind();
         if constexpr (sizeof...(params) > 0)
@@ -41,8 +41,16 @@ namespace helpers
         mesh.Draw();
     }
 
+    template<typename T, std::size_t N>
+    void render(Shader &shader, Mesh &mesh, const std::array<std::pair<const std::string, T>, N> &arr)
+    {
+        shader.Bind();
+        shader.SetUnis(arr);
+        mesh.Draw();
+    }
+
     template<typename ...T>
-    void render(Shader &shader, Mesh &mesh, const glm::mat4 &transform, const glm::mat4 &projection, std::pair<std::string, T> const&... params)
+    void render(Shader &shader, Mesh &mesh, const glm::mat4 &transform, const glm::mat4 &projection, std::pair<const std::string, T> const&... params)
     {
         shader.Bind();
         if constexpr (sizeof...(params) > 0)
@@ -50,10 +58,20 @@ namespace helpers
         shader.Update(transform, projection);
         mesh.Draw();
     }
+
+    template<typename T, std::size_t N>
+    void render(Shader &shader, Mesh &mesh, const glm::mat4 &transform, const glm::mat4 &projection,
+         const std::array<std::pair<const std::string, T>, N> &arr)
+    {
+        shader.Bind();
+        shader.SetUnis(arr);
+        shader.Update(transform, projection);
+        mesh.Draw();
+    }
     
     template<typename ...T>
-    void render(Shader &shader, UntexturedInstancedMesh &mesh, const glm::mat4 *instanceTransforms, size_t noInstances, const glm::mat4 &transform, 
-        const glm::mat4 &projection, std::pair<std::string, T> const&... params)
+    void render(Shader &shader, InstancedMesh &mesh, const glm::mat4 *instanceTransforms, size_t noInstances, const glm::mat4 &transform, 
+        const glm::mat4 &projection, std::pair<const std::string, T> const&... params)
     {
         shader.Bind();
         if constexpr (sizeof...(params) > 0)
@@ -63,6 +81,19 @@ namespace helpers
         mesh.Update(instanceTransforms, mesh.InstancedBufferPosition());
         mesh.Draw();
     }
+
+    template<typename T, std::size_t N>
+    void render(Shader &shader, InstancedMesh &mesh, const glm::mat4 *instanceTransforms, size_t noInstances, const glm::mat4 &transform,
+        const glm::mat4 &projection, const std::array<std::pair<const std::string, T>, N> &arr)
+    {
+        shader.Bind();
+        shader.SetUnis(arr);
+        shader.Update(transform, projection);
+        mesh.SetInstanceCount(static_cast<ui>(noInstances));
+        mesh.Update(instanceTransforms, mesh.InstancedBufferPosition());
+        mesh.Draw();
+    }
+
     template<typename T>
     constexpr void pushToCappedVector(std::vector<T> &cappedVec, const T &el, ui &oldestElIndex, const ui cap)
     {

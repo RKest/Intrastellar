@@ -10,10 +10,10 @@
 #include <fstream>
 #include <utility>
 
-using matUni = std::pair<std::string, glm::mat4>;
-using vecUni = std::pair<std::string, glm::vec3>;
-using ftUni = std::pair<std::string, ft>;
-using uiUni = std::pair<std::string, ui>;
+using matUni = std::pair<const std::string, glm::mat4>;
+using vecUni = std::pair<const std::string, glm::vec3>;
+using ftUni = std::pair<const std::string, ft>;
+using uiUni = std::pair<const std::string, ui>;
 
 static void CheckShaderError(GLuint shader, GLuint flag, bool isProgram, const std::string &errorMessage);
 static std::string LoadShader(const std::string &fileName);
@@ -48,11 +48,18 @@ public:
     void Update(const glm::mat4 &model, const glm::mat4 &cameraProjection) { SetUni(TRANSFORM_U, model); SetUni(PROJECTION_U, cameraProjection); }
 
     template<typename T, typename ...Ts>
-    constexpr void SetUnis(const std::pair<std::string, T> first, Ts ...rest)
+    constexpr void SetUnis(const std::pair<const std::string, T> first, Ts ...rest)
     {
         SetUni(first.first, first.second);
         if constexpr (sizeof...(rest) > 0)
             SetUnis(rest...);
+    }
+    
+    template<typename T, std::size_t N>
+    constexpr void SetUnis(const std::array<std::pair<const std::string, T>, N> &arr)
+    {
+        for(auto &el : arr)
+            SetUni(el.first, el.second);
     }
 
     void SetUni(const std::string &name, const glm::mat4 &arg) { glUniformMatrix4fv(glGetUniformLocation(program, name.c_str()), 1, GL_FALSE, &arg[0][0]); }
