@@ -9,8 +9,8 @@ WeaponsManager::WeaponsManager(helpers::Core &core, const TexturedMeshParams &ic
     for (ui i = 0; i < WEAPONS_NO_WEAPONS; ++i)
     {
         const ft leftIconMargin = baseLeftIconMargin + (static_cast<ft>(i) * _iconRealestate);
-        _baseInstanceTransforms [i] = glm::translate(glm::vec3(leftIconMargin, 0.0f, 0.0f));
-        _instanceTransforms     [i] = glm::translate(glm::vec3(leftIconMargin, 0.0f, 0.0f));
+        _baseInstanceTransforms [i] = glm::translate(glm::vec3(leftIconMargin, _iconRealestate, 0.0f));
+        _instanceTransforms     [i] = _baseInstanceTransforms[i];
         _boundingBoxes          [i] = ReqBoundingBox(iconMeshParams, _instanceTransforms[i]);
 
         si width, height, noComponents;
@@ -51,7 +51,7 @@ void WeaponsManager::Draw()
             {
                 for(ui i = 0; i < WEAPONS_NO_WEAPONS; ++i)
                 {
-                    _instanceTransforms[i] = _baseInstanceTransforms[i];
+                    _instanceTransforms[i] = _baseInstanceTransforms[i] * glm::translate(glm::vec3(0.0f, -_iconRealestate, 0.0f));
                     _overlayAlpthaUni.second = 1.0f; 
                 }
                 _timer.DestroyHeapClock(_weaponTransitionClockId);
@@ -61,10 +61,11 @@ void WeaponsManager::Draw()
             {
                 const db remainingClockTime = _timer.RemainingTime(_weaponTransitionClockId);
                 const db remainingTimeFraction = remainingClockTime / WEAPONS_OVERLAY_TRANSITION_TIME;
+                const ft overlayAlpha = decl_cast(overlayAlpha, remainingTimeFraction) * OVERLAY_MAX_APLHA;
                 const ft hiddenIconDimY = - _iconRealestate * decl_cast(hiddenIconDimY, remainingTimeFraction);
                 for(ui i = 0; i < WEAPONS_NO_WEAPONS; ++i)
                     _instanceTransforms[i] = _baseInstanceTransforms[i] * glm::translate(glm::vec3(0.0f, hiddenIconDimY, 0.0f));
-                _overlayAlpthaUni.second = decl_cast(_overlayAlpthaUni.second, remainingTimeFraction);
+                _overlayAlpthaUni.second = overlayAlpha;
             }
         }
         ui tempSelectedWeaponIndex = _selectedWeaponIndexUni.second;
@@ -85,7 +86,7 @@ void WeaponsManager::Draw()
         }
         _isLBMPressed = tempIsLBMPressed;
 
-        helpers::render(_overlayShader, _overlayMesh);
+        helpers::render(_overlayShader, _overlayMesh, _overlayAlphaUni);
         
         _weaponIconShader.Bind();
         _weaponIconShader.Update(_blankTransform, _projection);

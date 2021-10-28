@@ -7,7 +7,21 @@ Card::Card(const std::string &cardText, const ui weight, const std::vector<Playe
 
 void CardDeck::DrawCards()
 {
-	helpers::render(_overlayShader, _overlayMesh);
+	if(!_areCardsFullyDrawn)
+	{
+		const db remainingTime = _timer.RemainingTime(_overlayAlphaClockId);
+		const db remainingTimeFraction = remainingTime / _overlayTransitionTime;
+		const ft overlayAlpha = decl_cast(overlayAlpha, remainingTimeFraction) * OVERLAY_MAX_APLHA;
+		_overlayAlphaUni.second = overlayAlpha;
+		if(_timer.HeapIsItTime(_overlayAlphaClockId))
+		{
+			_timer.DestroyHeapClock(_overlayAlphaClockId);
+			_overlayAlphaUni.second = OVERLAY_MAX_APLHA;
+			_areCardsFullyDrawn = true;
+		}
+		
+	}
+	helpers::render(_overlayShader, _overlayMesh, _overlayAlphaUni);
     _pcDrawFunction(_pcInstanceTransforms, _projInstanceTransforms, _clockIds, _targetBoundingBoxes, _cardProjection, _oldestProjectileIndex);
 	helpers::render(_cardBorderShader, _cardBorderMesh, _cardBorderInstanceTransforms.data(), NO_CARDS, _blankTransform, _cardProjection);
 	helpers::render(_targetShader, _targetMesh, _targetInstanceTransforms.data(), NO_CARDS, _blankTransform, _cardProjection);
@@ -61,6 +75,7 @@ CardDeck::CardDeck(Shader &targetShader, helpers::Core &core, const UntexturedMe
 void CardDeck::RollCards()
 {
 	_areCardsDrawn = true;
+	_areCardsFullyDrawn = false;
 	_chosenCardIndices[0] = 9999;
 	_chosenCardIndices[1] = 9999;
 	_chosenCardIndices[2] = 9999;
@@ -84,6 +99,7 @@ void CardDeck::RollCards()
 				break;
 			}
 		}
+		_timer.InitHeapClock(_overlayAlphaClockId, _overlayTransitionTime);
 	}
 }
 

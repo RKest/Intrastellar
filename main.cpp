@@ -122,6 +122,26 @@ int main()
 	return 0;
 }
 
+/*
+
+#include <iostream>
+#include <array>
+#include <utility>
+
+template <typename T, typename Cont, std::size_t ...I>
+void f(T first, Cont *cont, std::index_sequence<I...>)
+{
+    std::cout << std::forward<Cont>(cont[I]...) << '\n';
+}
+
+
+int main()
+{
+    int a[3] = {1,2,3};
+    f(1, a);
+}
+https://www.py4u.net/discuss/78588
+*/
 
 /*
 Temat: Normalizacja

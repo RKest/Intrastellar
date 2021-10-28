@@ -71,7 +71,12 @@ private:
 	ui _oldestProjectileIndex = 0;
 
     bool _areCardsDrawn = false;
+    bool _areCardsFullyDrawn = false;
     bool _isLBMPressed = false;
+
+    ftUni _overlayAlphaUni{"overlayAlpha", 0.0f};
+    db _overlayTransitionTime = CARDS_OVERLAY_TRANSITION_TIME;
+    ui _overlayAlphaClockId{};
 
     void _choseCards(const ui cardIndex);
     std::vector<ui> _chosenCardIndices = std::vector<ui>(3, 9999);
