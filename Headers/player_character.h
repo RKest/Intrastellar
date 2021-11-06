@@ -67,8 +67,6 @@ private:
 
 	bool _projHit(const ui projIndex, const ui enemyIndex);
 	void _pcIntersection();
-	void _externDraw(const std::vector<glm::mat4> &pcTransforms, std::vector<glm::mat4> &projTransforms, const std::vector<ui> &clockIds, 
-	const std::vector<ReqBoundingBox> &targetBoundingBoxes, const glm::mat4 &projection, ui &oldestProjIndex);
 	constexpr ft _setAlpha(db remainingInvincibilityTime);
 	glm::mat4 _moveProj(const std::vector<std::vector<glm::mat4>*> &enemyInstanceTransforms, const glm::mat4 &projTransform) const;
 
@@ -80,7 +78,6 @@ struct IPlayerCharacter
 	IPlayerCharacter(IPlayerCharacter *iPtr) : _pcPtr(iPtr->_pcPtr) {};
 	auto &ProjHitCb()		{ return pcProjHitCb;						}
 	auto &HitCb()			{ return pcHitCb;	 						}
-	auto &ExternDraw()		{ return externDraw; 						}
 	auto &Transform()		{ return _pcPtr->_pcTransform; 				}
 	auto &BoundingBox()		{ return _pcPtr->_pcBoundingBox;			}
 	auto &ProjTransforms()	{ return _pcPtr->_projInstanceTransforms; 	}
@@ -89,5 +86,4 @@ private:
 	PlayerCharacter *_pcPtr;
 	DECL_INST(pcProjHitCb, std::bind(&PlayerCharacter::_projHit, _pcPtr, _1, _2));
 	DECL_INST(pcHitCb,	   std::bind(&PlayerCharacter::_pcIntersection, _pcPtr));
-	DECL_INST(externDraw,  std::bind(&PlayerCharacter::_externDraw, _pcPtr, _1, _2, _3, _4, _5, _6));
 };

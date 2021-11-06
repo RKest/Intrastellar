@@ -10,10 +10,27 @@ bool BoundingBox::IsThereAnIntersection(const std::vector<glm::mat4> &transforms
     collisionIndex = decl_cast(collisionIndex, std::distance(b, itr));
     return true;
 }
+bool BoundingBox::IsThereAnIntersection(const glm::mat4 *transforms, const size_t sz) const
+{
+	for(size_t i = 0; i < sz; ++i)
+		if(IsThereAnIntersection(transforms[i]))
+			return true;
+	return false;
+}
 bool BoundingBox::IsThereAnIntersection(const glm::mat4 &transform) const
 {
 	const glm::vec2 pos{transform * glm::vec4(0,0,0,1)};
 	return IsThereAnIntersection(pos);
+}
+bool BoundingBox::IsThereAnIntersection(const glm::mat4 *transforms, const size_t sz, ui &collisionIndex) const
+{
+	for(size_t i = 0; i < sz; ++i)
+		if(IsThereAnIntersection(transforms[i]))
+		{
+			collisionIndex = i;
+			return true;
+		}
+	return false;
 }
 ReqBoundingBox::ReqBoundingBox(const UntexturedMeshParams &params, const glm::mat4 &transform)
 {
@@ -54,6 +71,14 @@ bool ReqBoundingBox::IsThereAnIntersection(const std::vector<glm::mat4> &transfo
 {
 	return BoundingBox::IsThereAnIntersection(transforms, collisionIndex);
 }
+bool ReqBoundingBox::IsThereAnIntersection(const glm::mat4 *transforms, const size_t sz) const
+{
+	return BoundingBox::IsThereAnIntersection(transforms, sz);
+}
+bool ReqBoundingBox::IsThereAnIntersection(const glm::mat4 *transforms, const size_t sz, ui &collisionIndex) const
+{
+	return BoundingBox::IsThereAnIntersection(transforms, sz, collisionIndex);
+}
 bool ReqBoundingBox::IsThereAnIntersection(const glm::vec2 &vec) const 
 {
 	return vec.x >= minCoords.x  &&
@@ -82,6 +107,14 @@ bool TriBoundingBox::IsThereAnIntersection(const std::vector<glm::mat4> &transfo
 {
 	return BoundingBox::IsThereAnIntersection(transforms, collisionIndex);
 }
+bool TriBoundingBox::IsThereAnIntersection(const glm::mat4 *transforms, const size_t sz) const
+{
+	return BoundingBox::IsThereAnIntersection(transforms, sz);
+}
+bool TriBoundingBox::IsThereAnIntersection(const glm::mat4 *transforms, const size_t sz, ui &collisionIndex) const
+{
+	return BoundingBox::IsThereAnIntersection(transforms, sz, collisionIndex);
+}
 bool TriBoundingBox::IsThereAnIntersection(const glm::vec2 &pos) const 
 {
 	const ft d1 = sign(pos, triangleCoords[0], triangleCoords[1]);
@@ -90,4 +123,8 @@ bool TriBoundingBox::IsThereAnIntersection(const glm::vec2 &pos) const
 	const bool has_neg = (d1 < 0) || (d2 < 0) || (d3 < 0);
 	const bool has_pos = (d1 > 0) || (d2 > 0) || (d3 > 0);
 	return !(has_neg && has_pos);
+}
+ft TriBoundingBox::sign(const glm::vec2 &p1, const glm::vec2 &p2, const glm::vec2 &p3) const
+{
+	return (p1.x - p3.x) * (p2.y - p3.y) - (p2.x - p3.x) * (p1.y - p3.y);
 }

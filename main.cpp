@@ -3,9 +3,9 @@
 #include "Core/controler.h"
 #include "player_character.h"
 #include "exp_manager.h"
+#include "weapons.h"
 #include "enemy.h"
 #include "card_deck.h"
-#include "weapons.h"
 
 #include "glm/gtx/string_cast.hpp"
 
@@ -15,28 +15,19 @@ int main()
 	Camera camera(glm::vec3(0, 0, -20), 70.0f, display.Aspect(), 0.01f, 1000.0f);
 
 	Shader enemyShader("./Shaders/Enemy");
-	const glm::vec3 pcVertices[] = {{0, 0.5, 0}, {-0.5, -0.5, 0}, {0.5, -0.5, 0}};
-	const ui pcIndices[] = {2, 1, 0};
-	const glm::vec3 projectileVertices[] = {{-0.1, 0, 0}, {0.1, 0, 0}, {-0.1, 0.3, 0}, {0.1, 0.3, 0}};
-	const ui projectileIndices[] = {2, 1, 0, 3, 1, 2};
-	const glm::vec3 enemyVertices[] = {{0.5, -0.5, 0}, {0.5, 0.5, 0}, {-0.5, 0.5, 0}, {-0.5, -0.5, 0}};
-	const ui enemyIndices[] = {2, 1, 0, 0, 3, 2};
-	const glm::vec3 expVertices[] = {{0.1, 0, 0}, {0.1, 0.1, 0}, {0, 0.1, 0}, {0, 0, 0}};
-	const ui expIndices[] = {2, 1, 0, 0, 3, 2};
-	const glm::vec3 overlayVertices[] = {{100, -100, 0}, {100, 100, 0}, {-100, 100, 0}, {-100, -100, 0}};
-	const ui overlayIndices[] = {0, 1, 2, 2, 3, 0};
 	const glm::vec3 expBarVertices[] = {{0,0,0}, {0,1,0}, {1,0,0}, {1,1,0}};
 	const ui expBarIndices[] = {0, 2, 1, 2, 3, 1};
 	const glm::vec3 weaponIconVertices[] = {{WEAPONS_ICON_DIMS, 0, 0}, {WEAPONS_ICON_DIMS, WEAPONS_ICON_DIMS, 0}, {0, WEAPONS_ICON_DIMS, 0}, {0, 0, 0}};
 	const glm::vec2 weaponIconTexcoords[] = {{1, 1}, {1, 0}, {0, 0}, {0, 1}};
 	const ui weaponIconIndices[] = {2, 1, 0, 0, 3, 2};
 
-	const UntexturedMeshParams pcParams 		= {pcVertices, pcIndices, ARR_SIZE(pcVertices), ARR_SIZE(pcIndices)};
-	const UntexturedMeshParams enemyMeshParams 	= {enemyVertices, enemyIndices, ARR_SIZE(enemyVertices), ARR_SIZE(enemyIndices)};
-	const UntexturedMeshParams projectileParams = {projectileVertices, projectileIndices, ARR_SIZE(projectileVertices), ARR_SIZE(projectileIndices)};
-	const UntexturedMeshParams expParams 		= {expVertices, expIndices, ARR_SIZE(expVertices), ARR_SIZE(expIndices)};
-	const UntexturedMeshParams overlayParams 	= {overlayVertices, overlayIndices, ARR_SIZE(overlayVertices), ARR_SIZE(overlayIndices)};
-	MESH_PARAMS_FROM_PATH("./Resources/OBJs/card-border-1.obj", cardBorderParams);
+	MESH_PARAMS_FROM_PATH("./Resources/OBJs/player-character.obj", 		pcParams);
+	MESH_PARAMS_FROM_PATH("./Resources/OBJs/blaster-projectile.obj", 	blasterProjParams);
+	MESH_PARAMS_FROM_PATH("./Resources/OBJs/rocket-projectile.obj", 	rocketProjParams);
+	MESH_PARAMS_FROM_PATH("./Resources/OBJs/exp-particle.obj", 			expParams);
+	MESH_PARAMS_FROM_PATH("./Resources/OBJs/overlay.obj", 				overlayParams);
+	MESH_PARAMS_FROM_PATH("./Resources/OBJs/enemy.obj", 				enemyMeshParams);
+	MESH_PARAMS_FROM_PATH("./Resources/OBJs/card-border-1.obj", 		cardBorderParams);
 	const UntexturedMeshParams expBarParams 	= {expBarVertices, expBarIndices, ARR_SIZE(expBarVertices), ARR_SIZE(expBarIndices)};
 	const TexturedMeshParams weaponIconParams 	= {weaponIconVertices, weaponIconTexcoords, weaponIconIndices, ARR_SIZE(weaponIconVertices), ARR_SIZE(weaponIconIndices)};
 
@@ -46,11 +37,11 @@ int main()
 	Timer timer(text, playerStats);
 	helpers::Core core{display, camera, text, timer, playerStats};
 	ExpManager expManager(core, expParams, expBarParams);
-	PlayerCharacter playerCharacter(core, pcParams, projectileParams);
-	EnemyManager enemyManager(enemyShader, core, enemyMeshParams, enemyStats, projectileParams, playerCharacter.Interface());
+	PlayerCharacter playerCharacter(core, pcParams, blasterProjParams);
+	WeaponsManager weaponsManager(core, weaponIconParams, overlayParams, blasterProjParams, rocketProjParams);
+	EnemyManager enemyManager(core, enemyMeshParams, enemyStats, blasterProjParams, playerCharacter.Interface(), weaponsManager.WeaponInterfaces());
 	Controler controler(display, camera, timer, playerCharacter.Interface()->Transform());
-	CardDeck cardDeck(enemyShader, core, overlayParams, cardBorderParams, enemyMeshParams, playerCharacter.Interface()->ExternDraw());
-	WeaponsManager weaponsManager(core, weaponIconParams, overlayParams);
+	CardDeck cardDeck(core, overlayParams, cardBorderParams);
 
 	const auto render = [&]
 	{
@@ -72,8 +63,9 @@ int main()
 		if (timer.IsItTime(Timer::ClocksEnum::SPAWN_CLOCK))
 			enemyManager.Spawn();
 
-		if (timer.IsItTime(Timer::ClocksEnum::SHOT_CLOCK))
-			playerCharacter.Shoot();
+		// if (timer.IsItTime(Timer::ClocksEnum::SHOT_CLOCK))
+			// playerCharacter.Shoot();
+		weaponsManager.Update(pcModel);
 		playerCharacter.Update(enemyManager.InstanceTransforms());
 		if(expManager.HasThereBeenLevelUp())
 		{
@@ -110,6 +102,7 @@ int main()
 			{
 				expManager.Reset();
 				enemyManager.Reset();
+				weaponsManager.Reset();
 				playerCharacter.Reset();
 				playerCharacter.Interface()->Transform().Pos().x = 0;
 				playerCharacter.Interface()->Transform().Pos().y = 0;

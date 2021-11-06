@@ -144,24 +144,6 @@ void PlayerCharacter::_pcIntersection()
 	}
 }
 
-void PlayerCharacter::_externDraw(const std::vector<glm::mat4> &pcTransforms, std::vector<glm::mat4> &projTransforms, const std::vector<ui> &clockIds, 
-	const std::vector<ReqBoundingBox> &targetBoundingBoxes, const glm::mat4 &projection, ui &oldestProjIndex)
-{
-	ui projIndex;
-	for(auto &targetBoundingBox : targetBoundingBoxes)
-		if(targetBoundingBox.IsThereAnIntersection(projTransforms, projIndex))
-			projTransforms.erase(projTransforms.begin() + projIndex);
-
-	helpers::transformMatVec(projTransforms, _timer.Scale(0.05f));
-
-	for (ui i = 0; i < clockIds.size(); ++i)
-		if (_timer.HeapIsItTime(clockIds[i]))
-            helpers::pushToCappedVector(projTransforms, pcTransforms[i], oldestProjIndex, CARD_MAX_PROJ_COUNT);
-
-	helpers::render(_projectileShader, _projCardMesh, projTransforms.data(), projTransforms.size(), _blankTransform, projection);
-	helpers::render(_pcCardShader, _pcCardMesh, pcTransforms.data(), pcTransforms.size(), _blankTransform, projection);
-}
- 
 constexpr ft PlayerCharacter::_setAlpha(db remainingInvincibilityTime)
 {
 	const db period = 3.0;

@@ -30,8 +30,7 @@ using pcDrawFunc = std::function<void(const std::vector<glm::mat4>&, std::vector
 class CardDeck 
 {
 public:
-    CardDeck(Shader &targetShader, helpers::Core &core, const UntexturedMeshParams &overlayParams, const UntexturedMeshParams &cardBorderParams, 
-	    const UntexturedMeshParams &targetMeshParams, const pcDrawFunc &drawPcCb);
+    CardDeck(helpers::Core &core, const UntexturedMeshParams &overlayParams, const UntexturedMeshParams &cardBorderParams);
     void DrawCards();
     void RollCards();
     inline bool &AreCarsDrawn() { return _areCardsDrawn; }
@@ -44,38 +43,23 @@ private:
     CustomRand _customRand;
     Shader _cardBorderShader{"Shaders/CardBorder"};
     Shader _overlayShader{"Shaders/Overlay"};
-    Shader &_targetShader;
     UntexturedMesh          _overlayMesh;
     UntexturedMeshParams    _cardBorderParams;
     UntexturedInstancedMesh _cardBorderMesh;
-    UntexturedMeshParams    _targetParams;
-    UntexturedInstancedMesh _targetMesh;
-    Transform _pcTransform;
     Transform _cardBorderTransform;
 
     std::vector<glm::mat4> _cardBorderInstanceTransforms;
-    std::vector<glm::mat4> _targetInstanceTransforms;
     std::vector<ReqBoundingBox> _cardBoundingBoxes = std::vector<ReqBoundingBox>(3);
 
-    glm::mat4 _cardProjection;
-    glm::mat4 _inverseFlippedCardBorderProjection; //Kinda just stumbeled myself upon that one, by all metrics it shouldn't work but it does
-
-    //Drawing player Characters --- Delegated to a callable in the PlayerCharacter class --- parameters in order listed below
-    const pcDrawFunc _pcDrawFunction;
-    std::vector<glm::mat4>      _pcInstanceTransforms;
-    std::vector<glm::mat4>      _projInstanceTransforms;
-    std::vector<ui>             _clockIds = std::vector<ui>(3);
-    std::vector<ReqBoundingBox> _targetBoundingBoxes = std::vector<ReqBoundingBox>(3);
-    std::vector<PlayerStats>    _cardStatsToChose = std::vector<PlayerStats>(3);
-    //_cardProjection <--- Also, Just above here
-	ui _oldestProjectileIndex = 0;
+    glm::mat4 _cardProjection                       = glm::ortho(-SCREEN_ASPECT, SCREEN_ASPECT, -1.0f, 1.0f);
+    glm::mat4 _inverseFlippedCardBorderProjection   = glm::inverse(glm::ortho(-SCREEN_ASPECT, SCREEN_ASPECT, -1.0f, 1.0f));
 
     bool _areCardsDrawn = false;
     bool _areCardsFullyDrawn = false;
     bool _isLBMPressed = false;
 
     ftUni _overlayAlphaUni{"overlayAlpha", 0.0f};
-    db _overlayTransitionTime = CARDS_OVERLAY_TRANSITION_TIME;
+    db _overlayTransitionTime = OVERLAY_TRANSITION_TIME;
     ui _overlayAlphaClockId{};
 
     void _choseCards(const ui cardIndex);

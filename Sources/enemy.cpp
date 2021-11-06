@@ -236,10 +236,10 @@ void Enemy::Draw()
 	}
 }
 
-EnemyManager::EnemyManager(Shader &enemyShader, helpers::Core &core, const UntexturedMeshParams &params, EnemyStats &enemyStats, 
-		const UntexturedMeshParams &projParams, IPlayerCharacter *pcInterface)
- : _enemyShader(enemyShader), _camera(core.camera), _pcStats(core.stats), _timer(core.timer), _enemyStats(enemyStats), 
- 	_enemyParams(params), _enemyProjParams(projParams), _pcInterface(pcInterface)
+EnemyManager::EnemyManager(helpers::Core &core, const UntexturedMeshParams &params, EnemyStats &enemyStats, const UntexturedMeshParams &projParams, 
+		IPlayerCharacter *pcInterface, weaponInterfaceArray_t &weaponInterfaces)
+ : _camera(core.camera), _pcStats(core.stats), _timer(core.timer), _enemyStats(enemyStats), 
+ 	_enemyParams(params), _enemyProjParams(projParams), _pcInterface(pcInterface), _weaponInterfaces(weaponInterfaces)
 {
 	behavoiurPtrVec chaserVec;
 	behavoiurPtrVec shooterVec;
@@ -284,15 +284,18 @@ void EnemyManager::UpdateBehaviour(const std::vector<glm::vec2> &pcPositions, st
 		ui collisionIndex;
 		for(ui i = 0; i < enemy.data.size; ++i)
 		{
-			if(enemy.data.boundingBoxes[i].IsThereAnIntersection(_pcInterface.ProjTransforms(), collisionIndex))
+			for(auto weaponInterface : _weaponInterfaces)
 			{
-				if((_pcInterface.ProjHitCb())(collisionIndex, enemy.data.ids[i]))
+				if(enemy.data.boundingBoxes[i].IsThereAnIntersection(weaponInterface->ProjInstaceTransorms(), weaponInterface->NoProjs(), collisionIndex))
 				{
-					enemy.data.healths[i] -= decl_cast(enemy.data.healths, _pcStats.actualDamage);
-					if(enemy.data.healths[i] <= 0)
+					if((weaponInterface->ProjHitCb())(collisionIndex, enemy.data.ids[i]))
 					{
-						fatalityCallback(enemy.data.instanceTransforms[i], 3);
-						enemy.data.Erase(i);
+						enemy.data.healths[i] -= decl_cast(enemy.data.healths, _pcStats.actualDamage);
+						if(enemy.data.healths[i] <= 0)
+						{
+							fatalityCallback(enemy.data.instanceTransforms[i], 3);
+							enemy.data.Erase(i);
+						}
 					}
 				}
 			}

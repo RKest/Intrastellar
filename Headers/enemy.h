@@ -12,6 +12,7 @@
 #include "Core/stats.h"
 #include "Core/bounding_box.h"
 #include "player_character.h"
+#include "weapons.h"
 
 #include <execution>
 #include <algorithm>
@@ -143,8 +144,8 @@ private:
 class EnemyManager
 {
 public:
-	EnemyManager(Shader &enemyShader, helpers::Core &core, const UntexturedMeshParams &params, EnemyStats &enemyStats, 
-		const UntexturedMeshParams &projParams, IPlayerCharacter *pcInterface);
+	EnemyManager(helpers::Core &core, const UntexturedMeshParams &params, EnemyStats &enemyStats, const UntexturedMeshParams &projParams, 
+		IPlayerCharacter *pcInterface, weaponInterfaceArray_t &weaponInterfaces);
 
 	void Reset();
 	void Draw();
@@ -169,7 +170,7 @@ private:
 		NO_ENEMY_TYPES
 	};
 
-	Shader &_enemyShader;
+	Shader _enemyShader{"./Shaders/Enemy"};
 	Shader _enemyProjShader{"./Shaders/EnemyProjectile"};
 	Camera &_camera;
 	PlayerStats &_pcStats;
@@ -179,6 +180,7 @@ private:
 	const UntexturedMeshParams _enemyParams;
 	const UntexturedMeshParams _enemyProjParams;
 	IPlayerCharacter _pcInterface;
+	weaponInterfaceArray_t &_weaponInterfaces;
 
 	glm::mat4 _pcModel;
 	Transform _enemyTransform;

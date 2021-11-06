@@ -19,10 +19,16 @@ constexpr size_t ARR_SIZE(T (&)[N]) {
     return N;
 }
 
+
 #ifndef MESH_PARAMS_FROM_PATH
+
+#define CONCAT(a, b) CONCAT_INNER(a, b)
+#define CONCAT_INNER(a, b) a ## b
+#define UN(base) CONCAT(base, __LINE__) //UNIQUE_NAME --- curtasy of https://stackoverflow.com/questions/1082192/how-to-generate-random-variable-names-in-c-using-macros
+
 #define MESH_PARAMS_FROM_PATH(path, params)\
-	const auto model = OBJModel(path).ToIndexedModel(); \
-	const UntexturedMeshParams params = {model.positions.data(), model.indices.data(), static_cast<ui>(model.positions.size()), static_cast<ui>(model.indices.size())};
+	const auto UN(m) = OBJModel(path).ToIndexedModel(); \
+	const UntexturedMeshParams params = {UN(m).positions.data(), UN(m).indices.data(), static_cast<ui>(UN(m).positions.size()), static_cast<ui>(UN(m).indices.size())};
 #endif
 
 [[maybe_unused]]constexpr std::array UNIFORMS = {"transform", "projection"};
@@ -62,11 +68,15 @@ constexpr const glm::mat4 ENEMY_ORBIT_TO_ORBIT_TRANSLATE{{0.0f,1.0f,0.0f,0.0f}, 
 //Same in the file:///home/max/Documents/Intrastellar/Shaders/WeaponIcon/VS.glsl
 constexpr const ui WEAPONS_NO_WEAPONS = 10;
 constexpr const ft WEAPONS_ICON_DIMS = static_cast<ft>(SCREEN_HEIGHT) / static_cast<ft>(WEAPONS_NO_WEAPONS);
+constexpr const db WEAPONS_COOLDOWN = 2000.0;
 
 //Overlay
-constexpr const db WEAPONS_OVERLAY_TRANSITION_TIME = 2000.0;
-constexpr const db CARDS_OVERLAY_TRANSITION_TIME = 200.0;
+constexpr const db WEAPONS_TIMER_SCALING_ARG = 0.05;
+constexpr const db OVERLAY_TRANSITION_TIME = 200.0;
 constexpr const ft OVERLAY_MAX_APLHA = 0.5F;
+
+//Texture
+constexpr const ui MAX_NO_TEXTURES = 10;
 
 inline size_t _dummy_size_t;
 inline bool _dummy_bool;

@@ -22,9 +22,7 @@ void CardDeck::DrawCards()
 		
 	}
 	helpers::render(_overlayShader, _overlayMesh, _overlayAlphaUni);
-    _pcDrawFunction(_pcInstanceTransforms, _projInstanceTransforms, _clockIds, _targetBoundingBoxes, _cardProjection, _oldestProjectileIndex);
 	helpers::render(_cardBorderShader, _cardBorderMesh, _cardBorderInstanceTransforms.data(), NO_CARDS, _blankTransform, _cardProjection);
-	helpers::render(_targetShader, _targetMesh, _targetInstanceTransforms.data(), NO_CARDS, _blankTransform, _cardProjection);
 
 	for (ui i = 0; i < NO_CARDS; ++i)
 	{
@@ -40,31 +38,16 @@ void CardDeck::DrawCards()
 	}
 }
 
-CardDeck::CardDeck(Shader &targetShader, helpers::Core &core, const UntexturedMeshParams &overlayParams, const UntexturedMeshParams &cardBorderParams, 
-	const UntexturedMeshParams &targetMeshParams, const pcDrawFunc &drawPcCb)
-	:   _text(core.text), _timer(core.timer), _stats(core.stats), _customRand(CUSTOM_RAND_SEED), _targetShader(targetShader), _overlayMesh(overlayParams),
-	  _cardBorderParams(cardBorderParams), _cardBorderMesh(cardBorderParams, NO_CARDS), _targetParams(targetMeshParams), 
-	  _targetMesh(targetMeshParams, NO_CARDS), _pcDrawFunction(drawPcCb)
+CardDeck::CardDeck(helpers::Core &core, const UntexturedMeshParams &overlayParams, const UntexturedMeshParams &cardBorderParams)
+	:   _text(core.text), _timer(core.timer), _stats(core.stats), _customRand(CUSTOM_RAND_SEED), _overlayMesh(overlayParams),
+	  _cardBorderParams(cardBorderParams), _cardBorderMesh(cardBorderParams, NO_CARDS)
 {
-	_pcTransform.SetRotAngle(-25.0f);
-	_cardProjection = glm::ortho(-SCREEN_ASPECT, SCREEN_ASPECT, -1.0f, 1.0f);
-	_inverseFlippedCardBorderProjection = glm::inverse(glm::ortho(-SCREEN_ASPECT, SCREEN_ASPECT, -1.0f, 1.0f));
 	for (ui i = 0; i < NO_CARDS; ++i)
 	{
 		const ft xOffset = -0.9f + static_cast<ft>(i) * 0.9f;
-		_pcTransform				 .Pos().x = xOffset; 
-		_pcTransform				 .Pos().y = -0.3f;
-		_pcTransform				 .Scale() = glm::vec3(0.1f);
-
-		const glm::mat4 pcModel 				 = _pcTransform.Model();
-		const glm::mat4 targetInstanceTransform  = pcModel * glm::translate(glm::vec3(0, 5, 0)) * 
-			glm::rotate(glm::radians(-7.0f), glm::vec3(0,0,1));
 		_cardBorderTransform		 .Pos().x = xOffset; 
-		_pcInstanceTransforms		 .push_back(pcModel);
 		_cardBorderInstanceTransforms.push_back(_cardBorderTransform.Model());
-		_targetInstanceTransforms	 .push_back(targetInstanceTransform);
 		_cardBoundingBoxes  [i] = ReqBoundingBox(_cardBorderParams, _cardBorderInstanceTransforms[i]);
-		_targetBoundingBoxes[i]	= ReqBoundingBox(_targetParams, targetInstanceTransform);
 	}
 
 	for(ui i = 0; i < _cards.size(); ++i)
@@ -92,8 +75,6 @@ void CardDeck::RollCards()
 			{
 				if(!helpers::contains(_chosenCardIndices, i))
 				{
-					_cardShotDelays[rolledCards] = _stats.actualShotDelay + _cards[i].statAltarations.actualShotDelay;
-					_timer.InitHeapClock(_clockIds[rolledCards], _cardShotDelays[rolledCards]);
 					_chosenCardIndices[rolledCards++] = i;
 				}
 				rAcc = 0;
@@ -108,6 +89,4 @@ void CardDeck::_choseCards(const ui cardIndex)
 	_isLBMPressed = false;
 	_areCardsDrawn = false;
 	_stats += _cards[_chosenCardIndices[cardIndex]].statAltarations;
-	for(auto i : _clockIds)
-		_timer.DestroyHeapClock(i);
 }
