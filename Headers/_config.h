@@ -19,7 +19,6 @@ constexpr size_t ARR_SIZE(T (&)[N]) {
     return N;
 }
 
-
 #ifndef MESH_PARAMS_FROM_PATH
 
 #define CONCAT(a, b) CONCAT_INNER(a, b)
@@ -37,6 +36,8 @@ constexpr const ui CUSTOM_RAND_SEED = 982347557;
 constexpr const ui SCREEN_WIDTH = 960;
 constexpr const ui SCREEN_HEIGHT = 540;
 constexpr const ft SCREEN_ASPECT = static_cast<ft>(SCREEN_WIDTH) / static_cast<ft>(SCREEN_HEIGHT);
+
+constexpr const ft CAMERA_DISTANCE = 20.0f;
 
 //Shooter 
 constexpr const ui MAX_PROJ_AMOUNT = 100;
@@ -56,7 +57,7 @@ constexpr const ft TAU = 2.0f * glm::pi<ft>();
 constexpr const db TAU_d = 2.0 * glm::pi<db>();
 constexpr const ft PI = glm::pi<ft>();
 constexpr const db PI_d = glm::pi<db>();
-constexpr const ft MAX_PROJ_TURNING_RAD = glm::radians(1.0f);
+constexpr const ft MAX_PROJ_TURNING_RAD = glm::radians(0.1f);
 constexpr const ft DEF_ANGLE_BETWEEN_SHOTS = glm::radians(15.0f);
 
 inline db ENEMY_ORPHANDED_PROJ_LIFETIME = 5000.0;

@@ -23,7 +23,7 @@ namespace helpers
     std::vector<glm::vec2> transformStdVector(const UntexturedMeshParams &params, const glm::mat4 &model);
     void transformMatVec(std::vector<glm::mat4> &vec, const glm::mat4 &model);
     void transformMatVec(std::vector<glm::mat4> &vec, const ft yTransformVal);
-    glm::vec2 mouseCoordsTransformed(const glm::mat4 &transform);
+    glm::vec2 mouseCoordsTransformed(const glm::mat4 &transform, const ft transformScalingFactor = 1.0f);
     bool IsLBMPressed();
     ft det(const glm::vec2 &vec1, const glm::vec2 &vec2);
     ui squishedIntToScreenWidth(ui minValue, ui maxValue, ui value);
@@ -31,6 +31,9 @@ namespace helpers
     glm::mat4 transformTowards(const glm::mat4 &from, const glm::mat4 &to, const ft byHowMutch);
     ft angleDiff(const ft a, const ft b); 
     ft rotTransformAngle(const glm::mat4 &matrix);
+    ft matDistance(const glm::mat4&, const glm::vec2&);
+    glm::mat4 rotateTowardsClosest(const std::vector<glm::mat4>&, const glm::mat4&, const ft, const ft);
+    glm::mat4 rotateTowards(const glm::mat4&, const glm::mat4&, const ft);
 
     template<typename ...T>
     void render(Shader &shader, Mesh &mesh, std::pair<const std::string, T> const&... params)
@@ -104,6 +107,23 @@ namespace helpers
 		}
 		else
 			cappedVec.push_back(el);
+    }
+
+    template <typename T>
+    constexpr ui pushToCappedArr(T *arr, const T &el, ui &sz, ui &oldestElIndex, const ui cap)
+    {
+        if(sz == cap)
+        {
+            arr[oldestElIndex] = el;
+            const ui tempOldestIndex = oldestElIndex;
+            oldestElIndex = (oldestElIndex + 1) % cap;
+            return tempOldestIndex;
+        }
+        else
+        {
+            arr[sz] = el;
+            return sz++;
+        }
     }
 
     template <typename T>

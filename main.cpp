@@ -12,9 +12,8 @@
 int main()
 {
 	Display display(SCREEN_WIDTH, SCREEN_HEIGHT, "Intrastellar");
-	Camera camera(glm::vec3(0, 0, -20), 70.0f, display.Aspect(), 0.01f, 1000.0f);
+	Camera camera(glm::vec3(0.0f, 0.0f, -CAMERA_DISTANCE), 70.0f, display.Aspect(), 0.01f, 1000.0f);
 
-	Shader enemyShader("./Shaders/Enemy");
 	const glm::vec3 expBarVertices[] = {{0,0,0}, {0,1,0}, {1,0,0}, {1,1,0}};
 	const ui expBarIndices[] = {0, 2, 1, 2, 3, 1};
 	const glm::vec3 weaponIconVertices[] = {{WEAPONS_ICON_DIMS, 0, 0}, {WEAPONS_ICON_DIMS, WEAPONS_ICON_DIMS, 0}, {0, WEAPONS_ICON_DIMS, 0}, {0, 0, 0}};
@@ -34,14 +33,14 @@ int main()
 	PlayerStats playerStats = defaultStats;
 	EnemyStats enemyStats = defaultEnemyStats;
 	Text text("./Resources/Fonts/slkscr.ttf", SCREEN_WIDTH, SCREEN_HEIGHT);
-	Timer timer(text, playerStats);
-	helpers::Core core{display, camera, text, timer, playerStats};
-	ExpManager expManager(core, expParams, expBarParams);
-	PlayerCharacter playerCharacter(core, pcParams, blasterProjParams);
-	WeaponsManager weaponsManager(core, weaponIconParams, overlayParams, blasterProjParams, rocketProjParams);
-	EnemyManager enemyManager(core, enemyMeshParams, enemyStats, blasterProjParams, playerCharacter.Interface(), weaponsManager.WeaponInterfaces());
-	Controler controler(display, camera, timer, playerCharacter.Interface()->Transform());
-	CardDeck cardDeck(core, overlayParams, cardBorderParams);
+	Timer timer						(text, playerStats);
+	helpers::Core core				{display, camera, text, timer, playerStats};
+	ExpManager expManager			(core, expParams, expBarParams);
+	PlayerCharacter playerCharacter	(core, pcParams);
+	WeaponsManager weaponsManager	(core, weaponIconParams, overlayParams, blasterProjParams, rocketProjParams);
+	EnemyManager enemyManager		(core, enemyMeshParams, enemyStats, blasterProjParams, playerCharacter.Interface(), weaponsManager.WeaponInterfaces());
+	Controler controler				(display, camera, timer, playerCharacter.Interface()->Transform());
+	CardDeck cardDeck				(core, overlayParams, cardBorderParams);
 
 	const auto render = [&]
 	{
@@ -65,8 +64,8 @@ int main()
 
 		// if (timer.IsItTime(Timer::ClocksEnum::SHOT_CLOCK))
 			// playerCharacter.Shoot();
-		weaponsManager.Update(pcModel);
-		playerCharacter.Update(enemyManager.InstanceTransforms());
+		weaponsManager.Update(pcModel, enemyManager.InstanceTransforms());
+		playerCharacter.Update();
 		if(expManager.HasThereBeenLevelUp())
 		{
 			playerStats.enemySpawnRate *= 0.5f;

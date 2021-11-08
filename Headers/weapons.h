@@ -30,6 +30,36 @@ enum Weapons : ui
     NO_IMPLEMENTED_WEAPONS
 };
 
+class Weapon;
+struct WeaponBehaviour
+{
+    virtual void Construct(Weapon*) = 0;
+    virtual void operator()([[maybe_unused]]const std::vector<glm::mat4> &enemyInstanceTransforms) = 0;
+};
+
+struct BlasterBehaviour : WeaponBehaviour
+{
+    void Construct(Weapon *weaponPtr) override { _weaponPtr = weaponPtr; }
+    void operator()([[maybe_unused]]const std::vector<glm::mat4> &enemyInstanceTransforms) override;
+private:
+    Weapon *_weaponPtr = nullptr;
+};
+
+struct RocketBehaviour : WeaponBehaviour
+{
+    void Construct(Weapon *weaponPtr) override { _weaponPtr = weaponPtr; }
+    void operator()([[maybe_unused]]const std::vector<glm::mat4> &enemyInstanceTransforms) override;
+private:
+    Weapon *_weaponPtr = nullptr;
+};
+
+struct LaserBehaviour : WeaponBehaviour
+{
+    void Construct(Weapon *weaponPtr) override { _weaponPtr = weaponPtr; }
+    void operator()([[maybe_unused]]const std::vector<glm::mat4> &enemyInstanceTransforms) override;
+private:
+    Weapon *_weaponPtr = nullptr;
+};
 
 struct IWeapon;
 using weaponInterfaceArray_t = std::array<IWeapon*, Weapons::NO_IMPLEMENTED_WEAPONS>;
@@ -37,29 +67,32 @@ using weaponInterfaceArray_t = std::array<IWeapon*, Weapons::NO_IMPLEMENTED_WEAP
 class WeaponsManager;
 class Weapon {
 public:
-    Weapon(WeaponsManager &manager, UntexturedInstancedMesh &projMesh);
+    Weapon(WeaponsManager &manager, UntexturedInstancedMesh &projMesh, WeaponBehaviour &behaviour, PlayerStats &weaponStats);
     void Draw();
     void Fire(const glm::mat4 &pcModel);
     void Init();
     void Uninit();
-    void Update();
+    void Update(const std::vector<glm::mat4> &enemyInstanceTransforms);
     inline IWeapon *Interface() { return _interface; }
 
 protected:
     friend struct IWeapon;
+    friend struct BlasterBehaviour;
+    friend struct RocketBehaviour;
+    friend struct LaserBehaviour;
     PlayerStats _weaponStats = defaultStats;
-    WeaponsManager &_manager;
+    WeaponsManager          &_manager;
     UntexturedInstancedMesh &_projMesh;
-    IWeapon *_interface;
+    WeaponBehaviour         &_behaviour;
+    IWeapon                 *_interface;
 
     glm::mat4           _projInstanceTransforms [MAX_PROJ_AMOUNT];
 	ui		            _noLeftProjPiercings    [MAX_PROJ_AMOUNT];
 	std::vector<ui>     _alreadyHitEnemyIds     [MAX_PROJ_AMOUNT];
-    size_t              _noProjs = 0;
+    ui                  _noProjs = 0;
 
     ui _shotClockId{};
-
-    virtual void _specUpdate() = 0;
+    ui _oldestProjIndex{};
 	bool _projHit(const ui projIndex, const ui enemyIndex);
 };
 
@@ -77,30 +110,6 @@ private:
 	DECL_INST(weaponProjHitCb, std::bind(&Weapon::_projHit, _weaponPtr, _1, _2));
 };
 
-class BlasterWeapon : public Weapon
-{
-public:
-    BlasterWeapon(WeaponsManager &manager, UntexturedInstancedMesh &projMesh);
-private:
-    void _specUpdate() override;
-};
-
-class RocketLauncherWeapon : public Weapon
-{
-public:
-    RocketLauncherWeapon(WeaponsManager &manager, UntexturedInstancedMesh &projMesh);
-private:
-    void _specUpdate() override;
-};
-
-class LaserWeapon : public Weapon
-{
-public:
-    LaserWeapon(WeaponsManager &manager, UntexturedInstancedMesh &projMesh);
-private:
-    void _specUpdate() override;
-};
-
 class WeaponsManager
 {
 public:
@@ -108,16 +117,16 @@ public:
         const UntexturedMeshParams &blasterProjParams, const UntexturedMeshParams &rocketMeshParams);
 
     void Draw();
-    void Update(const glm::mat4 &pcModel);
+    void Update(const glm::mat4 &pcModel, const std::vector<glm::mat4> &enemyInstanceTransforms);
     void Reset();
 
     inline auto &WeaponInterfaces() { return _weaponInterfaces; }
 
 private:
     friend class Weapon;
-    friend class BlasterWeapon;
-    friend class RocketLauncherWeapon;
-    friend class LaserWeapon;
+    friend struct BlasterBehaviour;
+    friend struct RocketBehaviour;
+    friend struct LaserBehaviour;
 
     Display &_display;
     Timer &_timer;
@@ -130,6 +139,14 @@ private:
     UntexturedInstancedMesh _rocketProjMesh;
     UntexturedInstancedMesh _laserProjMesh;
 
+    BlasterBehaviour        _blasterBehaviour;
+    RocketBehaviour         _rocketBehaviour;
+    LaserBehaviour          _laserBehaviour;
+
+    PlayerStats             _blasterStatAltarations;
+    PlayerStats             _rocketStatAltarations;
+    PlayerStats             _laserStatAltarations;
+
     Shader                          _overlayShader          {"./Shaders/Overlay"    };
     Shader                          _weaponIconShader       {"./Shaders/WeaponIcon" };
     Shader                          _projShader             {"./Shaders/Projectile" };
@@ -138,7 +155,6 @@ private:
     glm::mat4                       _instanceTransforms     [WEAPONS_NO_WEAPONS];
     glm::mat4                       _baseInstanceTransforms [WEAPONS_NO_WEAPONS];
     ReqBoundingBox                  _boundingBoxes          [WEAPONS_NO_WEAPONS];
-    PlayerStats                     _weaponStatAltarations  [WEAPONS_NO_WEAPONS];
     std::unique_ptr<Weapon>         _weapons                [WEAPONS_NO_WEAPONS];
     weaponInterfaceArray_t          _weaponInterfaces;
     samplerArray_t  _samplerIds = arr_ini::makeSampArr(std::make_index_sequence<WEAPONS_NO_WEAPONS>{}); 
@@ -157,8 +173,9 @@ private:
     bool _isLBMPressed{};
     
     const ft _iconRealestate = WEAPONS_ICON_DIMS + 1.0f;
-    const glm::mat4 _projection                 = glm::ortho(0.0f, static_cast<ft>(SCREEN_WIDTH), 0.0f, static_cast<ft>(SCREEN_HEIGHT));
-    const glm::mat4 _inverseFlippedProjection   = glm::inverse(glm::ortho(0.0f, static_cast<ft>(SCREEN_WIDTH), static_cast<ft>(SCREEN_HEIGHT), 0.0f));
+    const glm::mat4 _projection         = glm::ortho(0.0f, static_cast<ft>(SCREEN_WIDTH), 0.0f, static_cast<ft>(SCREEN_HEIGHT));
+    const glm::mat4 _inverseProjection  = glm::inverse(_projection);
 
     void _closeWeaponTab();
+    void _switchWeapons(const ui weaponIndex);
 };

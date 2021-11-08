@@ -146,3 +146,25 @@ TexturedInstancedMesh::TexturedInstancedMesh(const TexturedMeshParams &params, u
 
     glBindVertexArray(0);
 }
+
+UntexturedDynamicBezierMesh::UntexturedDynamicBezierMesh(const BezierCurveMeshParams params, ui maxNoCurves, ui curveResolution)
+    vab(vertexArrayBuffers)
+{
+
+}
+
+constexpr glm::vec2 UntexturedDynamicBezierMesh::_intrapolateCurve(const ft t, const glm::vec4 &xvals, const glm::vec4 &yvals) const
+{
+    const ft one_less_t = 1.0f - t;
+    const ft t_squared = t * t;
+    const ft t_cubed = fttsquared * t;
+    const ft one_less_t_squared = one_less_t * one_less_t;
+    const ft one_less_t_cubed = one_less_t_squared * one_less_t;
+    const ft tree_t_one_less_t_squared = 3 * t * one_less_t_squared;
+    const ft tree_t_squared_one_less_t = 3 * t_squared * one_less_t;
+
+    const ft x = one_less_t_cubed * xvals[0] + tree_t_one_less_t_squared * xvals[1] + tree_t_squared_one_less_t * xvals[2] + t_cubed * xvals[4];
+    const ft y = one_less_t_cubed * yvals[0] + tree_t_one_less_t_squared * yvals[1] + tree_t_squared_one_less_t * yvals[2] + t_cubed * yvals[4];
+
+    return glm::vec2(x, y);
+}

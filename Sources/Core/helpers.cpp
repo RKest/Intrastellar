@@ -38,13 +38,17 @@ void helpers::transformMatVec(std::vector<glm::mat4> &vec, const glm::mat4 &mode
 	std::for_each(vec.begin(), vec.end(), [&model](auto &mat){ mat *= model; });
 }
 
+ft helpers::matDistance(const glm::mat4 &mat, const glm::vec2 &vec)
+{
+	return glm::distance(glm::vec2(mat * glm::vec4(0,0,0,1)), vec);
+}
 void helpers::transformMatVec(std::vector<glm::mat4> &vec, const ft yTransformVal)
 {
 	const glm::mat4 model = glm::translate(glm::vec3(0, yTransformVal, 0));
 	std::for_each(vec.begin(), vec.end(), [&model](auto &mat){ mat *= model; });
 }
 
-glm::vec2 helpers::mouseCoordsTransformed(const glm::mat4 &transform)
+glm::vec2 helpers::mouseCoordsTransformed(const glm::mat4 &transform, const ft transformScalingFactor)
 {
 	int x, y;
 	const ft halfScreenWidth = static_cast<ft>(SCREEN_WIDTH) / 2.0f;
@@ -52,7 +56,7 @@ glm::vec2 helpers::mouseCoordsTransformed(const glm::mat4 &transform)
 	SDL_GetMouseState(&x, &y);
 	ft squishedX = (static_cast<ft>(x) - halfScreenWidth) / halfScreenWidth;
 	ft squishedY = (static_cast<ft>(y) - halfScreenHeight ) /halfScreenHeight;
-	glm::vec2 transformesdPos = glm::vec2(transform * glm::vec4(squishedX, squishedY, 0, 1));
+	glm::vec2 transformesdPos = glm::vec2(transform * glm::vec4(squishedX, -squishedY, 0.0f, transformScalingFactor));
 	return transformesdPos;
 }
 
@@ -103,4 +107,31 @@ ft helpers::angleDiff(const ft a, const ft b)
 }
 ft helpers::rotTransformAngle(const glm::mat4 &matrix) {
 	return glm::atan(matrix[0][1], matrix[0][0]);
+}
+glm::mat4 helpers::rotateTowardsClosest(const std::vector<glm::mat4> &rotateTowardModels, const glm::mat4 &rotateFromModel, const ft maxTurningRadius, const ft minDistanceToTurn)
+{
+	if(rotateTowardModels.empty())
+		return _blankTransform;
+		
+	const glm::vec2 rotateFromPos{rotateFromModel * glm::vec4(0,0,0,1)};
+	const auto closestModel = std::min_element(cbegin(rotateTowardModels), cend(rotateTowardModels), 
+		[&rotateFromPos](auto &m1, auto &m2){ return helpers::matDistance(m1, rotateFromPos) < helpers::matDistance(m2, rotateFromPos); });
+
+	const glm::vec2 closestPos{*closestModel * glm::vec4(0,0,0,1)};
+	if(glm::distance(rotateFromPos, closestPos) > minDistanceToTurn)
+		return _blankTransform; 
+		
+	return helpers::rotateTowards(rotateFromModel, *closestModel, maxTurningRadius);
+}
+
+glm::mat4 helpers::rotateTowards(const glm::mat4 &rotateTowardModel, const glm::mat4 &rotateFromModel, const ft maxTurningRadius)
+{
+	const ft angle = helpers::angleBetweenPoints(rotateFromModel, rotateTowardModel);
+	if(angle < maxTurningRadius)
+		return glm::rotate(angle, glm::vec3(0,0,1));
+	if(TAU - angle < maxTurningRadius)
+		return glm::rotate(-angle, glm::vec3(0,0,1));
+	if(angle < PI)
+		return glm::rotate(maxTurningRadius, glm::vec3(0,0,1));
+	return glm::rotate(-maxTurningRadius, glm::vec3(0,0,1));
 }

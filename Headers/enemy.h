@@ -151,7 +151,7 @@ public:
 	void Draw();
 	void Spawn();
 	void UpdateBehaviour(const std::vector<glm::vec2> &pcPositions, std::function<void(const glm::mat4&, const ui)> fatalityCallback);
-	std::vector<std::vector<glm::mat4>*> InstanceTransforms();
+	std::vector<glm::mat4> InstanceTransforms();
 	inline ui NextId() { return _newestEnemyId++; }
 
 private:

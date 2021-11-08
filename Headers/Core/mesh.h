@@ -30,6 +30,12 @@ struct TexturedMeshParams
     const ui noIndices;
 };
 
+struct BezierCurveMeshParams
+{
+    const glm::vec2 *positions; //endpoint, control, control, endpoint, control, control, endpoint;
+    const ui noCruves;
+};
+
 class VAB
 {
 public:
@@ -170,4 +176,23 @@ private:
     };
 
     GLuint vertexArrayBuffers[NO_BUFFERS];
+};
+
+class UntexturedDynamicBezierMesh : public Mesh
+{
+public:
+    UntexturedDynamicBezierMesh(const BezierCurveMeshParams params, ui maxNoCurves, ui curveResolution);
+    void Update(const glm::vec2 *positions, const ui noCurves);
+
+private:
+    VAB vab;
+    enum 
+    {
+        POSITION_VB,
+        
+        NO_BUFFERS
+    };
+
+    GLuint vertexArrayBuffers[NO_BUFFERS];
+    constexpr glm::vec2 _intrapolateCurve(const ui t, const glm::vec4 &xvals, const glm::vec4 &yvals) const;
 };

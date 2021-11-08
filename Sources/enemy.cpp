@@ -305,11 +305,15 @@ void EnemyManager::UpdateBehaviour(const std::vector<glm::vec2> &pcPositions, st
 	}
 }
 
-std::vector<std::vector<glm::mat4>*> EnemyManager::InstanceTransforms()
+std::vector<glm::mat4> EnemyManager::InstanceTransforms()
 {
-	std::vector<std::vector<glm::mat4>*> enemyInstanceTransforms;
+	size_t totalSize = 0;
+	std::vector<glm::mat4> enemyInstanceTransforms;
 	for(auto &enemy : _enemies)
-		enemyInstanceTransforms.push_back(&enemy.data.instanceTransforms);
+		totalSize += enemy.data.instanceTransforms.size();
+	enemyInstanceTransforms.reserve(totalSize);
+	for(auto &enemy : _enemies)
+		enemyInstanceTransforms.insert(end(enemyInstanceTransforms), begin(enemy.data.instanceTransforms), end(enemy.data.instanceTransforms));
 	return enemyInstanceTransforms;
 }
 

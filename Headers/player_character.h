@@ -20,13 +20,12 @@ struct IPlayerCharacter;
 class PlayerCharacter
 {
 public:
-	PlayerCharacter(helpers::Core &core, const UntexturedMeshParams &pcParams, const UntexturedMeshParams &projectileParams);
+	PlayerCharacter(helpers::Core &core, const UntexturedMeshParams &pcParams);
 
 	void Reset();
 	void RenderScore();
-	void Update(const std::vector<std::vector<glm::mat4>*> &enemyInstanceTransforms);
+	void Update();
 	void Draw();
-	void Shoot();
 
 	inline IPlayerCharacter *Interface()  { return _pcInterface; };
 	inline bool &IsAlive() 				  { return _isAlive; 	 }
@@ -39,13 +38,8 @@ private:
 	Text &_text;
 	Timer &_timer;
     PlayerStats &_pcStats;
-	Shader _projectileShader{"Shaders/Projectile"};
 	Shader _pcShader{"Shaders/PC"};
-	Shader _pcCardShader{"Shaders/PC_Card"};
 	UntexturedMesh _pcMesh;
-	UntexturedInstancedMesh _pcCardMesh;
-	UntexturedInstancedMesh _projMesh;
-	UntexturedInstancedMesh _projCardMesh;
 	TriBoundingBox _pcBoundingBox;
 	Transform _pcTransform;
 	IPlayerCharacter *_pcInterface;
@@ -56,34 +50,21 @@ private:
 	db _invincibilityDuration{400.0};
 	ui _invincibilityClockId;
 
-	std::vector<glm::mat4> 			_projInstanceTransforms;
-	std::vector<ui>					_noLeftProjPiercings;
-	std::vector<std::vector<ui>> 	_alreadyHitEnemyIds;
-
-	ui _oldestProjectileIndex0{};
-	ui _oldestProjectileIndex1{};
-	ui _oldestProjectileIndex2{};
 	ui _enemiesShotCounter{};
 
-	bool _projHit(const ui projIndex, const ui enemyIndex);
 	void _pcIntersection();
 	constexpr ft _setAlpha(db remainingInvincibilityTime);
-	glm::mat4 _moveProj(const std::vector<std::vector<glm::mat4>*> &enemyInstanceTransforms, const glm::mat4 &projTransform) const;
-
 };
 
 struct IPlayerCharacter
 {
 	IPlayerCharacter(PlayerCharacter *pcPtr) : _pcPtr(pcPtr) {};
 	IPlayerCharacter(IPlayerCharacter *iPtr) : _pcPtr(iPtr->_pcPtr) {};
-	auto &ProjHitCb()		{ return pcProjHitCb;						}
 	auto &HitCb()			{ return pcHitCb;	 						}
 	auto &Transform()		{ return _pcPtr->_pcTransform; 				}
 	auto &BoundingBox()		{ return _pcPtr->_pcBoundingBox;			}
-	auto &ProjTransforms()	{ return _pcPtr->_projInstanceTransforms; 	}
 
 private:
 	PlayerCharacter *_pcPtr;
-	DECL_INST(pcProjHitCb, std::bind(&PlayerCharacter::_projHit, _pcPtr, _1, _2));
 	DECL_INST(pcHitCb,	   std::bind(&PlayerCharacter::_pcIntersection, _pcPtr));
 };

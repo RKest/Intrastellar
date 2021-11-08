@@ -1,27 +1,64 @@
 #include "weapons.h"
 
-Weapon::Weapon(WeaponsManager &manager, UntexturedInstancedMesh &projMesh) 
-    : _manager(manager), _projMesh(projMesh), _interface(new IWeapon(this))
+void BlasterBehaviour::operator()([[maybe_unused]]const std::vector<glm::mat4> &enemyInstanceTransforms)
 {
+    assert(_weaponPtr != nullptr);
+    const ft homingStrength =_weaponPtr->_weaponStats.shotHomingStrength; 
+    if(fpclassify(homingStrength) != FP_ZERO)
+    {
+        const ft maxTurningRadius = _weaponPtr->_manager._timer.Scale(MAX_PROJ_TURNING_RAD);
+        for(size_t i = 0; i < _weaponPtr->_noProjs; ++i)
+        {
+            _weaponPtr->_projInstanceTransforms[i] *= helpers::rotateTowardsClosest(enemyInstanceTransforms, _weaponPtr->_projInstanceTransforms[i], 
+                maxTurningRadius, homingStrength);
+        }
+    }
 }
 
-void Weapon::Update()
+void RocketBehaviour::operator()([[maybe_unused]]const std::vector<glm::mat4> &enemyInstanceTransforms)
+{
+    assert(_weaponPtr != nullptr);
+    const ft homingStrength = _weaponPtr->_weaponStats.shotHomingStrength;
+    if(fpclassify(homingStrength) != FP_ZERO)
+    {
+        const glm::vec2 worldMousePos = helpers::mouseCoordsTransformed(inverse(_weaponPtr->_manager._camera.ViewProjection()), 0.001f);
+        const glm::mat4 worldMouseModel = glm::translate(glm::vec3(worldMousePos * CAMERA_DISTANCE, 0.0f));
+        const ft maxTurningRadius = _weaponPtr->_manager._timer.Scale(MAX_PROJ_TURNING_RAD);
+        for(size_t i = 0; i < _weaponPtr->_noProjs; ++i)
+        {
+            _weaponPtr->_projInstanceTransforms[i] *= helpers::rotateTowards(worldMouseModel, _weaponPtr->_projInstanceTransforms[i], maxTurningRadius);
+        }
+    }
+}
+
+void LaserBehaviour::operator()([[maybe_unused]]const std::vector<glm::mat4> &enemyInstanceTransforms)
+{
+    assert(_weaponPtr != nullptr);
+}
+
+Weapon::Weapon(WeaponsManager &manager, UntexturedInstancedMesh &projMesh, WeaponBehaviour &behaviour, PlayerStats &weaponStats) 
+    : _manager(manager), _projMesh(projMesh), _behaviour(behaviour), _interface(new IWeapon(this))
+{
+    _weaponStats += weaponStats;
+    _behaviour.Construct(this);
+}
+
+void Weapon::Update(const std::vector<glm::mat4> &enemyInstanceTransforms)
 {
     const ft scaledTravelDistance  = _manager._timer.Scale(_weaponStats.shotSpeed);
     const glm::mat4 localTransform = glm::translate(glm::vec3(0.0f, scaledTravelDistance, 0.0f));
     for (size_t i = 0; i < _noProjs; ++i)
         _projInstanceTransforms[i] *= localTransform;
     
-    _specUpdate();
+    _behaviour(enemyInstanceTransforms);
 }
 
 void Weapon::Fire(const glm::mat4 &pcModel)
 {
-    if(_noProjs < MAX_PROJ_AMOUNT && _manager._timer.HeapIsItTime(_shotClockId))
+    if(_manager._timer.HeapIsItTime(_shotClockId))
     {
-        _projInstanceTransforms [_noProjs] = pcModel;
-        _noLeftProjPiercings    [_noProjs] = _weaponStats.noPiercings;
-        ++_noProjs;
+        const ui replacedProjIndex = helpers::pushToCappedArr(_projInstanceTransforms, pcModel, _noProjs, _oldestProjIndex, MAX_PROJ_AMOUNT);
+        _noLeftProjPiercings[replacedProjIndex] = _weaponStats.noPiercings;
     }
 }
 
@@ -58,33 +95,6 @@ bool Weapon::_projHit(const ui projIndex, const ui enemyIndex)
 	return false;
 }
 
-BlasterWeapon::BlasterWeapon(WeaponsManager &manager, UntexturedInstancedMesh &projMesh) : Weapon(manager, projMesh)
-{
-
-}
-
-void BlasterWeapon::_specUpdate()
-{
-}
-
-RocketLauncherWeapon::RocketLauncherWeapon(WeaponsManager &manager, UntexturedInstancedMesh &projMesh) : Weapon(manager, projMesh)
-{
-    _weaponStats += stat_altarations::SHOT_HOMING_STRENGTH(2.0f) + stat_altarations::SHOT_SPEED(-0.01f);
-}
-
-void RocketLauncherWeapon::_specUpdate()
-{
-}
-
-LaserWeapon::LaserWeapon(WeaponsManager &manager, UntexturedInstancedMesh &projMesh) : Weapon(manager, projMesh)
-{
-    _weaponStats += stat_altarations::SHOT_SPEED(0.05f) + stat_altarations::NO_PIERCINGS(99);
-}
-
-void LaserWeapon::_specUpdate()
-{
-}
-
 WeaponsManager::WeaponsManager(helpers::Core &core, const TexturedMeshParams &iconMeshParams, const UntexturedMeshParams &overlayMeshParams, 
         const UntexturedMeshParams &blasterProjParams, const UntexturedMeshParams &rocketMeshParams)
     : _display(core.display), _timer(core.timer), _pcStats(core.stats), _camera(core.camera), _iconMesh(iconMeshParams, WEAPONS_NO_WEAPONS), 
@@ -103,18 +113,21 @@ WeaponsManager::WeaponsManager(helpers::Core &core, const TexturedMeshParams &ic
         _weaponTextures.Instance(basePath + std::to_string(i + 1) + ".png");
     }
 
-    _weapons[Weapons::BLASTER]          .reset(new BlasterWeapon        (*this, _blasterProjMesh));
-    _weapons[Weapons::ROCEKT_LANCHER]   .reset(new RocketLauncherWeapon (*this, _rocketProjMesh));
-    _weapons[Weapons::LASER]            .reset(new LaserWeapon          (*this, _laserProjMesh));
+    _rocketStatAltarations += stat_altarations::SHOT_HOMING_STRENGTH(99.0f)  + stat_altarations::SHOT_SPEED(-0.01f);
+    _laserStatAltarations  += stat_altarations::SHOT_SPEED(0.05f)           + stat_altarations::NO_PIERCINGS(99);
+
+    _weapons[Weapons::BLASTER]          .reset(new Weapon(*this, _blasterProjMesh, _blasterBehaviour, _blasterStatAltarations));
+    _weapons[Weapons::ROCEKT_LANCHER]   .reset(new Weapon(*this, _rocketProjMesh , _rocketBehaviour , _rocketStatAltarations));
+    _weapons[Weapons::LASER]            .reset(new Weapon(*this, _laserProjMesh  , _laserBehaviour  , _laserStatAltarations));
     for(size_t i = 0; i < Weapons::NO_IMPLEMENTED_WEAPONS; ++i)
         _weaponInterfaces[i] = _weapons[i]->Interface();
     _weapons[Weapons::BLASTER]->Init();
 }
 
-void WeaponsManager::Update(const glm::mat4 &pcModel)
+void WeaponsManager::Update(const glm::mat4 &pcModel, const std::vector<glm::mat4> &enemyInstanceTransforms)
 {
     for(size_t i = 0; i < Weapons::NO_IMPLEMENTED_WEAPONS; ++i)
-        _weapons[i]->Update();
+        _weapons[i]->Update(enemyInstanceTransforms);
     const ui chosenWeaponIndex = _selectedWeaponIndexUni.second;
     if (chosenWeaponIndex >= Weapons::NO_IMPLEMENTED_WEAPONS)
         return;
@@ -157,17 +170,14 @@ void WeaponsManager::Draw()
         _timer.SetScalingFactor(WEAPONS_TIMER_SCALING_ARG);
         for(ui i = 0; i < WEAPONS_NO_WEAPONS; ++i)
         {
-            if(_boundingBoxes[i].IsThereAnIntersection(helpers::mouseCoordsTransformed(_inverseFlippedProjection)))
+            if(_boundingBoxes[i].IsThereAnIntersection(helpers::mouseCoordsTransformed(_inverseProjection)))
                 tempSelectedWeaponIndex = i;
         }
         bool tempIsLBMPressed = helpers::IsLBMPressed();
-        if(_isLBMPressed && !tempIsLBMPressed)
+        if(_isLBMPressed && !tempIsLBMPressed && tempSelectedWeaponIndex != _selectedWeaponIndexUni.second)
         {
             _closeWeaponTab();
-
-            _weapons[_selectedWeaponIndexUni.second]->Uninit();
-            _selectedWeaponIndexUni.second = tempSelectedWeaponIndex;
-            _weapons[_selectedWeaponIndexUni.second]->Init();
+            _switchWeapons(tempSelectedWeaponIndex);
 
             _timer.InitHeapClock(_weaponCooldownClockId, _weaponCooldownTime);
             _isThereWeaponCooldown = true;
@@ -197,8 +207,14 @@ void WeaponsManager::Draw()
 
 void WeaponsManager::Reset()
 {
-    _pcStats -= _weaponStatAltarations[_selectedWeaponIndexUni.second];
-    _selectedWeaponIndexUni.second = 0;
+    _switchWeapons(0);
+    if(_isWeaopnsTabVisible && !_isWeaponsFullyDrawn)
+        _timer.DestroyHeapClock(_weaponCooldownClockId);
+    _isLBMPressed           = false;
+    _isThereWeaponCooldown  = false;
+    _isWeaopnsTabVisible    = false;
+    _isWeaponsFullyDrawn    = false;
+    _timer.SetScalingFactor(1.0);
 }
 
 void WeaponsManager::_closeWeaponTab()
@@ -210,7 +226,14 @@ void WeaponsManager::_closeWeaponTab()
         for(ui i = 0; i < WEAPONS_NO_WEAPONS; ++i)
             _instanceTransforms[i] = _baseInstanceTransforms[i];
     }
-    _isWeaopnsTabVisible = false;
-    _isWeaponsFullyDrawn = false;
+    _isWeaopnsTabVisible    = false;
+    _isWeaponsFullyDrawn    = false;
     _timer.SetScalingFactor(1.0);
+}
+
+void WeaponsManager::_switchWeapons(const ui weaponIndex)
+{
+    _weapons[_selectedWeaponIndexUni.second]->Uninit();
+    _selectedWeaponIndexUni.second = weaponIndex;
+    _weapons[_selectedWeaponIndexUni.second]->Init();
 }
