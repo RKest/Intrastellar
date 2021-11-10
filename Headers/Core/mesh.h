@@ -183,6 +183,7 @@ class UntexturedDynamicBezierMesh : public Mesh
 public:
     UntexturedDynamicBezierMesh(const BezierCurveMeshParams params, ui maxNoCurves, ui curveResolution);
     void Update(const glm::vec2 *positions, const ui noCurves);
+    void Draw() override;
 
 private:
     VAB vab;
