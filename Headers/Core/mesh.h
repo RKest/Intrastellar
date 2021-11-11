@@ -181,6 +181,7 @@ private:
 class UntexturedDynamicBezierMesh : public Mesh
 {
 public:
+    UntexturedDynamicBezierMesh(ui maxNoCurves, ui curveResolution);
     UntexturedDynamicBezierMesh(const BezierCurveMeshParams params, ui maxNoCurves, ui curveResolution);
     void Update(const glm::vec2 *positions, const ui noCurves);
     void Draw() override;
@@ -194,6 +195,9 @@ private:
         NO_BUFFERS
     };
 
+    const ui curveResolution;
+    std::vector<glm::vec2> lineVertices;
     GLuint vertexArrayBuffers[NO_BUFFERS];
-    constexpr glm::vec2 _intrapolateCurve(const ui t, const glm::vec4 &xvals, const glm::vec4 &yvals) const;
+    void _bindCurveData(glm::vec2 *linesArray, const glm::vec2 *positions, const ui noCurves);
+    constexpr glm::vec2 _intrapolateCurve(const ft t, const glm::vec4 &xvals, const glm::vec4 &yvals) const;
 };

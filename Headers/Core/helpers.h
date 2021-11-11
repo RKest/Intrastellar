@@ -159,6 +159,11 @@ namespace helpers
     {
         return std::find(cbegin(cont), cend(cont), arg) != cend(cont);
     }
+    template<typename T>
+    T diff(const T &a, const T&b)
+    {
+        return b > a ? b - a : a - b;
+    }
 
     struct Core
     {

@@ -33,32 +33,38 @@ enum Weapons : ui
 class Weapon;
 struct WeaponBehaviour
 {
-    virtual void Construct(Weapon*) = 0;
-    virtual void operator()([[maybe_unused]]const std::vector<glm::mat4> &enemyInstanceTransforms) = 0;
+    void Construct(Weapon& weapon) : _weapon(weapon) {};
+    virtual void Update([[maybe_unused]]const std::vector<glm::mat4> &enemyInstanceTransforms) = 0;
+    virtual void Draw();
+    virtual void Fire(const glm::mat4 &pcModel);
+protected:
+    Weapon &_weapon;
 };
 
-struct BlasterBehaviour : WeaponBehaviour
+struct BlasterBehaviour : public WeaponBehaviour
 {
-    void Construct(Weapon *weaponPtr) override { _weaponPtr = weaponPtr; }
-    void operator()([[maybe_unused]]const std::vector<glm::mat4> &enemyInstanceTransforms) override;
-private:
-    Weapon *_weaponPtr = nullptr;
+    void Update([[maybe_unused]]const std::vector<glm::mat4> &enemyInstanceTransforms) override;
 };
 
-struct RocketBehaviour : WeaponBehaviour
+struct RocketBehaviour : public WeaponBehaviour
 {
-    void Construct(Weapon *weaponPtr) override { _weaponPtr = weaponPtr; }
-    void operator()([[maybe_unused]]const std::vector<glm::mat4> &enemyInstanceTransforms) override;
-private:
-    Weapon *_weaponPtr = nullptr;
+    void Update([[maybe_unused]]const std::vector<glm::mat4> &enemyInstanceTransforms) override;
 };
 
-struct LaserBehaviour : WeaponBehaviour
+struct LaserBehaviour : public WeaponBehaviour
 {
-    void Construct(Weapon *weaponPtr) override { _weaponPtr = weaponPtr; }
-    void operator()([[maybe_unused]]const std::vector<glm::mat4> &enemyInstanceTransforms) override;
+    void Update([[maybe_unused]]const std::vector<glm::mat4> &enemyInstanceTransforms) override;
+    void Fire(const glm::mat4 &pcModel) override;
+    void Draw() override;
+
 private:
-    Weapon *_weaponPtr = nullptr;
+    UntexturedDynamicBezierMesh _projMesh       {MAX_PROJ_AMOUNT, 10};
+
+    std::vector<glm::vec2> _laserBezierCurves = std::vector<glm::vec2>(MAX_PROJ_AMOUNT * 3 + 1);
+    glm::mat4 _laserOrigin;
+    ui _laserLingerClockId;
+    db _laserLingerClockDuration = WEAPONS_LASER_LINGER_DURATION;
+    bool _hasTheLaserFired{};
 };
 
 struct IWeapon;
@@ -67,7 +73,7 @@ using weaponInterfaceArray_t = std::array<IWeapon*, Weapons::NO_IMPLEMENTED_WEAP
 class WeaponsManager;
 class Weapon {
 public:
-    Weapon(WeaponsManager &manager, UntexturedInstancedMesh &projMesh, WeaponBehaviour &behaviour, PlayerStats &weaponStats);
+    Weapon(WeaponsManager &manager, UntexturedInstancedMesh &projMesh, WeaponBehaviour &behaviour, PlayerStats &weaponStats, Shader &projShader);
     void Draw();
     void Fire(const glm::mat4 &pcModel);
     void Init();
@@ -77,23 +83,26 @@ public:
 
 protected:
     friend struct IWeapon;
+    friend struct WeaponBehaviour;
     friend struct BlasterBehaviour;
     friend struct RocketBehaviour;
     friend struct LaserBehaviour;
-    PlayerStats _weaponStats = defaultStats;
+    PlayerStats             _weaponStats = defaultStats;
     WeaponsManager          &_manager;
     UntexturedInstancedMesh &_projMesh;
     WeaponBehaviour         &_behaviour;
+    Shader                  &_projShader;
     IWeapon                 *_interface;
 
-    glm::mat4           _projInstanceTransforms [MAX_PROJ_AMOUNT];
-	ui		            _noLeftProjPiercings    [MAX_PROJ_AMOUNT];
-	std::vector<ui>     _alreadyHitEnemyIds     [MAX_PROJ_AMOUNT];
-    ui                  _noProjs = 0;
+    glm::mat4               _projInstanceTransforms [MAX_PROJ_AMOUNT];
+	ui		                _noLeftProjPiercings    [MAX_PROJ_AMOUNT];
+	std::vector<ui>         _alreadyHitEnemyIds     [MAX_PROJ_AMOUNT];
+    ui                      _noProjs = 0;
 
     ui _shotClockId{};
     ui _oldestProjIndex{};
 	bool _projHit(const ui projIndex, const ui enemyIndex);
+    void _commonUpdate();
 };
 
 using namespace std::placeholders;
@@ -124,39 +133,41 @@ public:
 
 private:
     friend class Weapon;
+    friend struct WeaponBehaviour;
     friend struct BlasterBehaviour;
     friend struct RocketBehaviour;
     friend struct LaserBehaviour;
 
-    Display &_display;
-    Timer &_timer;
-    PlayerStats &_pcStats;
-    Camera &_camera;
-    TexturedInstancedMesh _iconMesh;
-    UntexturedMesh _overlayMesh;
+    Display                     &_display;
+    Timer                       &_timer;
+    PlayerStats                 &_pcStats;
+    Camera                      &_camera;
+    TexturedInstancedMesh       _iconMesh;
+    UntexturedMesh              _overlayMesh;
 
-    UntexturedInstancedMesh _blasterProjMesh;
-    UntexturedInstancedMesh _rocketProjMesh;
-    UntexturedInstancedMesh _laserProjMesh;
+    UntexturedInstancedMesh     _blasterProjMesh;
+    UntexturedInstancedMesh     _rocketProjMesh;
+    UntexturedInstancedMesh     _laserProjMesh;
 
-    BlasterBehaviour        _blasterBehaviour;
-    RocketBehaviour         _rocketBehaviour;
-    LaserBehaviour          _laserBehaviour;
+    BlasterBehaviour            _blasterBehaviour;
+    RocketBehaviour             _rocketBehaviour;
+    LaserBehaviour              _laserBehaviour;
 
-    PlayerStats             _blasterStatAltarations;
-    PlayerStats             _rocketStatAltarations;
-    PlayerStats             _laserStatAltarations;
+    PlayerStats                 _blasterStatAltarations;
+    PlayerStats                 _rocketStatAltarations;
+    PlayerStats                 _laserStatAltarations;
 
-    Shader                          _overlayShader          {"./Shaders/Overlay"    };
-    Shader                          _weaponIconShader       {"./Shaders/WeaponIcon" };
-    Shader                          _projShader             {"./Shaders/Projectile" };
-    Texture                         _weaponTextures         {WEAPONS_NO_WEAPONS};
+    Shader                      _overlayShader          {"./Shaders/Overlay"    };
+    Shader                      _weaponIconShader       {"./Shaders/WeaponIcon" };
+    Shader                      _projShader             {"./Shaders/Projectile" };
+    Shader                      _bezierProjShader       {"./Shaders/Bezier"     };    
+    Texture                     _weaponTextures         {WEAPONS_NO_WEAPONS};
 
-    glm::mat4                       _instanceTransforms     [WEAPONS_NO_WEAPONS];
-    glm::mat4                       _baseInstanceTransforms [WEAPONS_NO_WEAPONS];
-    ReqBoundingBox                  _boundingBoxes          [WEAPONS_NO_WEAPONS];
-    std::unique_ptr<Weapon>         _weapons                [WEAPONS_NO_WEAPONS];
-    weaponInterfaceArray_t          _weaponInterfaces;
+    glm::mat4                   _instanceTransforms     [WEAPONS_NO_WEAPONS];
+    glm::mat4                   _baseInstanceTransforms [WEAPONS_NO_WEAPONS];
+    ReqBoundingBox              _boundingBoxes          [WEAPONS_NO_WEAPONS];
+    std::unique_ptr<Weapon>     _weapons                [WEAPONS_NO_WEAPONS];
+    weaponInterfaceArray_t      _weaponInterfaces;
     samplerArray_t  _samplerIds = arr_ini::makeSampArr(std::make_index_sequence<WEAPONS_NO_WEAPONS>{}); 
 
     uiUni _selectedWeaponIndexUni   {"chosenWeaponInx", 0};

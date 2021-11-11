@@ -70,6 +70,8 @@ constexpr const glm::mat4 ENEMY_ORBIT_TO_ORBIT_TRANSLATE{{0.0f,1.0f,0.0f,0.0f}, 
 constexpr const ui WEAPONS_NO_WEAPONS = 10;
 constexpr const ft WEAPONS_ICON_DIMS = static_cast<ft>(SCREEN_HEIGHT) / static_cast<ft>(WEAPONS_NO_WEAPONS);
 constexpr const db WEAPONS_COOLDOWN = 2000.0;
+constexpr const ft WEAPONS_LASER_HOMING_CONE_ANGLE = glm::radians(30.0f); //A test value
+constexpr const db WEAPONS_LASER_LINGER_DURATION = 100.0;
 
 //Overlay
 constexpr const db WEAPONS_TIMER_SCALING_ARG = 0.05;

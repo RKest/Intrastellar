@@ -1,8 +1,23 @@
 #include "weapons.h"
 
-void BlasterBehaviour::operator()([[maybe_unused]]const std::vector<glm::mat4> &enemyInstanceTransforms)
+void WeaponBehaviour::Draw()
 {
-    assert(_weaponPtr != nullptr);
+    helpers::render(_weapon._projShader, _weapon._projMesh, _weapon._projInstanceTransforms, _weapon._noProjs, 
+        _blankTransform, _weapon._manager._camera.ViewProjection());
+}
+
+void WeaponBehaviour::Fire(const glm::mat4 &pcModel)
+{
+    if(_manager._timer.HeapIsItTime(_shotClockId))
+    {
+        const ui replacedProjIndex = helpers::pushToCappedArr(_projInstanceTransforms, pcModel, _noProjs, _oldestProjIndex, MAX_PROJ_AMOUNT);
+        _noLeftProjPiercings[replacedProjIndex] = _weaponStats.noPiercings;
+    }
+}
+
+void BlasterBehaviour::Update([[maybe_unused]]const std::vector<glm::mat4> &enemyInstanceTransforms)
+{
+    _weaponPtr->_commonUpdate();
     const ft homingStrength =_weaponPtr->_weaponStats.shotHomingStrength; 
     if(fpclassify(homingStrength) != FP_ZERO)
     {
@@ -15,9 +30,9 @@ void BlasterBehaviour::operator()([[maybe_unused]]const std::vector<glm::mat4> &
     }
 }
 
-void RocketBehaviour::operator()([[maybe_unused]]const std::vector<glm::mat4> &enemyInstanceTransforms)
+void RocketBehaviour::Update([[maybe_unused]]const std::vector<glm::mat4> &enemyInstanceTransforms)
 {
-    assert(_weaponPtr != nullptr);
+    _weaponPtr->_commonUpdate();
     const ft homingStrength = _weaponPtr->_weaponStats.shotHomingStrength;
     if(fpclassify(homingStrength) != FP_ZERO)
     {
@@ -31,37 +46,71 @@ void RocketBehaviour::operator()([[maybe_unused]]const std::vector<glm::mat4> &e
     }
 }
 
-void LaserBehaviour::operator()([[maybe_unused]]const std::vector<glm::mat4> &enemyInstanceTransforms)
+void LaserBehaviour::Update([[maybe_unused]]const std::vector<glm::mat4> &enemyInstanceTransforms)
 {
-    assert(_weaponPtr != nullptr);
+    if(_hasTheLaserFired)
+    {
+        _hasTheLaserFired       = false;
+        ui laserBezierCurvesSZ  = 0;
+        ft fireAngle            = helpers::rotTransformAngle(_laserOrigin);
+        const glm::vec2 firstFirePos{_laserOrigin * glm::vec4(0,0,0,1)};
+        _laserBezierCurves[laserBezierCurvesSZ++] = firstFirePos;
+        for (ui i = 0; i < MAX_PROJ_AMOUNT; ++i)
+        {
+            const glm::vec2 firePos{_laserOrigin * glm::vec4(0,0,0,1)};
+            std::vector<glm::mat4> fileterdVector;
+            fileterdVector.reserve(MAX_NO_ENEMIES);
+            std::copy_if(cbegin(enemyInstanceTransforms), cend(enemyInstanceTransforms), std::back_inserter(fileterdVector), [this, fireAngle](auto & mat){ 
+                return helpers::diff(helpers::angleBetweenPoints(_laserOrigin, mat, glm::vec2(1,0)), fireAngle) < WEAPONS_LASER_HOMING_CONE_ANGLE; 
+            });
+            if(fileterdVector.empty())
+                break;
+            const auto closestConeEnemy = std::min_element(cbegin(filteredVector), cend(filteredVector), [firePos](auto &m1, auto &m2){
+                return helpers::matDistance(m1, firePos) < helpers::matDistance(m2, firePos);
+            });
+            const glm::vec2 enemyPos{*closestConeEnemy * glm::vec4(0,0,0,1)};
+            const glm::vec2 uVecToEnemy = normalize(glm::vec2(helpers::diff(firePos.x, enemyPos.x), helpers::diff(firePos.y, enemyPos.y)));
+            const ft fireDistance = distance(fireAngle, enemyPos);
+            const ft distanceToControl = fireDistance / 3.0f;
+            _laserBezierCurves[laserBezierCurvesSZ++] = firePos + uVecToEnemy * distanceToControl;
+            _laserBezierCurves[laserBezierCurvesSZ++] = firePos + uVecToEnemy * distanceToControl * 2;
+            _laserBezierCurves[laserBezierCurvesSZ++] = enemyPos;
+            fireAngle = helpers::angleBetweenPoints(filteredVector[laserBezierCurvesSZ - 2], filteredVector[laserBezierCurvesSZ - 1], glm::vec2(1,0));
+            _laserOrigin = *closestConeEnemy;
+        }
+    }
+    /*TODO 
+        - Make second and third place of the _laserBezierCurves have proper values to make this an actual curve not a straight line
+        - Add a finishing touch before the break statement
+        - Figure out how to do collision
+    */
 }
 
-Weapon::Weapon(WeaponsManager &manager, UntexturedInstancedMesh &projMesh, WeaponBehaviour &behaviour, PlayerStats &weaponStats) 
-    : _manager(manager), _projMesh(projMesh), _behaviour(behaviour), _interface(new IWeapon(this))
+void LaserBehaviour::Fire(const glm::mat4 &pcModel)
+{
+    _laserOrigin = pcModel;
+    _weapon._manager._timer.InitHeapClock(_laserLingerClockId, _laserLingerClockDuration);
+    _hasTheLaserFired = true;
+}
+
+Weapon::Weapon(WeaponsManager &manager, UntexturedInstancedMesh &projMesh, WeaponBehaviour &behaviour, PlayerStats &weaponStats, Shader &projShader) 
+    : _manager(manager), _projMesh(projMesh), _behaviour(behaviour), _projShader(projShader), _interface(new IWeapon(this))
 {
     _weaponStats += weaponStats;
-    _behaviour.Construct(this);
+    _behaviour.Construct(*this);
 }
-
 void Weapon::Update(const std::vector<glm::mat4> &enemyInstanceTransforms)
 {
-    const ft scaledTravelDistance  = _manager._timer.Scale(_weaponStats.shotSpeed);
-    const glm::mat4 localTransform = glm::translate(glm::vec3(0.0f, scaledTravelDistance, 0.0f));
-    for (size_t i = 0; i < _noProjs; ++i)
-        _projInstanceTransforms[i] *= localTransform;
-    
-    _behaviour(enemyInstanceTransforms);
+    _behaviour.Update(enemyInstanceTransforms);
 }
-
 void Weapon::Fire(const glm::mat4 &pcModel)
 {
-    if(_manager._timer.HeapIsItTime(_shotClockId))
-    {
-        const ui replacedProjIndex = helpers::pushToCappedArr(_projInstanceTransforms, pcModel, _noProjs, _oldestProjIndex, MAX_PROJ_AMOUNT);
-        _noLeftProjPiercings[replacedProjIndex] = _weaponStats.noPiercings;
-    }
+    _behaviour.Fire(pcModel);
 }
-
+void Weapon::Draw()
+{
+    _behaviour.Draw()
+}
 void Weapon::Init()
 {
     _manager._timer.InitHeapClock(_shotClockId, _weaponStats.shotDelay);
@@ -70,11 +119,13 @@ void Weapon::Uninit()
 {
     _manager._timer.DestroyHeapClock(_shotClockId);
 }
-void Weapon::Draw()
+void Weapon::_commonUpdate()
 {
-    helpers::render(_manager._projShader, _projMesh, _projInstanceTransforms, _noProjs, _blankTransform, _manager._camera.ViewProjection());
+    const ft scaledTravelDistance  = _manager._timer.Scale(_weaponStats.shotSpeed);
+    const glm::mat4 localTransform = glm::translate(glm::vec3(0.0f, scaledTravelDistance, 0.0f));
+    for (size_t i = 0; i < _noProjs; ++i)
+        _projInstanceTransforms[i] *= localTransform;
 }
-
 bool Weapon::_projHit(const ui projIndex, const ui enemyIndex)
 {
     if(!helpers::contains(_alreadyHitEnemyIds[projIndex], enemyIndex))
@@ -116,9 +167,9 @@ WeaponsManager::WeaponsManager(helpers::Core &core, const TexturedMeshParams &ic
     _rocketStatAltarations += stat_altarations::SHOT_HOMING_STRENGTH(99.0f)  + stat_altarations::SHOT_SPEED(-0.01f);
     _laserStatAltarations  += stat_altarations::SHOT_SPEED(0.05f)           + stat_altarations::NO_PIERCINGS(99);
 
-    _weapons[Weapons::BLASTER]          .reset(new Weapon(*this, _blasterProjMesh, _blasterBehaviour, _blasterStatAltarations));
-    _weapons[Weapons::ROCEKT_LANCHER]   .reset(new Weapon(*this, _rocketProjMesh , _rocketBehaviour , _rocketStatAltarations));
-    _weapons[Weapons::LASER]            .reset(new Weapon(*this, _laserProjMesh  , _laserBehaviour  , _laserStatAltarations));
+    _weapons[Weapons::BLASTER]          .reset(new Weapon(*this, _blasterProjMesh, _blasterBehaviour, _blasterStatAltarations, _projShader));
+    _weapons[Weapons::ROCEKT_LANCHER]   .reset(new Weapon(*this, _rocketProjMesh , _rocketBehaviour , _rocketStatAltarations , _projShader));
+    _weapons[Weapons::LASER]            .reset(new Weapon(*this, _laserProjMesh  , _laserBehaviour  , _laserStatAltarations  , _projShader));
     for(size_t i = 0; i < Weapons::NO_IMPLEMENTED_WEAPONS; ++i)
         _weaponInterfaces[i] = _weapons[i]->Interface();
     _weapons[Weapons::BLASTER]->Init();

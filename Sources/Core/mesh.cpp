@@ -147,25 +147,63 @@ TexturedInstancedMesh::TexturedInstancedMesh(const TexturedMeshParams &params, u
     glBindVertexArray(0);
 }
 
-UntexturedDynamicBezierMesh::UntexturedDynamicBezierMesh(const BezierCurveMeshParams params, ui maxNoCurves, ui curveResolution)
-   : vab(vertexArrayBuffers), noCurves(params.noCruves), curveResolution(curveResolution)
+UntexturedDynamicBezierMesh::UntexturedDynamicBezierMesh(ui maxNoCurves, ui curveResolution)
+   : vab(vertexArrayBuffers), curveResolution(curveResolution)
 {
-    const ui noLines = params.noCurves * curveResolution;
+    lineVertices.reserve(curveResolution * maxNoCurves);
+    glGenBuffers(NO_BUFFERS, vertexArrayBuffers);
+    vab.Init(lineVertices.data(), maxNoCurves * curveResolution, POSITION_VB, GL_DYNAMIC_DRAW);
+    glBindVertexArray(0);
+}
+UntexturedDynamicBezierMesh::UntexturedDynamicBezierMesh(const BezierCurveMeshParams params, ui maxNoCurves, ui curveResolution)
+   : vab(vertexArrayBuffers), curveResolution(curveResolution)
+{
+    lineVertices.reserve(curveResolution * maxNoCurves);
+    const ui noLines = params.noCruves * curveResolution;
+
     SetDrawCount(noLines);
     glGenBuffers(NO_BUFFERS, vertexArrayBuffers);
-    glm::vec2 lineVertives[noLines + 1];
-    for(ui i = 0; i < noLines; ++i)
-    {
-        
-    }
-    
+    _bindCurveData(lineVertices.data(), params.positions, params.noCruves);
+
+    vab.Init(lineVertices.data(), maxNoCurves * curveResolution, POSITION_VB, GL_DYNAMIC_DRAW);
+    glBindVertexArray(0);
 }
 
-void UntexturedDynamicBezierMesh::Draw() override
+void UntexturedDynamicBezierMesh::Update(const glm::vec2 *positions, const ui noCurves)
+{
+    const ui noLines = noCurves * curveResolution;
+
+    _bindCurveData(lineVertices.data(), positions, noCurves);
+    SetDrawCount(noLines);
+    glBindVertexArray(vertexArrayObject);
+    glBindBuffer(GL_ARRAY_BUFFER, vertexArrayBuffers[POSITION_VB]);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(lineVertices[0]) * noLines, lineVertices.data());
+    glBindVertexArray(0);
+}
+
+void UntexturedDynamicBezierMesh::Draw()
 {
     glBindVertexArray(vertexArrayObject);
     glDrawArrays(GL_LINE_STRIP, 0, drawCount);
     glBindVertexArray(0);
+}
+
+void UntexturedDynamicBezierMesh::_bindCurveData(glm::vec2 *linesArray, const glm::vec2 *positions, const ui noCurves)
+{
+    ui lineArraySZ = 0;
+    linesArray[lineArraySZ++] = positions[0];
+    for(ui i = 0; i < noCurves; ++i)
+    {
+        for(ui j = 1; j < curveResolution; ++j)
+        {
+            const ft t = decl_cast(t, j) / decl_cast(t, curveResolution);
+            const glm::vec4 xvals{positions[3*i].x, positions[3*i+1].x, positions[3*i+2].x, positions[3*i+3].x};
+            const glm::vec4 yvals{positions[3*i].y, positions[3*i+1].y, positions[3*i+2].y, positions[3*i+3].y};
+            linesArray[lineArraySZ++] = _intrapolateCurve(t, xvals, yvals);
+            assert(lineArraySZ <= noCurves * curveResolution);
+        }
+        linesArray[lineArraySZ++] = positions[3*i+3];
+    }
 }
 
 constexpr glm::vec2 UntexturedDynamicBezierMesh::_intrapolateCurve(const ft t, const glm::vec4 &xvals, const glm::vec4 &yvals) const
