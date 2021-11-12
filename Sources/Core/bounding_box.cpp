@@ -92,7 +92,7 @@ bool ReqBoundingBox::IsThereAnIntersection(const std::vector<glm::vec2> &vecs) c
 }
 bool ReqBoundingBox::IsThereAnIntersection(const glm::vec2 &originPos, const ft shotAngle) const
 {
-	const glm::vec2 farAwayPos{originPos.x + 99 * cosf(shotAngle), originPos.y + 99 * sinf(shotAngle)};
+	const glm::vec2 farAwayPos = helpers::vecDistanceAway(originPos, 99.0f, shotAngle);
 	return 	doLinesIntersect(originPos, farAwayPos, minCoords, glm::vec2(minCoords.x, maxCoords.y)) ||
 			doLinesIntersect(originPos, farAwayPos, minCoords, glm::vec2(maxCoords.x, minCoords.y)) ||
 			doLinesIntersect(originPos, farAwayPos, maxCoords, glm::vec2(minCoords.x, maxCoords.y)) ||
@@ -132,9 +132,9 @@ bool TriBoundingBox::IsThereAnIntersection(const glm::vec2 &pos) const
 	const bool has_pos = (d1 > 0) || (d2 > 0) || (d3 > 0);
 	return !(has_neg && has_pos);
 }
-bool TriBoundingBox::IsThereAnIntersection(const glm::vec2&, const ft) const
+bool TriBoundingBox::IsThereAnIntersection(const glm::vec2 &originPos, const ft shotAngle) const
 {
-	const glm::vec2 farAwayPos{originPos.x + 99 * cosf(shotAngle), originPos.y + 99 * sinf(shotAngle)};
+	const glm::vec2 farAwayPos = helpers::vecDistanceAway(originPos, 99.0f, shotAngle);
 	return 	doLinesIntersect(originPos, farAwayPos, triangleCoords[0], triangleCoords[1]) ||
 			doLinesIntersect(originPos, farAwayPos, triangleCoords[1], triangleCoords[2]) ||
 			doLinesIntersect(originPos, farAwayPos, triangleCoords[2], triangleCoords[0]);

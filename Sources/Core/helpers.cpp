@@ -80,13 +80,36 @@ ft helpers::det(const glm::vec2 &vec1, const glm::vec2 &vec2)
     return vec1.x * vec2.y - vec1.y * vec2.x;
 }
 
-ft helpers::angleBetweenPoints(const glm::mat4 &from, const glm::mat4 &to, const glm::vec2 &up)
+ft helpers::angleBetweenTransforms(const glm::mat4 &from, const glm::mat4 &to)
 {
-	const ft orientedAngle = glm::orientedAngle(up, glm::normalize(glm::vec2(glm::inverse(from) * to * glm::vec4(0,0,0,1))));
+	const ft orientedAngle = glm::orientedAngle(glm::vec2(1,0), glm::normalize(glm::vec2(glm::inverse(from) * to * glm::vec4(0,0,0,1))));
 	const ft angle = orientedAngle < 0 ? TAU + orientedAngle : orientedAngle;
 	return angle;
 }
-
+ft helpers::angleBetweenPoints(const glm::vec2 &a, const glm::vec2 &b)
+{
+	const ft angle = atan2f(b.y * a.x - b.x * a.y, a.x * b.x + a.y * b.y);
+	const ft tauAngle = angle < 0.0f ? TAU + angle : angle;
+	return tauAngle;
+}
+ft helpers::angleBetweenPoints(const glm::mat4 &aModel, const glm::mat4 &bModel)
+{
+	const glm::vec2 a{aModel * glm::vec4(0,0,0,1)};
+	const glm::vec2 b{bModel * glm::vec4(0,0,0,1)};
+	return angleBetweenPoints(a, b);
+}
+ft helpers::angleBetweenVectors(const glm::vec2 &from, const glm::vec2 &to)
+{
+	const glm::vec2 pos = from - to;
+	const glm::vec2 normPos = normalize(pos);
+	return angleBetweenPoints(normPos, glm::vec2(1,0));
+}
+ft helpers::angleBetweenVectors(const glm::mat4 &fromModel, const glm::mat4 &toModel)
+{
+	const glm::vec2 from{fromModel 	* glm::vec4(0,0,0,1)};
+	const glm::vec2 to	{toModel 	* glm::vec4(0,0,0,1)};
+	return angleBetweenVectors(from, to);
+}
 glm::mat4 helpers::transformTowards(const glm::mat4 &from, const glm::mat4 &to, const ft byHowMutch)
 {
 	const glm::vec2 toPos	{to * glm::vec4(0,0,0,1)};
@@ -106,7 +129,9 @@ ft helpers::angleDiff(const ft a, const ft b)
 		return delta;
 }
 ft helpers::rotTransformAngle(const glm::mat4 &matrix) {
-	return glm::atan(matrix[0][1], matrix[0][0]);
+	const ft angle = PI - glm::atan(matrix[0][1], matrix[0][0]);
+	const ft tauAngle = angle < 0.0f ? TAU + angle : angle;
+	return tauAngle;
 }
 glm::mat4 helpers::rotateTowardsClosest(const std::vector<glm::mat4> &rotateTowardModels, const glm::mat4 &rotateFromModel, const ft maxTurningRadius, const ft minDistanceToTurn)
 {
@@ -126,7 +151,7 @@ glm::mat4 helpers::rotateTowardsClosest(const std::vector<glm::mat4> &rotateTowa
 
 glm::mat4 helpers::rotateTowards(const glm::mat4 &rotateTowardModel, const glm::mat4 &rotateFromModel, const ft maxTurningRadius)
 {
-	const ft angle = helpers::angleBetweenPoints(rotateFromModel, rotateTowardModel);
+	const ft angle = helpers::angleBetweenTransforms(rotateFromModel, rotateTowardModel);
 	if(angle < maxTurningRadius)
 		return glm::rotate(angle, glm::vec3(0,0,1));
 	if(TAU - angle < maxTurningRadius)
@@ -134,4 +159,10 @@ glm::mat4 helpers::rotateTowards(const glm::mat4 &rotateTowardModel, const glm::
 	if(angle < PI)
 		return glm::rotate(maxTurningRadius, glm::vec3(0,0,1));
 	return glm::rotate(-maxTurningRadius, glm::vec3(0,0,1));
+}
+
+glm::vec2 helpers::vecDistanceAway(const glm::vec2 &originPos, const ft distance, const ft angle)
+{
+	const ft actualAngle = PI - angle;
+	return glm::vec2(originPos.x + distance * cosf(actualAngle), originPos.y + distance * sinf(actualAngle));
 }

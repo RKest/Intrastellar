@@ -111,7 +111,7 @@ static const PlayerStats defaultStats(
     1,     // noShots
     1,     // noPiercings
     0.0f,  // shotVariance
-    0.0f,  // shotHomingStrength
+    5.0f,  // shotHomingStrength
     3,     // maxHP
     3,     // currHP
     200.0  // enemySpawnRate

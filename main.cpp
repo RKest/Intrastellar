@@ -51,7 +51,7 @@ int main()
 		playerCharacter.RenderScore();
 		timer.RenderFPS();
 	};
-	LOG(helpers::angleBetweenPoints(glm::translate(glm::vec3(0,0,0)), glm::translate(glm::vec3(1,0,0))));
+
 	while (!display.IsClosed())
 	{
 		timer.RecordFrame();
@@ -62,8 +62,6 @@ int main()
 		if (timer.IsItTime(Timer::ClocksEnum::SPAWN_CLOCK))
 			enemyManager.Spawn();
 
-		// if (timer.IsItTime(Timer::ClocksEnum::SHOT_CLOCK))
-			// playerCharacter.Shoot();
 		weaponsManager.Update(pcModel, enemyManager.InstanceTransforms());
 		playerCharacter.Update();
 		if(expManager.HasThereBeenLevelUp())

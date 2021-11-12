@@ -33,7 +33,7 @@ void ShootBehavoiur::Update(glm::mat4 &instanceTransform, std::vector<glm::mat4>
 	EnemyBehaviuor::UpdateProjs(projInstanceTransforms);
 	if(_manager._timer.HeapIsItTime(_shotClockId))
 	{
-		const ft angle = helpers::angleBetweenPoints(instanceTransform, _manager._pcModel);
+		const ft angle = helpers::angleBetweenTransforms(instanceTransform, _manager._pcModel);
 		const glm::mat4 aimTransform = glm::rotate(angle, glm::vec3(0,0,1));
 		const glm::mat4 initProjTransform = instanceTransform * aimTransform;
 		helpers::pushToCappedVector(projInstanceTransforms, initProjTransform, _latestShotIndex, MAX_PROJ_AMOUNT_PER_ENEMY);
@@ -94,7 +94,7 @@ void OrbiterBehaviour::Update(glm::mat4 &instanceTransform, std::vector<glm::mat
 		}
 		else
 		{
-			const ft projAngle = helpers::angleBetweenPoints(instanceTransform, projInstanceTransform);
+			const ft projAngle = helpers::angleBetweenTransforms(instanceTransform, projInstanceTransform);
 			orbitProjData.emplace_back(projAngle, projInstanceTransform);
 		}
 	}

@@ -33,12 +33,12 @@ enum Weapons : ui
 class Weapon;
 struct WeaponBehaviour
 {
-    void Construct(Weapon& weapon) : _weapon(weapon) {};
+    void Construct(Weapon* weaponPtr){ _weaponPtr = weaponPtr; }
     virtual void Update([[maybe_unused]]const std::vector<glm::mat4> &enemyInstanceTransforms) = 0;
     virtual void Draw();
     virtual void Fire(const glm::mat4 &pcModel);
 protected:
-    Weapon &_weapon;
+    Weapon *_weaponPtr = nullptr;
 };
 
 struct BlasterBehaviour : public WeaponBehaviour
@@ -60,11 +60,13 @@ struct LaserBehaviour : public WeaponBehaviour
 private:
     UntexturedDynamicBezierMesh _projMesh       {MAX_PROJ_AMOUNT, 10};
 
-    std::vector<glm::vec2> _laserBezierCurves = std::vector<glm::vec2>(MAX_PROJ_AMOUNT * 3 + 1);
-    glm::mat4 _laserOrigin;
-    ui _laserLingerClockId;
-    db _laserLingerClockDuration = WEAPONS_LASER_LINGER_DURATION;
-    bool _hasTheLaserFired{};
+    std::vector<glm::vec2>  _laserBezierCurves = std::vector<glm::vec2>(MAX_PROJ_AMOUNT * 3 + 1);
+    ui                      _laserBezierCurvesSZ = 0;
+    ui                      _noBezierCurves = 1;
+    glm::mat4               _laserOrigin;
+    ui                      _laserLingerClockId;
+    db                      _laserLingerClockDuration = WEAPONS_LASER_LINGER_DURATION;
+    bool                    _hasTheLaserFired{};
 };
 
 struct IWeapon;

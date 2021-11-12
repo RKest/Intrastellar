@@ -19,7 +19,7 @@ void Controler::CaptureMouseMovement()
     const glm::vec2 pcPos = glm::vec2(0);
     const glm::vec2 vecToMouse = glm::normalize(pcPos - mousePos);
 
-    const ft angle = -glm::atan(glm::dot({-1.0, 0.0}, vecToMouse), helpers::det({-1.0, 0.0}, vecToMouse));
+    const ft angle = PI / 2.0f - glm::atan(glm::dot({-1.0, 0.0}, vecToMouse), helpers::det({-1.0, 0.0}, vecToMouse));
     transform.SetRotAngle(angle);
 }
 

@@ -27,13 +27,18 @@ namespace helpers
     bool IsLBMPressed();
     ft det(const glm::vec2 &vec1, const glm::vec2 &vec2);
     ui squishedIntToScreenWidth(ui minValue, ui maxValue, ui value);
-    ft angleBetweenPoints(const glm::mat4 &from, const glm::mat4 &to, const glm::vec2 &up = glm::vec2(0.0f, 1.0f));
+    ft angleBetweenTransforms(const glm::mat4 &from, const glm::mat4 &to);
+    ft angleBetweenPoints(const glm::vec2 &from, const glm::vec2 &to);
+    ft angleBetweenPoints(const glm::mat4 &from, const glm::mat4 &to);
+    ft angleBetweenVectors(const glm::vec2 &from, const glm::vec2 &to);
+    ft angleBetweenVectors(const glm::mat4 &from, const glm::mat4 &to);
     glm::mat4 transformTowards(const glm::mat4 &from, const glm::mat4 &to, const ft byHowMutch);
     ft angleDiff(const ft a, const ft b); 
     ft rotTransformAngle(const glm::mat4 &matrix);
     ft matDistance(const glm::mat4&, const glm::vec2&);
     glm::mat4 rotateTowardsClosest(const std::vector<glm::mat4>&, const glm::mat4&, const ft, const ft);
     glm::mat4 rotateTowards(const glm::mat4&, const glm::mat4&, const ft);
+    glm::vec2 vecDistanceAway(const glm::vec2&, const ft, const ft);
 
     template<typename ...T>
     void render(Shader &shader, Mesh &mesh, std::pair<const std::string, T> const&... params)
