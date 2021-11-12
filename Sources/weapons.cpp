@@ -87,6 +87,8 @@ void LaserBehaviour::Update([[maybe_unused]]const std::vector<glm::mat4> &enemyI
         }
     }
     /*TODO 
+        - Make this be flashin according to simulate rate of fire
+        - Make homing better when dealing with multiple enemies close together 
         - Figure out how to do collision
     */
 }
