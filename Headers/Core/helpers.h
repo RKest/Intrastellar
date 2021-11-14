@@ -22,7 +22,7 @@ namespace helpers
     std::vector<glm::vec2> transformStdVector(const std::vector<glm::vec3> &stdVec, const glm::mat4 &model);
     std::vector<glm::vec2> transformStdVector(const UntexturedMeshParams &params, const glm::mat4 &model);
     void transformMatVec(std::vector<glm::mat4> &vec, const glm::mat4 &model);
-    void transformMatVec(std::vector<glm::mat4> &vec, const ft yTransformVal);
+    void transformMatVec(std::vector<glm::mat4> &vec, const ft xTransformVal);
     glm::vec2 mouseCoordsTransformed(const glm::mat4 &transform, const ft transformScalingFactor = 1.0f);
     bool IsLBMPressed();
     ft det(const glm::vec2 &vec1, const glm::vec2 &vec2);
@@ -39,6 +39,7 @@ namespace helpers
     glm::mat4 rotateTowardsClosest(const std::vector<glm::mat4>&, const glm::mat4&, const ft, const ft);
     glm::mat4 rotateTowards(const glm::mat4&, const glm::mat4&, const ft);
     glm::vec2 vecDistanceAway(const glm::vec2&, const ft, const ft);
+    glm::mat4 rotateZ(const ft);
 
     template<typename ...T>
     void render(Shader &shader, Mesh &mesh, std::pair<const std::string, T> const&... params)

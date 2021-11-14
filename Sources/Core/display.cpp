@@ -13,7 +13,6 @@ Display::Display(int _width, int _height, const std::string &title)
 
     std::cout << "Constructed" << std::endl;
     SDL_Init(SDL_INIT_EVERYTHING);
-
     SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
@@ -23,7 +22,11 @@ Display::Display(int _width, int _height, const std::string &title)
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
     window = SDL_CreateWindow(title.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, _width, _height, SDL_WINDOW_OPENGL);
+    if(window == NULL) LOG(SDL_GetError());
     glContext = SDL_GL_CreateContext(window);
+
+    const GLenum err = glewInit();
+    if(err) LOG(glewGetErrorString(err));
 
 #ifdef _WIN32
     SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);

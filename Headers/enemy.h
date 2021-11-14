@@ -37,7 +37,7 @@ class EnemyBehaviuor
 public:
 	EnemyBehaviuor(EnemyManager &manager, bool isDefault = false);
 	virtual ~EnemyBehaviuor() = default;
-	virtual void Update(glm::mat4 &instanceTransform, std::vector<glm::mat4> &projInstanceTransforms) = 0;
+	virtual void Update(glm::mat4 &instanceTransform, std::vector<glm::mat4> &projInstanceTransforms,[[maybe_unused]]ui shotClockId) = 0;
 	[[nodiscard]]BehavoiurStatus EnemyBehaviuorStatus(const glm::mat4 &enemyModel);
 	inline bool &IsActive() { return _isActive; }
 protected:
@@ -48,13 +48,12 @@ protected:
 	const bool _isDefault;
 };
 
-using behavoiurPtrVec = std::vector<std::unique_ptr<EnemyBehaviuor>>;
-
+using behavoiurPtrVec_t = std::vector<std::unique_ptr<EnemyBehaviuor>>;
 class ChaseBehaviour : public EnemyBehaviuor
 {
 public:
 	ChaseBehaviour(EnemyManager &manager) : EnemyBehaviuor(manager, true) {}
-	void Update(glm::mat4 &instanceTransform, std::vector<glm::mat4> &projInstanceTransforms) override;
+	void Update(glm::mat4 &instanceTransform, std::vector<glm::mat4> &projInstanceTransforms,[[maybe_unused]]ui shotClockId) override;
 
 private:
 };
@@ -62,27 +61,25 @@ private:
 class ShootBehavoiur : public EnemyBehaviuor
 {
 public:
-	ShootBehavoiur(EnemyManager &manager) : EnemyBehaviuor(manager, false) {}
-	void Update(glm::mat4 &instanceTransform, std::vector<glm::mat4> &projInstanceTransforms) override;
+	ShootBehavoiur(EnemyManager &manager);
+	void Update(glm::mat4 &instanceTransform, std::vector<glm::mat4> &projInstanceTransforms,[[maybe_unused]]ui shotClockId) override;
 
 private:
 	bool HasMetPredicate(const glm::mat4 &enemyModel);
 	ui _latestShotIndex{};
-	ui _shotClockId;
 };
 
 class OrbiterBehaviour : public EnemyBehaviuor
 {
 public:
 	OrbiterBehaviour(EnemyManager &manager);
-	void Update(glm::mat4 &instanceTransform, std::vector<glm::mat4> &projInstanceTransforms) override;
+	void Update(glm::mat4 &instanceTransform, std::vector<glm::mat4> &projInstanceTransforms,[[maybe_unused]]ui shotClockId) override;
 
 private:
 	ui _latestShotIndex{};
-	ui _shotClockId;
 };
 
-inline static auto choseBehaviour(behavoiurPtrVec &behavoiurs, const glm::mat4 &enemyModel)
+inline static auto choseBehaviour(behavoiurPtrVec_t &behavoiurs, const glm::mat4 &enemyModel)
 {
 	const auto bbegin = behavoiurs.begin();
 	const auto bend = behavoiurs.end();
@@ -107,17 +104,19 @@ using orphanedProjPair_t = std::pair<ui, std::vector<glm::mat4>>;
 struct EnemyData
 {
 	EnemyData(EnemyManager &manager);
-	std::vector<glm::mat4>					instanceTransforms;
-	std::vector<ReqBoundingBox>				boundingBoxes;
-	std::vector<si>							healths;
-	behavoiurPtrVec							enemyBehaviours;
-	std::vector<std::vector<glm::mat4>>		projInstanceTransforms;
-	std::vector<orphanedProjPair_t> 		clockIdOrphanedProjsPairs;
-	std::vector<ui>							ids;
-	size_t size = 0;
+	std::vector<glm::mat4>				instanceTransforms;
+	std::vector<ReqBoundingBox>			boundingBoxes;
+	std::vector<si>						healths;
+	behavoiurPtrVec_t					enemyBehaviours;
+	std::vector<std::vector<glm::mat4>>	projInstanceTransforms;
+	std::vector<orphanedProjPair_t> 	clockIdOrphanedProjsPairs;
+	std::vector<ui>						shotClockIds;
+	std::vector<ui>						ids;
+
+	size_t 	size = 0;
 	void Clear();
 	void Erase(const ui index);
-	void Push(const glm::mat4 &instanceTransform, const UntexturedMeshParams &params, EnemyStats &stats);
+	void Push(const glm::mat4 &instanceTransform, const UntexturedMeshParams &params, EnemyStats &stats, bool hasProjectiles = false);
 private:
 	EnemyManager &_manager;
 };
@@ -125,18 +124,18 @@ private:
 class Enemy
 {
 public:
-	Enemy(EnemyManager &manager, behavoiurPtrVec &behaviours, const glm::vec3 &colour, const ui maxNoInstances);
+	Enemy(EnemyManager &manager, behavoiurPtrVec_t &behaviours, const glm::vec3 &colour, const ui maxNoInstances);
 	Enemy(const Enemy&) = delete;
 	Enemy(Enemy&&) = default;
 	void Update();
-	void Spawn(const glm::mat4 &instanceTransform);
+	void Spawn(const glm::mat4 &instanceTransform, bool hasProjectiles = false);
 	void Draw();
 	EnemyData data;
 private:
 	EnemyManager &_manager;
 	UntexturedInstancedMesh _mesh;
 	UntexturedInstancedMesh _projMesh;
-	behavoiurPtrVec _behaviours;
+	behavoiurPtrVec_t _behaviours;
 	const vecUni _colourUni;
 	const ui _maxNoInstances;
 };

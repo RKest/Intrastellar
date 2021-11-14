@@ -64,7 +64,7 @@ inline db ENEMY_ORPHANDED_PROJ_LIFETIME = 5000.0;
 constexpr const ft ENEMY_ORBIT_RADIUS = 5.0f;
 constexpr const ft ENEMY_ORBIT_CIRC = ENEMY_ORBIT_RADIUS * TAU;
 constexpr const ft ENEMY_ORBIT_TICS_TO_DESIERED_ANGLE = 1000.0F;
-constexpr const glm::mat4 ENEMY_ORBIT_TO_ORBIT_TRANSLATE{{0.0f,1.0f,0.0f,0.0f}, {-1.0f,0.0f,0.0f,0.0f},{0.0f, 0.0f, 1.0f, 0.0f},{0.0f, ENEMY_ORBIT_RADIUS + 0.1f, 0.0f, 1.0f}};
+constexpr const glm::mat4 ENEMY_ORBIT_TO_ORBIT_TRANSLATE{{0.0f,1.0f,0.0f,0.0f}, {-1.0f,0.0f,0.0f,0.0f},{0.0f, 0.0f, 1.0f, 0.0f},{ENEMY_ORBIT_RADIUS + 0.1f, 0.0f, 0.0f, 1.0f}};
 
 //Same in the file:///home/max/Documents/Intrastellar/Shaders/WeaponIcon/VS.glsl
 constexpr const ui WEAPONS_NO_WEAPONS = 10;

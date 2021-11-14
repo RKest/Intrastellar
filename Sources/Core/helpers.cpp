@@ -42,9 +42,9 @@ ft helpers::matDistance(const glm::mat4 &mat, const glm::vec2 &vec)
 {
 	return glm::distance(glm::vec2(mat * glm::vec4(0,0,0,1)), vec);
 }
-void helpers::transformMatVec(std::vector<glm::mat4> &vec, const ft yTransformVal)
+void helpers::transformMatVec(std::vector<glm::mat4> &vec, const ft xTransformVal)
 {
-	const glm::mat4 model = glm::translate(glm::vec3(0, yTransformVal, 0));
+	const glm::mat4 model = glm::translate(glm::vec3(xTransformVal, 0.0f, 0.0f));
 	std::for_each(vec.begin(), vec.end(), [&model](auto &mat){ mat *= model; });
 }
 
@@ -146,7 +146,7 @@ glm::mat4 helpers::rotateTowardsClosest(const std::vector<glm::mat4> &rotateTowa
 	if(glm::distance(rotateFromPos, closestPos) > minDistanceToTurn)
 		return _blankTransform; 
 		
-	return helpers::rotateTowards(rotateFromModel, *closestModel, maxTurningRadius);
+	return helpers::rotateTowards(*closestModel, rotateFromModel, maxTurningRadius);
 }
 
 glm::mat4 helpers::rotateTowards(const glm::mat4 &rotateTowardModel, const glm::mat4 &rotateFromModel, const ft maxTurningRadius)
@@ -165,4 +165,9 @@ glm::vec2 helpers::vecDistanceAway(const glm::vec2 &originPos, const ft distance
 {
 	const ft actualAngle = PI - angle;
 	return glm::vec2(originPos.x + distance * cosf(actualAngle), originPos.y + distance * sinf(actualAngle));
+}
+glm::mat4 helpers::rotateZ(const ft angle)
+{
+	const ft adjustedAngle = PI - angle;
+	return glm::rotate(adjustedAngle, glm::vec3(0,0,1));
 }

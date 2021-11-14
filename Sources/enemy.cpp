@@ -22,19 +22,23 @@ void EnemyBehaviuor::UpdateProjs(std::vector<glm::mat4> &projInstanceTransforms)
 	_manager.checkForProjIntersection(projInstanceTransforms);
 }
 
-void ChaseBehaviour::Update(glm::mat4 &instanceTransform, std::vector<glm::mat4> &projInstanceTransforms)
+void ChaseBehaviour::Update(glm::mat4 &instanceTransform, std::vector<glm::mat4> &projInstanceTransforms,[[maybe_unused]]ui shotClockId)
 {
 	instanceTransform *= helpers::transformTowards(instanceTransform, _manager._pcModel, static_cast<ft>(_manager._timer.Scale(_manager._enemyStats.speed)));
 	EnemyBehaviuor::UpdateProjs(projInstanceTransforms);
 }
 
-void ShootBehavoiur::Update(glm::mat4 &instanceTransform, std::vector<glm::mat4> &projInstanceTransforms)
+ShootBehavoiur::ShootBehavoiur(EnemyManager &manager) : EnemyBehaviuor(manager, false) 
+{
+}
+
+void ShootBehavoiur::Update(glm::mat4 &instanceTransform, std::vector<glm::mat4> &projInstanceTransforms,[[maybe_unused]]ui shotClockId)
 {
 	EnemyBehaviuor::UpdateProjs(projInstanceTransforms);
-	if(_manager._timer.HeapIsItTime(_shotClockId))
+	if(_manager._timer.HeapIsItTime(shotClockId))
 	{
-		const ft angle = helpers::angleBetweenTransforms(instanceTransform, _manager._pcModel);
-		const glm::mat4 aimTransform = glm::rotate(angle, glm::vec3(0,0,1));
+		const ft angle = helpers::angleBetweenVectors(instanceTransform, _manager._pcModel);
+		const glm::mat4 aimTransform = helpers::rotateZ(angle);
 		const glm::mat4 initProjTransform = instanceTransform * aimTransform;
 		helpers::pushToCappedVector(projInstanceTransforms, initProjTransform, _latestShotIndex, MAX_PROJ_AMOUNT_PER_ENEMY);
 	}
@@ -44,39 +48,21 @@ bool ShootBehavoiur::HasMetPredicate(const glm::mat4 &enemyModel)
 {
 	const glm::vec2 pcPos	{_manager._pcModel * glm::vec4(0,0,0,1)};
 	const glm::vec2 enemyPos{enemyModel 	   * glm::vec4(0,0,0,1)};
-	if(glm::distance(pcPos, enemyPos) < 15.0f)
-	{
-		if(!_isActive)
-		{
-			_manager._timer.InitHeapClock(_shotClockId, _manager._enemyStats.shotDelay);
-			_isActive = true;
-		}
-		return true;
-	}
-	else
-	{
-		if(_isActive)
-		{
-			_manager._timer.DestroyHeapClock(_shotClockId);
-			_isActive = false;
-		}
-		return false;
-	}
+	return glm::distance(pcPos, enemyPos) < 15.0f;
 }
 
 OrbiterBehaviour::OrbiterBehaviour(EnemyManager &manager) : EnemyBehaviuor(manager, true) 
 {
-	manager._timer.InitHeapClock(_shotClockId, manager._enemyStats.shotDelay);
 }
 
-void OrbiterBehaviour::Update(glm::mat4 &instanceTransform, std::vector<glm::mat4> &projInstanceTransforms)
+void OrbiterBehaviour::Update(glm::mat4 &instanceTransform, std::vector<glm::mat4> &projInstanceTransforms,[[maybe_unused]]ui shotClockId)
 {
 	_manager.checkForProjIntersection(projInstanceTransforms);
 
 	const ft scaledProjDistanceToTravelPerFrame = decl_cast(scaledProjDistanceToTravelPerFrame, _manager._timer.Scale(_manager._enemyStats.shotSpeed));
 	const glm::vec2 enemyPos{instanceTransform * glm::vec4(0,0,0,1)};
 	const size_t noProjectiles = projInstanceTransforms.size();
-	if(noProjectiles < MAX_PROJ_AMOUNT_PER_ORBIT && _manager._timer.HeapIsItTime(_shotClockId))
+	if(noProjectiles < MAX_PROJ_AMOUNT_PER_ORBIT && _manager._timer.HeapIsItTime(shotClockId))
 		projInstanceTransforms.push_back(instanceTransform);
 		
 	const ft desieredAngleBetweenShots = TAU / static_cast<ft>(noProjectiles);
@@ -94,7 +80,7 @@ void OrbiterBehaviour::Update(glm::mat4 &instanceTransform, std::vector<glm::mat
 		}
 		else
 		{
-			const ft projAngle = helpers::angleBetweenTransforms(instanceTransform, projInstanceTransform);
+			const ft projAngle = helpers::angleBetweenVectors(instanceTransform, projInstanceTransform);
 			orbitProjData.emplace_back(projAngle, projInstanceTransform);
 		}
 	}
@@ -117,7 +103,7 @@ void OrbiterBehaviour::Update(glm::mat4 &instanceTransform, std::vector<glm::mat
 		const ft angleToAdd = minAngleToTravel + _manager._timer.Scale(cappedAngleDifference);
 		const ft nextFrameAngle = i->first + angleToAdd;
 
-		const glm::mat4 nextFrameRotationTransform = instanceTransform * glm::rotate(nextFrameAngle, glm::vec3(0,0,1)) * ENEMY_ORBIT_TO_ORBIT_TRANSLATE;
+		const glm::mat4 nextFrameRotationTransform = instanceTransform * helpers::rotateZ(nextFrameAngle) * ENEMY_ORBIT_TO_ORBIT_TRANSLATE;
 		const glm::mat4 nextFrameTransform = nextFrameRotationTransform;
 		i->second.get() = nextFrameTransform;
 	}
@@ -148,6 +134,7 @@ void EnemyData::Clear()
 	healths						.clear();
 	projInstanceTransforms		.clear();
 	clockIdOrphanedProjsPairs	.clear();
+	shotClockIds				.clear();
 	ids							.clear();
 
 	size = 0;
@@ -165,28 +152,34 @@ void EnemyData::Erase(const ui index)
 	boundingBoxes			[index] = boundingBoxes			[size - 1];
 	projInstanceTransforms	[index] = projInstanceTransforms[size - 1];
 	healths					[index] = healths				[size - 1];
+	shotClockIds			[index] = shotClockIds			[size - 1];
 	ids						[index] = ids					[size - 1];
 	instanceTransforms		.pop_back();
 	boundingBoxes			.pop_back();
 	projInstanceTransforms	.pop_back();
 	healths					.pop_back();
+	shotClockIds			.pop_back();
 	ids						.pop_back();
 
 	size--;
 }
 
-void EnemyData::Push(const glm::mat4 &instanceTransform, const UntexturedMeshParams &params, EnemyStats &stats)
+void EnemyData::Push(const glm::mat4 &instanceTransform, const UntexturedMeshParams &params, EnemyStats &stats, bool hasProjectiles)
 {
 	instanceTransforms		.push_back(instanceTransform);
 	boundingBoxes			.emplace_back(params, instanceTransform);
 	projInstanceTransforms	.emplace_back();
 	healths					.push_back(stats.health);
+	shotClockIds			.emplace_back();
 	ids						.push_back(_manager.NextId());
 	
+	if(hasProjectiles)
+		_manager._timer.InitHeapClock(shotClockIds[size], stats.shotDelay);
+
 	size++;
 }
 
-Enemy::Enemy(EnemyManager &manager, behavoiurPtrVec &behaviours, const glm::vec3 &colour, const ui maxNoInstances)
+Enemy::Enemy(EnemyManager &manager, behavoiurPtrVec_t &behaviours, const glm::vec3 &colour, const ui maxNoInstances)
 	: _manager(manager), _mesh(manager._enemyParams, maxNoInstances), _projMesh(_manager._enemyProjParams, MAX_ENEMY_PROJ_AMOUNT),
 		_behaviours(std::move(behaviours)), _colourUni("colour", colour), _maxNoInstances(maxNoInstances), data(manager)
 {
@@ -197,7 +190,7 @@ void Enemy::Update()
 	for(ui i = 0; i < data.size; ++i)
 	{
 		const auto chosenBehavoiurIter = choseBehaviour(_behaviours, data.instanceTransforms[i]);
-		chosenBehavoiurIter->get()->Update(data.instanceTransforms[i], data.projInstanceTransforms[i]);
+		chosenBehavoiurIter->get()->Update(data.instanceTransforms[i], data.projInstanceTransforms[i], data.shotClockIds[i]);
 		data.boundingBoxes[i].UpdateCoords(data.instanceTransforms[i]);
 	}
 	for(ui i = 0; i < data.clockIdOrphanedProjsPairs.size(); ++i)
@@ -214,10 +207,10 @@ void Enemy::Update()
 	}
 }
 
-void Enemy::Spawn(const glm::mat4 &instanceTransform)
+void Enemy::Spawn(const glm::mat4 &instanceTransform, bool hasProjectiles)
 {
 	if(_maxNoInstances > data.size)
-		data.Push(instanceTransform, _manager._enemyParams, _manager._enemyStats);
+		data.Push(instanceTransform, _manager._enemyParams, _manager._enemyStats, hasProjectiles);
 }
 
 void Enemy::Draw()
@@ -241,9 +234,9 @@ EnemyManager::EnemyManager(helpers::Core &core, const UntexturedMeshParams &para
  : _camera(core.camera), _pcStats(core.stats), _timer(core.timer), _enemyStats(enemyStats), 
  	_enemyParams(params), _enemyProjParams(projParams), _pcInterface(pcInterface), _weaponInterfaces(weaponInterfaces)
 {
-	behavoiurPtrVec chaserVec;
-	behavoiurPtrVec shooterVec;
-	behavoiurPtrVec orbiterVec;
+	behavoiurPtrVec_t chaserVec;
+	behavoiurPtrVec_t shooterVec;
+	behavoiurPtrVec_t orbiterVec;
 	_enemies.reserve(EnemyTypeEnum::NO_ENEMY_TYPES);
 	chaserVec .push_back(std::make_unique<ChaseBehaviour>(*this));
 	shooterVec.push_back(std::make_unique<ChaseBehaviour>(*this));
@@ -327,9 +320,9 @@ void EnemyManager::Spawn()
 
 	const glm::mat4 instanceTransform = _enemyTransform.Model() * glm::translate(glm::vec3(enemyX, enemyY, 0));
 	if(!(_customRand.NextUi() % 10))
-		_enemies[SHOOTER_ENEMY].Spawn(instanceTransform);
+		_enemies[SHOOTER_ENEMY].Spawn(instanceTransform, true);
 	else if (!(_customRand.NextUi() % 10))
-		_enemies[ORBITER_ENEMY].Spawn(instanceTransform);
+		_enemies[ORBITER_ENEMY].Spawn(instanceTransform, true);
 	else
 		_enemies[CHASER_ENEMY] .Spawn(instanceTransform);
 }

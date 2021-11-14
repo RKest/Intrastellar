@@ -2,7 +2,6 @@
 #include "_config.h"
 #include <string>
 #include <SDL2/SDL.h>
-// #include <SDL_ttf.h>
 
 class Display
 {
@@ -13,9 +12,6 @@ public:
     void Update();
     void FetchMouseState(int &x, int &y, bool &isLbmPressed = _dummy_bool);
     bool ReadKeyboardState(SDL_Scancode code);
-
-    // void RenderText(const std::string &text, SDL_Rect textBox);
-    // TTF_Font* LoadFont(const std::string &path);
 
     enum { W, A, S, D, LCTRL, SPACE, TAB};
     SDL_Scancode *KeyScancodeMap();
@@ -34,10 +30,6 @@ private:
     float halfWidth, halfHeight;
     int mouseX = 0, mouseY = 0;
 
-    // TTF_Font *font;
-    // SDL_Renderer* renderer;
-
-    //Offset used to keep track of the position after the mouse wrapping from CenterMouseInWindow();
     int mouseXOffset = 0, mouseYOffset = 0;
     bool mouseEventFilter = false;
 
