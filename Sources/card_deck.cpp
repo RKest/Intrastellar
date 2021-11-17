@@ -9,17 +9,11 @@ void CardDeck::DrawCards()
 {
 	if(!_areCardsFullyDrawn)
 	{
-		const db remainingTime = _timer.RemainingTime(_overlayAlphaClockId);
+		const db remainingTime = m_overlayClock.RemainingTime();
 		const db remainingTimeFraction = 1.0 - remainingTime / _overlayTransitionTime;
 		const ft overlayAlpha = decl_cast(overlayAlpha, remainingTimeFraction) * OVERLAY_MAX_APLHA;
 		_overlayAlphaUni.second = overlayAlpha;
-		if(_timer.HeapIsItTime(_overlayAlphaClockId))
-		{
-			_timer.DestroyHeapClock(_overlayAlphaClockId);
-			_overlayAlphaUni.second = OVERLAY_MAX_APLHA;
-			_areCardsFullyDrawn = true;
-		}
-		
+		m_overlayClock.Inspect();
 	}
 	helpers::render(_overlayShader, _overlayMesh, _overlayAlphaUni);
 	helpers::render(_cardBorderShader, _cardBorderMesh, _cardBorderInstanceTransforms.data(), NO_CARDS, _blankTransform, _cardProjection);
@@ -39,7 +33,7 @@ void CardDeck::DrawCards()
 }
 
 CardDeck::CardDeck(helpers::Core &core, const UntexturedMeshParams &overlayParams, const UntexturedMeshParams &cardBorderParams)
-	:   _text(core.text), _timer(core.timer), _stats(core.stats), _customRand(CUSTOM_RAND_SEED), _overlayMesh(overlayParams),
+	:   _text(core.text), _stats(core.stats), _customRand(CUSTOM_RAND_SEED), _overlayMesh(overlayParams),
 	  _cardBorderParams(cardBorderParams), _cardBorderMesh(cardBorderParams, NO_CARDS)
 {
 	for (ui i = 0; i < NO_CARDS; ++i)
@@ -64,6 +58,12 @@ void CardDeck::RollCards()
 	_chosenCardIndices[2] = 9999;
 	ui rolledCards = 0;
 	ui rAcc = 0;
+
+	m_overlayClock = Clock(OVERLAY_TRANSITION_TIME, [this]{
+		_overlayAlphaUni.second = OVERLAY_MAX_APLHA;
+		_areCardsFullyDrawn = true;
+	});
+
 	_timer.InitHeapClock(_overlayAlphaClockId, _overlayTransitionTime);
 	while (rolledCards < NO_CARDS)
 	{

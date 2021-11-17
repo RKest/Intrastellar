@@ -38,7 +38,6 @@ public:
 protected:
 private:
     Text &_text;
-    Timer &_timer;
     PlayerStats  &_stats;
     CustomRand _customRand;
     Shader _cardBorderShader{"Shaders/CardBorder"};
@@ -59,8 +58,7 @@ private:
     bool _isLBMPressed = false;
 
     ftUni _overlayAlphaUni{"overlayAlpha", 0.0f};
-    db _overlayTransitionTime = OVERLAY_TRANSITION_TIME;
-    ui _overlayAlphaClockId{};
+    Clock m_overlayClock;
 
     void _choseCards(const ui cardIndex);
     std::vector<ui> _chosenCardIndices = std::vector<ui>(3, 9999);

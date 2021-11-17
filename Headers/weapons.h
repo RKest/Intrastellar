@@ -141,7 +141,6 @@ private:
     friend struct LaserBehaviour;
 
     Display                     &_display;
-    Timer                       &_timer;
     PlayerStats                 &_pcStats;
     Camera                      &_camera;
     TexturedInstancedMesh       _iconMesh;

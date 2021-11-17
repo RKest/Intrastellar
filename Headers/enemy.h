@@ -37,7 +37,7 @@ class EnemyBehaviuor
 public:
 	EnemyBehaviuor(EnemyManager &manager, bool isDefault = false);
 	virtual ~EnemyBehaviuor() = default;
-	virtual void Update(glm::mat4 &instanceTransform, std::vector<glm::mat4> &projInstanceTransforms,[[maybe_unused]]ui shotClockId) = 0;
+	virtual void Update(glm::mat4 &instanceTransform, std::vector<glm::mat4> &projInstanceTransforms,[[maybe_unused]]Clock &shotClock) = 0;
 	[[nodiscard]]BehavoiurStatus EnemyBehaviuorStatus(const glm::mat4 &enemyModel);
 	inline bool &IsActive() { return _isActive; }
 protected:
@@ -53,7 +53,7 @@ class ChaseBehaviour : public EnemyBehaviuor
 {
 public:
 	ChaseBehaviour(EnemyManager &manager) : EnemyBehaviuor(manager, true) {}
-	void Update(glm::mat4 &instanceTransform, std::vector<glm::mat4> &projInstanceTransforms,[[maybe_unused]]ui shotClockId) override;
+	void Update(glm::mat4 &instanceTransform, std::vector<glm::mat4> &projInstanceTransforms,[[maybe_unused]]Clock<> &shotClock) override;
 
 private:
 };
@@ -62,7 +62,7 @@ class ShootBehavoiur : public EnemyBehaviuor
 {
 public:
 	ShootBehavoiur(EnemyManager &manager);
-	void Update(glm::mat4 &instanceTransform, std::vector<glm::mat4> &projInstanceTransforms,[[maybe_unused]]ui shotClockId) override;
+	void Update(glm::mat4 &instanceTransform, std::vector<glm::mat4> &projInstanceTransforms,[[maybe_unused]]Clock<> &shotClock) override;
 
 private:
 	bool HasMetPredicate(const glm::mat4 &enemyModel);
@@ -73,7 +73,7 @@ class OrbiterBehaviour : public EnemyBehaviuor
 {
 public:
 	OrbiterBehaviour(EnemyManager &manager);
-	void Update(glm::mat4 &instanceTransform, std::vector<glm::mat4> &projInstanceTransforms,[[maybe_unused]]ui shotClockId) override;
+	void Update(glm::mat4 &instanceTransform, std::vector<glm::mat4> &projInstanceTransforms,[[maybe_unused]]Clock<> &shotClock) override;
 
 private:
 	ui _latestShotIndex{};
@@ -100,7 +100,7 @@ inline static auto choseBehaviour(behavoiurPtrVec_t &behavoiurs, const glm::mat4
 	throw std::runtime_error("ERROR:choseBehaviour: Failed to chose a behaviour");
 }
 
-using orphanedProjPair_t = std::pair<ui, std::vector<glm::mat4>>;
+using orphanedProjPair_t = std::pair<Clock<ui>, std::vector<glm::mat4>>;
 struct EnemyData
 {
 	EnemyData(EnemyManager &manager);
@@ -109,14 +109,14 @@ struct EnemyData
 	std::vector<si>						healths;
 	behavoiurPtrVec_t					enemyBehaviours;
 	std::vector<std::vector<glm::mat4>>	projInstanceTransforms;
-	std::vector<orphanedProjPair_t> 	clockIdOrphanedProjsPairs;
-	std::vector<ui>						shotClockIds;
+	std::vector<orphanedProjPair_t> 	clockOrphanedProjsParis;
+	std::vector<Clock>					shotClocks;
 	std::vector<ui>						ids;
 
 	size_t 	size = 0;
 	void Clear();
 	void Erase(const ui index);
-	void Push(const glm::mat4 &instanceTransform, const UntexturedMeshParams &params, EnemyStats &stats, bool hasProjectiles = false);
+	void Push(const glm::mat4 &instanceTransform, const UntexturedMeshParams &params, EnemyStats &stats, bool hasProjectiles);
 private:
 	EnemyManager &_manager;
 };
@@ -173,7 +173,6 @@ private:
 	Shader _enemyProjShader{"./Shaders/EnemyProjectile"};
 	Camera &_camera;
 	PlayerStats &_pcStats;
-	Timer &_timer;
 	EnemyData _enemyData{*this};
 	EnemyStats &_enemyStats;
 	const UntexturedMeshParams _enemyParams;

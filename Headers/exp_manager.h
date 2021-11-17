@@ -43,7 +43,6 @@ public:
 	
 protected:
 private:
-	Timer &_timer;
 	Camera &_camera;
 	CustomRand _customRand;
 	Shader _expParticleShader{"Shaders/Exp"};

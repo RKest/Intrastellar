@@ -33,13 +33,12 @@ int main()
 	PlayerStats playerStats = defaultStats;
 	EnemyStats enemyStats = defaultEnemyStats;
 	Text text("./Resources/Fonts/slkscr.ttf", SCREEN_WIDTH, SCREEN_HEIGHT);
-	Timer timer						(text, playerStats);
-	helpers::Core core				{display, camera, text, timer, playerStats};
+	helpers::Core core				{display, camera, text, playerStats};
 	ExpManager expManager			(core, expParams, expBarParams);
 	PlayerCharacter playerCharacter	(core, pcParams);
 	WeaponsManager weaponsManager	(core, weaponIconParams, overlayParams, blasterProjParams, rocketProjParams);
 	EnemyManager enemyManager		(core, enemyMeshParams, enemyStats, blasterProjParams, playerCharacter.Interface(), weaponsManager.WeaponInterfaces());
-	Controler controler				(display, camera, timer, playerCharacter.Interface()->Transform());
+	Controler controler				(display, camera, playerCharacter.Interface()->Transform());
 	CardDeck cardDeck				(core, overlayParams, cardBorderParams);
 
 	const auto render = [&]
@@ -49,18 +48,17 @@ int main()
 		playerCharacter.Draw();
 		weaponsManager.Draw();
 		playerCharacter.RenderScore();
-		timer.RenderFPS();
 	};
 
 	while (!display.IsClosed())
 	{
-		timer.RecordFrame();
+		Clock::RecordFrame();
 		glm::mat4 pcModel = playerCharacter.Interface()->Transform().Model();
 		controler.CaptureKeyboardPresses(playerCharacter.IsAlive());
 		controler.CaptureMouseMovement();
 
-		if (timer.IsItTime(Timer::ClocksEnum::SPAWN_CLOCK))
-			enemyManager.Spawn();
+		//tiem
+		enemyManager.Spawn();
 
 		weaponsManager.Update(pcModel, enemyManager.InstanceTransforms());
 		playerCharacter.Update();
@@ -76,7 +74,7 @@ int main()
 
 		while (cardDeck.AreCarsDrawn() && !display.IsClosed())
 		{
-			timer.RecordFrame();
+			Clock::RecordFrame();
 			render();
 			cardDeck.DrawCards();
 			display.Update();
@@ -86,7 +84,7 @@ int main()
 
 		while (!playerCharacter.IsAlive() && !display.IsClosed())
 		{
-			timer.RecordFrame();
+			Clock::RecordFrame();
 			render();
 
 			text.Render("GAME OVER!", (static_cast<ft>(SCREEN_WIDTH) / 2.0f) - 300.0f, (static_cast<ft>(SCREEN_HEIGHT) / 2.0f), 2.0f, glm::vec3(1));

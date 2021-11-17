@@ -102,8 +102,11 @@ void LaserBehaviour::Fire(const glm::mat4 &pcModel)
 
 void LaserBehaviour::Draw()
 {
-    _projMesh.Update(_laserBezierCurves.data(), _noBezierCurves);
-    helpers::render(_weaponPtr->_projShader, _projMesh, _blankTransform, _weaponPtr->_manager._camera.ViewProjection());
+    if(_weaponPtr->_manager._timer.HeapIsItTime(_laserLingerClockId))
+    {
+        _projMesh.Update(_laserBezierCurves.data(), _noBezierCurves);
+        helpers::render(_weaponPtr->_projShader, _projMesh, _blankTransform, _weaponPtr->_manager._camera.ViewProjection());
+    }
 }
 
 Weapon::Weapon(WeaponsManager &manager, UntexturedInstancedMesh &projMesh, WeaponBehaviour &behaviour, PlayerStats &weaponStats, Shader &projShader) 

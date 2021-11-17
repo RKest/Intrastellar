@@ -6,67 +6,74 @@
 #include <ratio>
 #include <list>
 #include <numeric>
+#include <functional>
 
-using _clock = std::chrono::steady_clock;
-using milliDuration = std::chrono::duration<db, std::milli>;
-using timePt = _clock::time_point;
+using g_clock_t = std::chrono::steady_clock;
+using milliDuration_t = std::chrono::duration<db, std::milli>;
+using timePt_t = g_clock_t::time_point;
+template <typename... T>
+using clockCB_t = std::function<void(T...)>;
 
-struct Clock
-{
-	Clock(db &clockDelay, timePt &latestFrameTimePoint);
-	bool IsItTime(const db scalingFactor);
-	db RemainingTime();
-
-	db &clockDelayDB;
-	milliDuration clockDelay;
-	timePt &latestFrameTimePoint;
-	timePt lastRecordedPoint;
-};
-
-class Timer
+//Clock
+template <typename... T>
+class Clock
 {
 public:
-	Timer(Text &text, PlayerStats &stats);
-	enum ClocksEnum : ui
+	Clock() = default;
+	Clock(const db delay, const clockCB_t<T...> cb)
+		: m_delayDB(delay), m_cb(cb), m_delay(delay) {}
+	inline void Inspect(T... ts)
 	{
-		SHOT_CLOCK,
-		SPAWN_CLOCK,
-		NO_CLOCKS
-	};
+		if (s_wasScalingFactorChanged)
+			m_delay = static_cast<milliDuration_t>(RemainingTime() * s_scalingChangeFactor);
 
-	void InitHeapClock(ui &heapClockId, db &clockDelay);
-	void DestroyHeapClock(const ui clockId);
-	bool HeapIsItTime(const ui heapClockId);
-	db RemainingTime(ui heapClockId);
-
-	void RenderFPS();
-	void RecordFrame();
-	bool IsItTime(ClocksEnum onWhichClock);
-	void SetScalingFactor(const db arg);
-	template<typename T>
-	inline T Scale(T number)
-	{
-		return (number * static_cast<T>(lastFrameDuration.count() * scalingFactor));
+		if (std::chrono::duration_cast<milliDuration_t>(s_lastFramePt - m_latestTimePoint) > m_delay)
+		{
+			m_delay = static_cast<milliDuration_t>(m_delay / s_scalingFactor);
+			m_latestTimePoint = s_lastFramePt;
+			m_cb(ts...);
+		}
 	}
-	~Timer();
+	inline void ManualInspect(auto cb)
+	{
+		if (s_wasScalingFactorChanged)
+			m_delay = static_cast<milliDuration_t>(RemainingTime() * s_scalingChangeFactor);
 
-protected:
+		if (std::chrono::duration_cast<milliDuration_t>(s_lastFramePt - m_latestTimePoint) > m_delay)
+		{
+			m_delay = static_cast<milliDuration_t>(m_delay / s_scalingFactor);
+			m_latestTimePoint = s_lastFramePt;
+			cb();
+		}
+	}
+	db RemainingTime();
+	static void RecordFrame();
+	static void SetScalngFactor(cosnt db arg);
+	template <typename T>
+	static inline T Scale(T num)
+	{
+		return (num * static_cast<T>(s_durationSinceLastFrame.count() * s_scalingFactor));
+	}
+
 private:
-	Text &text;
+	const db m_delayDB;
+	const clockCB_t<T...> m_cb;
+	milliDuration_t m_delay;
+	timePt_t m_latestTimePoint;
 
-	timePt lastFramePt;
-	milliDuration lastFrameDuration;
+	static timePt_t s_lastFramePt = g_clock_t::now();
+	static milliDuration_t s_durationSinceLastFrame;
 
-	std::vector<Clock> clocks;
-	ui newestHeapClockId = 0;
-	std::vector<Clock *> heapClocks;
+	// Scaling
+	static db s_scalingFactor;
+	static db s_scalingChangeFactor{1.0};
+	static bool s_wasScalingFactorChanged{};
 
-	db scalingFactor = 1.0;
-
-	//FPS
-	milliDuration fpsDuration = milliDuration(0.0);
-	std::list<ui> pastFPSValues;
-	ui framesThisSecond = 0;
-	const ui maxPolledFrames = 5;
+	// FPS
+	static milliDuration_t s_fpsDuration = milliDuration_t(0.0);
+	static std::list<ui> s_pastFPSValues;
+	static ui s_framesThisSecond{};
+	static const ui s_maxPolledFrames{5};
 };
 
+using clk = Clock<>;

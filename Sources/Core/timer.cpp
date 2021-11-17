@@ -1,15 +1,48 @@
 #include "Core/timer.h"
 
-Clock::Clock(db &clockDelay, timePt &latestFrameTimePoint)
+db Clock::RemainingTime()
+{
+	return m_delay.count() - std::chrono::duration_cast<milliDuration_t>(s_lastFramePt - m_latestTimePoint).count();
+}
+
+void Clock::RecordFrame()
+{
+	timePt_t newFramePt = g_clock_t::now();
+	s_durationSinceLastFrame = newFramePt - s_lastFramePt;
+	s_lastFramePt = newFramePt;
+
+	//FPS
+	s_fpsDuration += s_durationSinceLastFrame;
+	s_framesThisSecond++;
+	if(s_fpsDuration > milliDuration_t(1000.0))
+	{
+		s_fpsDuration = milliDuration_t(0.0);
+		s_pastFPSValues.push_back(s_framesThisSecond);
+		if(s_pastFPSValues.size() >= s_maxPolledFrames)
+			s_pastFPSValues.pop_front();
+		s_framesThisSecond = 0;
+	}
+}
+
+void Clock::SetScalngFactor(const db arg)
+{
+	if(s_scalingFactor != arg)
+	{
+		s_scalingChangeFactor = s_scalingFactor * arg;
+		scalingFactor = arg;
+	}
+}
+
+Clock::Clock(db &clockDelay, timePt_t &latestFrameTimePoint)
  : clockDelayDB(clockDelay), clockDelay(clockDelay), latestFrameTimePoint(latestFrameTimePoint), lastRecordedPoint(latestFrameTimePoint)
 {
 }
 
 bool Clock::IsItTime(const db scalingFactor)
 {
-	if(std::chrono::duration_cast<milliDuration>(latestFrameTimePoint - lastRecordedPoint) > clockDelay)
+	if(std::chrono::duration_cast<milliDuration_t>(latestFrameTimePoint - lastRecordedPoint) > clockDelay)
 	{
-		clockDelay = static_cast<milliDuration>(clockDelayDB / scalingFactor);
+		clockDelay = static_cast<milliDuration_t>(clockDelayDB / scalingFactor);
 		lastRecordedPoint = latestFrameTimePoint;
 		return true;
 	}
@@ -19,7 +52,7 @@ bool Clock::IsItTime(const db scalingFactor)
 
 db Clock::RemainingTime()
 {
-	return clockDelay.count() - std::chrono::duration_cast<milliDuration>(latestFrameTimePoint - lastRecordedPoint).count();
+	return clockDelay.count() - std::chrono::duration_cast<milliDuration_t>(latestFrameTimePoint - lastRecordedPoint).count();
 }
 
 Timer::Timer(Text &text, PlayerStats &stats)
@@ -36,7 +69,7 @@ void Timer::SetScalingFactor(const db arg)
 		const db remainingScaleChange = scalingFactor * arg;
 		for(Clock &clock: clocks)
 		{
-			clock.clockDelay = static_cast<milliDuration>(clock.RemainingTime() * remainingScaleChange);
+			clock.clockDelay = static_cast<milliDuration_t>(clock.RemainingTime() * remainingScaleChange);
 		}
 		scalingFactor = arg;
 	}
@@ -64,16 +97,16 @@ void Timer::RenderFPS()
 
 void Timer::RecordFrame()
 {
-	timePt newFramePt = _clock::now();
+	timePt_t newFramePt = _clock::now();
 	lastFrameDuration = newFramePt - lastFramePt;
 	lastFramePt = newFramePt;
 
 	//FPS
 	fpsDuration += lastFrameDuration;
 	framesThisSecond++;
-	if(fpsDuration > milliDuration(1000.0))
+	if(fpsDuration > milliDuration_t(1000.0))
 	{
-		fpsDuration = milliDuration(0.0);
+		fpsDuration = milliDuration_t(0.0);
 		pastFPSValues.push_back(framesThisSecond);
 		if(pastFPSValues.size() >= maxPolledFrames)
 			pastFPSValues.pop_front();

@@ -18,11 +18,11 @@ BehavoiurStatus EnemyBehaviuor::EnemyBehaviuorStatus(const glm::mat4 &enemyModel
 
 void EnemyBehaviuor::UpdateProjs(std::vector<glm::mat4> &projInstanceTransforms)
 {
-	helpers::transformMatVec(projInstanceTransforms, _manager._timer.Scale(_manager._enemyStats.shotSpeed));
+	helpers::transformMatVec(projInstanceTransforms, clk::Scale(_manager._enemyStats.shotSpeed));
 	_manager.checkForProjIntersection(projInstanceTransforms);
 }
 
-void ChaseBehaviour::Update(glm::mat4 &instanceTransform, std::vector<glm::mat4> &projInstanceTransforms,[[maybe_unused]]ui shotClockId)
+void ChaseBehaviour::Update(glm::mat4 &instanceTransform, std::vector<glm::mat4> &projInstanceTransforms,[[maybe_unused]]Clock<> &shotClock)
 {
 	instanceTransform *= helpers::transformTowards(instanceTransform, _manager._pcModel, static_cast<ft>(_manager._timer.Scale(_manager._enemyStats.speed)));
 	EnemyBehaviuor::UpdateProjs(projInstanceTransforms);
@@ -32,16 +32,15 @@ ShootBehavoiur::ShootBehavoiur(EnemyManager &manager) : EnemyBehaviuor(manager, 
 {
 }
 
-void ShootBehavoiur::Update(glm::mat4 &instanceTransform, std::vector<glm::mat4> &projInstanceTransforms,[[maybe_unused]]ui shotClockId)
+void ShootBehavoiur::Update(glm::mat4 &instanceTransform, std::vector<glm::mat4> &projInstanceTransforms,[[maybe_unused]]Clock<> &shotClock)
 {
 	EnemyBehaviuor::UpdateProjs(projInstanceTransforms);
-	if(_manager._timer.HeapIsItTime(shotClockId))
-	{
+	shotClock.ManualInspect([this, &instanceTransform, &projInstanceTransforms]{
 		const ft angle = helpers::angleBetweenVectors(instanceTransform, _manager._pcModel);
 		const glm::mat4 aimTransform = helpers::rotateZ(angle);
 		const glm::mat4 initProjTransform = instanceTransform * aimTransform;
 		helpers::pushToCappedVector(projInstanceTransforms, initProjTransform, _latestShotIndex, MAX_PROJ_AMOUNT_PER_ENEMY);
-	}
+	});
 }
 
 bool ShootBehavoiur::HasMetPredicate(const glm::mat4 &enemyModel)
@@ -55,16 +54,19 @@ OrbiterBehaviour::OrbiterBehaviour(EnemyManager &manager) : EnemyBehaviuor(manag
 {
 }
 
-void OrbiterBehaviour::Update(glm::mat4 &instanceTransform, std::vector<glm::mat4> &projInstanceTransforms,[[maybe_unused]]ui shotClockId)
+void OrbiterBehaviour::Update(glm::mat4 &instanceTransform, std::vector<glm::mat4> &projInstanceTransforms,[[maybe_unused]]Clock<> &shotClock)
 {
 	_manager.checkForProjIntersection(projInstanceTransforms);
 
 	const ft scaledProjDistanceToTravelPerFrame = decl_cast(scaledProjDistanceToTravelPerFrame, _manager._timer.Scale(_manager._enemyStats.shotSpeed));
 	const glm::vec2 enemyPos{instanceTransform * glm::vec4(0,0,0,1)};
 	const size_t noProjectiles = projInstanceTransforms.size();
-	if(noProjectiles < MAX_PROJ_AMOUNT_PER_ORBIT && _manager._timer.HeapIsItTime(shotClockId))
-		projInstanceTransforms.push_back(instanceTransform);
-		
+	if(noProjectiles < MAX_PROJ_AMOUNT_PER_ORBIT)
+	{
+		shotClock.ManualInspect([&projInstanceTransforms, &instanceTransform]{
+			projInstanceTransforms.push_back(instanceTransform);
+		});
+	}
 	const ft desieredAngleBetweenShots = TAU / static_cast<ft>(noProjectiles);
 	std::vector<std::pair<ft, std::reference_wrapper<glm::mat4>>> orbitProjData;
 	std::vector<std::reference_wrapper<glm::mat4>> movingToOrbitProjData;
@@ -126,15 +128,12 @@ EnemyData::EnemyData(EnemyManager &manager) : _manager(manager)
 
 void EnemyData::Clear()
 {
-	for(auto &pair : clockIdOrphanedProjsPairs)
-		_manager._timer.DestroyHeapClock(pair.first);
-
 	instanceTransforms			.clear();
 	boundingBoxes				.clear();
 	healths						.clear();
 	projInstanceTransforms		.clear();
-	clockIdOrphanedProjsPairs	.clear();
-	shotClockIds				.clear();
+	clockOrphanedProjsParis		.clear();
+	shotClocks					.clear();
 	ids							.clear();
 
 	size = 0;
@@ -142,23 +141,29 @@ void EnemyData::Clear()
 
 void EnemyData::Erase(const ui index)
 {
-	ui orphanedProjClockId;
-	_manager._timer.InitHeapClock(orphanedProjClockId, ENEMY_ORPHANDED_PROJ_LIFETIME);
-	clockIdOrphanedProjsPairs.emplace_back(orphanedProjClockId, std::vector<glm::mat4>());
-	clockIdOrphanedProjsPairs.back().second.insert(end(clockIdOrphanedProjsPairs.back().second), 
+	//Can be inlined but would be very unclean
+	Clock<ui> orphanedClock(ENEMY_ORPHANDED_PROJ_LIFETIME, [this](ui i){
+		const size_t noOrphanedProjs = clockOrphanedProjsParis.size();
+		if(i != noOrphanedProjs - 1)
+			clockOrphanedProjsParis[i] = clockOrphanedProjsParis[noOrphanedProjs - 1];
+		clockOrphanedProjsParis.pop_back();
+	});
+
+	clockOrphanedProjsParis.emplace_back(orphanedClock, std::vector<glm::mat4>());
+	clockOrphanedProjsParis.back().second.insert(end(clockOrphanedProjsParis.back().second), 
 		begin(projInstanceTransforms[index]), end(projInstanceTransforms[index]));
 
 	instanceTransforms		[index] = instanceTransforms	[size - 1];
 	boundingBoxes			[index] = boundingBoxes			[size - 1];
 	projInstanceTransforms	[index] = projInstanceTransforms[size - 1];
 	healths					[index] = healths				[size - 1];
-	shotClockIds			[index] = shotClockIds			[size - 1];
+	shotClocks				[index] = shotClocks			[size - 1];
 	ids						[index] = ids					[size - 1];
 	instanceTransforms		.pop_back();
 	boundingBoxes			.pop_back();
 	projInstanceTransforms	.pop_back();
 	healths					.pop_back();
-	shotClockIds			.pop_back();
+	shotClocks				.pop_back();
 	ids						.pop_back();
 
 	size--;
@@ -170,18 +175,15 @@ void EnemyData::Push(const glm::mat4 &instanceTransform, const UntexturedMeshPar
 	boundingBoxes			.emplace_back(params, instanceTransform);
 	projInstanceTransforms	.emplace_back();
 	healths					.push_back(stats.health);
-	shotClockIds			.emplace_back();
+	shotClocks				.emplace_back();
 	ids						.push_back(_manager.NextId());
-	
-	if(hasProjectiles)
-		_manager._timer.InitHeapClock(shotClockIds[size], stats.shotDelay);
 
 	size++;
 }
 
 Enemy::Enemy(EnemyManager &manager, behavoiurPtrVec_t &behaviours, const glm::vec3 &colour, const ui maxNoInstances)
-	: _manager(manager), _mesh(manager._enemyParams, maxNoInstances), _projMesh(_manager._enemyProjParams, MAX_ENEMY_PROJ_AMOUNT),
-		_behaviours(std::move(behaviours)), _colourUni("colour", colour), _maxNoInstances(maxNoInstances), data(manager)
+	: data(manager), _manager(manager), _mesh(manager._enemyParams, maxNoInstances), _projMesh(_manager._enemyProjParams, MAX_ENEMY_PROJ_AMOUNT),
+		_behaviours(std::move(behaviours)), _colourUni("colour", colour), _maxNoInstances(maxNoInstances)
 {
 }
 
@@ -190,20 +192,14 @@ void Enemy::Update()
 	for(ui i = 0; i < data.size; ++i)
 	{
 		const auto chosenBehavoiurIter = choseBehaviour(_behaviours, data.instanceTransforms[i]);
-		chosenBehavoiurIter->get()->Update(data.instanceTransforms[i], data.projInstanceTransforms[i], data.shotClockIds[i]);
+		chosenBehavoiurIter->get()->Update(data.instanceTransforms[i], data.projInstanceTransforms[i], data.shotClocks[i]);
 		data.boundingBoxes[i].UpdateCoords(data.instanceTransforms[i]);
 	}
-	for(ui i = 0; i < data.clockIdOrphanedProjsPairs.size(); ++i)
+	for(ui i = 0; i < data.clockOrphanedProjsParis.size(); ++i)
 	{
-		if(_manager._timer.HeapIsItTime(data.clockIdOrphanedProjsPairs[i].first))
-		{
-			const size_t noOrphanedProjs = data.clockIdOrphanedProjsPairs.size();
-			if(i != noOrphanedProjs - 1)
-				data.clockIdOrphanedProjsPairs[i] = data.clockIdOrphanedProjsPairs[noOrphanedProjs - 1];
-			data.clockIdOrphanedProjsPairs.pop_back();
-		}
-		helpers::transformMatVec(data.clockIdOrphanedProjsPairs[i].second, _manager._timer.Scale(_manager._enemyStats.shotSpeed));
-		_manager.checkForProjIntersection(data.clockIdOrphanedProjsPairs[i].second);
+		data.clockOrphanedProjsParis[i].first.Inspect();
+		helpers::transformMatVec(data.clockOrphanedProjsParis[i].second, Clock::Scale(_manager._enemyStats.shotSpeed));
+		_manager.checkForProjIntersection(data.clockOrphanedProjsParis[i].second);
 	}
 }
 
@@ -217,11 +213,11 @@ void Enemy::Draw()
 {
 	helpers::render(_manager._enemyShader, _mesh, data.instanceTransforms.data(), data.size, _blankTransform, _manager._camera.ViewProjection(), 
 		_colourUni);
-	if(!data.clockIdOrphanedProjsPairs.empty() || !data.projInstanceTransforms.empty())
+	if(!data.clockOrphanedProjsParis.empty() || !data.projInstanceTransforms.empty())
 	{
 		const auto flattenedVec = helpers::flattenVec(data.projInstanceTransforms);
 		std::vector<glm::mat4> projectilesVector;
-		std::for_each(begin(data.clockIdOrphanedProjsPairs), end(data.clockIdOrphanedProjsPairs),
+		std::for_each(begin(data.clockOrphanedProjsParis), end(data.clockOrphanedProjsParis),
 			[&projectilesVector](auto& pair){ projectilesVector.insert(projectilesVector.end(), pair.second.begin(), pair.second.end()); });
 		projectilesVector.insert(end(projectilesVector), begin(flattenedVec), end(flattenedVec));
 		helpers::render(_manager._enemyProjShader, _projMesh, projectilesVector.data(), projectilesVector.size(), _blankTransform, 
@@ -231,7 +227,7 @@ void Enemy::Draw()
 
 EnemyManager::EnemyManager(helpers::Core &core, const UntexturedMeshParams &params, EnemyStats &enemyStats, const UntexturedMeshParams &projParams, 
 		IPlayerCharacter *pcInterface, weaponInterfaceArray_t &weaponInterfaces)
- : _camera(core.camera), _pcStats(core.stats), _timer(core.timer), _enemyStats(enemyStats), 
+ : _camera(core.camera), _pcStats(core.stats), _enemyStats(enemyStats), 
  	_enemyParams(params), _enemyProjParams(projParams), _pcInterface(pcInterface), _weaponInterfaces(weaponInterfaces)
 {
 	behavoiurPtrVec_t chaserVec;

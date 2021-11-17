@@ -176,7 +176,6 @@ namespace helpers
         Display &display;
         Camera &camera;
         Text &text;
-        Timer &timer;
         PlayerStats &stats;
     };
 
