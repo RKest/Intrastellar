@@ -39,14 +39,11 @@ void PlayerCharacter::RenderScore()
 
 void PlayerCharacter::Update()
 {
-	if(_isInvincible && _timer.HeapIsItTime(_invincibilityClockId))
-	{
-		_isInvincible = false;
-		_timer.DestroyHeapClock(_invincibilityClockId);
-	}
+	if(_isInvincible)
+		m_invincibilityClock.Inspect();
 
 	if(_isInvincible)
-		_pcAlphaValue.second = _setAlpha(_timer.RemainingTime(_invincibilityClockId));
+		_pcAlphaValue.second = _setAlpha(m_invincibilityClock.RemainingTime());
 	else
 		_pcAlphaValue.second = 1.0f;
 
@@ -67,7 +64,9 @@ void PlayerCharacter::_pcIntersection()
 			_isAlive = false;
 		else
 		{
-			_timer.InitHeapClock(_invincibilityClockId, _invincibilityDuration);
+			m_invincibilityClock = Clock(_invincibilityDuration, [this]{
+				_isInvincible = false;
+			});
 			_isInvincible = true;
 		}
 	}

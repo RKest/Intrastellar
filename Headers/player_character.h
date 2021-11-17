@@ -47,7 +47,8 @@ private:
 	bool _isAlive{true};
 	bool _isInvincible{false};
 	db _invincibilityDuration{400.0};
-	ui _invincibilityClockId;
+
+	Clock<> m_invincibilityClock;
 
 	ui _enemiesShotCounter{};
 

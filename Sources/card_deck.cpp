@@ -63,8 +63,7 @@ void CardDeck::RollCards()
 		_overlayAlphaUni.second = OVERLAY_MAX_APLHA;
 		_areCardsFullyDrawn = true;
 	});
-
-	_timer.InitHeapClock(_overlayAlphaClockId, _overlayTransitionTime);
+	
 	while (rolledCards < NO_CARDS)
 	{
 		const auto r = _customRand.NextU32(0, _cardWeightSum);
