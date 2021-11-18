@@ -12,15 +12,14 @@
 class Controler
 {
 public:
-    Controler(Display &display, Transform &transform) 
-    : display(display), transform(transform) {};
+    Controler(Transform &transform) 
+    : transform(transform) {};
     void CaptureMouseMovement();
     void CaptureKeyboardPresses(bool &isPcAlive);
-    inline bool IsTabPressed() { return display.ReadKeyboardState(codes[display.TAB]); }
+    inline bool IsTabPressed() { return Display::ReadKeyboardState(codes[Display::TAB]); }
 
 protected:
 private:
-    Display &display;
     Transform &transform;
 
     SDL_Scancode *codes = display.KeyScancodeMap();

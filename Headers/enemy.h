@@ -155,6 +155,7 @@ public:
 	void UpdateBehaviour(const std::vector<glm::vec2> &pcPositions, std::function<void(const glm::mat4&, const ui)> fatalityCallback);
 	std::vector<glm::mat4> InstanceTransforms();
 	inline ui NextId() { return _newestEnemyId++; }
+	inline auto Interface() { return interface; }
 
 private:
 	friend class Enemy;
@@ -163,6 +164,7 @@ private:
 	friend class ChaseBehaviour;
 	friend class ShootBehavoiur;
 	friend class OrbiterBehaviour;
+	friend class EnemyInterface;
 	enum EnemyTypeEnum : std::size_t
 	{
 		CHASER_ENEMY,
@@ -182,6 +184,7 @@ private:
 	IPlayerCharacter _pcInterface;
 	weaponInterfaceArray_t &_weaponInterfaces;
 	Clock m_spawnClock;
+	EnemyInterface *m_interfacePtr;
 
 	glm::mat4 _pcModel;
 	Transform _enemyTransform;
@@ -192,4 +195,15 @@ private:
 
 	void checkForProjIntersection(std::vector<glm::mat4> &projInstanceTransforms);
 	void m_spawn();
+	void m_hit(const ui enemyIndex);
+};
+
+using namespace std::placeholders;
+struct EnemyInterface
+{
+	EnemyInterface(EnemyManager *managerPtr) : m_managerPtr(managerPtr) {}
+	inline void EnemyHit() { return enemyHit; }
+private:
+	DECL_INST(enemyHit, std::bind(&EnemyManager::m_hit, m_managerPtr, _1));
+	EnemyManager *m_managerPtr;
 };

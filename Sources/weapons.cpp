@@ -49,6 +49,7 @@ void LaserBehaviour::Update([[maybe_unused]]const std::vector<glm::mat4> &enemyI
     m_laserLingerClock.Inspect();
     if(m_hasLaserFired)
     {
+        std::vector<decltype(enemyInstanceTransforms)::const_iterator> alreadyHitIters;
         _noBezierCurves         = 1;
         m_hasLaserFired         = false;
         _laserBezierCurvesSZ    = 0;
@@ -58,10 +59,15 @@ void LaserBehaviour::Update([[maybe_unused]]const std::vector<glm::mat4> &enemyI
         for (ui i = 0; i < MAX_PROJ_AMOUNT; ++i)
         {
             const glm::vec2 firePos{_laserOrigin * glm::vec4(0,0,0,1)};
-            std::vector<glm::mat4> filteredVector;
+            std::vector<decltype(enemyInstanceTransforms)::const_iterator> filteredVector;
             filteredVector.reserve(MAX_NO_ENEMIES);
-            std::copy_if(cbegin(enemyInstanceTransforms), cend(enemyInstanceTransforms), std::back_inserter(filteredVector), [this, fireAngle](auto & mat){
-                return helpers::diff(helpers::angleBetweenVectors(_laserOrigin, mat), fireAngle) < WEAPONS_LASER_HOMING_CONE_ANGLE; 
+            helpers::copy_iter_if(cbegin(enemyInstanceTransforms), cend(enemyInstanceTransforms), std::back_inserter(filteredVector), [this, fireAngle](auto it){
+                if(helpers::contains(alreadyHitIters, it))
+                    return false;
+                const ft distanceToEnemy = helpers::matDistance(_laserOrigin, *it);
+                const ft desieredAngle = WEAPONS_LASER_MAX_HOMING_ANGLE / std::powf(distanceToEnemy + 0.001f, 2.0f);
+                const ft minAcceptableAngle = std::clamp(desieredAngle, WEAPONS_LASER_MIN_HOMING_ANGLE, WEAPONS_LASER_MAX_HOMING_ANGLE);
+                return helpers::diff(helpers::angleBetweenVectors(_laserOrigin, *it), fireAngle) < minAcceptableAngle; 
             });
             if(filteredVector.empty())
             {
@@ -70,17 +76,22 @@ void LaserBehaviour::Update([[maybe_unused]]const std::vector<glm::mat4> &enemyI
                 _laserBezierCurves[_laserBezierCurvesSZ++] = helpers::vecDistanceAway(firePos, 99.0f, fireAngle);
                 break;
             }
-            const auto closestConeEnemy = std::min_element(cbegin(filteredVector), cend(filteredVector), [firePos](auto &m1, auto &m2){
-                return helpers::matDistance(m1, firePos) < helpers::matDistance(m2, firePos);
+            const auto closestConeEnemyIter = std::min_element(cbegin(filteredVector), cend(filteredVector), [firePos](auto &m1, auto &m2){
+                return helpers::matDistance(*m1, firePos) < helpers::matDistance(*m2, firePos);
             });
-            const glm::vec2 enemyPos{*closestConeEnemy * glm::vec4(0,0,0,1)};
+
+            const ui hitIndex = std::distance(cbegin(enemyInstanceTransforms), *closestConeEnemyIter);
+            alreadyHitIters.push_back(*closestConeEnemyIter);
+            (_manager.m_enemyInterfacePtr->EnemyHit())(hitIndex);
+
+            const glm::vec2 enemyPos{**closestConeEnemyIter * glm::vec4(0,0,0,1)};
             const ft fireDistance = distance(firePos, enemyPos);
             const ft distanceToControl = fireDistance / 3.0f;
             _laserBezierCurves[_laserBezierCurvesSZ++] = helpers::vecDistanceAway(firePos, distanceToControl, fireAngle);
             _laserBezierCurves[_laserBezierCurvesSZ++] = helpers::vecDistanceAway(firePos, distanceToControl * 2.0f, fireAngle);
             _laserBezierCurves[_laserBezierCurvesSZ++] = enemyPos;
             fireAngle = helpers::angleBetweenVectors(_laserBezierCurves[_laserBezierCurvesSZ - 2], _laserBezierCurves[_laserBezierCurvesSZ - 1]);
-            _laserOrigin = *closestConeEnemy;
+            _laserOrigin = **closestConeEnemyIter;
             _noBezierCurves++;
         }
     }
@@ -162,8 +173,8 @@ bool Weapon::_projHit(const ui projIndex, const ui enemyIndex)
 
 WeaponsManager::WeaponsManager(helpers::Core &core, const TexturedMeshParams &iconMeshParams, const UntexturedMeshParams &overlayMeshParams, 
         const UntexturedMeshParams &blasterProjParams, const UntexturedMeshParams &rocketMeshParams)
-    : _display(core.display), _pcStats(core.stats), _iconMesh(iconMeshParams, WEAPONS_NO_WEAPONS), _overlayMesh(overlayMeshParams), 
-        _blasterProjMesh(blasterProjParams, MAX_PROJ_AMOUNT), _rocketProjMesh(rocketMeshParams, MAX_PROJ_AMOUNT), _laserProjMesh(blasterProjParams, MAX_PROJ_AMOUNT)
+    : _pcStats(core.stats), _iconMesh(iconMeshParams, WEAPONS_NO_WEAPONS), _overlayMesh(overlayMeshParams), 
+    _blasterProjMesh(blasterProjParams, MAX_PROJ_AMOUNT), _rocketProjMesh(rocketMeshParams, MAX_PROJ_AMOUNT), _laserProjMesh(blasterProjParams, MAX_PROJ_AMOUNT)
 {
     constexpr const char *basePath = "./Resources/Textures/WeaponIcons/";
     const ft baseLeftIconMargin = (SCREEN_WIDTH - _iconRealestate * static_cast<ft>(WEAPONS_NO_WEAPONS)) / 2.0f;
@@ -200,7 +211,7 @@ void WeaponsManager::Update(const glm::mat4 &pcModel, const std::vector<glm::mat
 
 void WeaponsManager::Draw()
 {
-    if(!_isThereWeaponCooldown && _display.ReadKeyboardState(_display.KeyScancodeMap()[_display.TAB]))
+    if(!_isThereWeaponCooldown && Display::ReadKeyboardState(Display::KeyScancodeMap()[Display::TAB]))
     {
         if(!_isWeaopnsTabVisible)
         {

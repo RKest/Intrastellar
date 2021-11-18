@@ -4,12 +4,12 @@
 
 void Controler::CaptureMouseMovement()
 {
-    if(display.ReadKeyboardState(codes[display.TAB]))
+    if(Display::ReadKeyboardState(codes[Display::TAB]))
         return;
     int xCoord, yCoord;
-    display.FetchMouseState(xCoord, yCoord);
-    const ft halfDisplayWidth = (ft)display.width / 2;
-    const ft halfDisplayHeight = (ft)display.height / 2;
+    Display::FetchMouseState(xCoord, yCoord);
+    constexpr const ft halfDisplayWidth   = static_cast<ft>(SCREEN_WIDTH) / 2.0f;
+    constexpr const ft halfDisplayHeight  = static_cast<ft>(SCREEN_HEIGHT) / 2.0f;
 
     const ft xPcCoord = (decl_cast(halfDisplayWidth, xCoord) - halfDisplayWidth) / halfDisplayWidth;
     const ft yPcCoord = -(decl_cast(halfDisplayHeight, yCoord) - halfDisplayHeight) / halfDisplayHeight;
@@ -28,19 +28,19 @@ void Controler::CaptureKeyboardPresses(bool &isPcAlive)
     if (isPcAlive)
     {
         const ft movementAmount = decl_cast(movementAmount, timer.Scale(defaultMovementAmount));
-        if (display.ReadKeyboardState(codes[display.W]))
+        if (Display::ReadKeyboardState(codes[Display::W]))
             transform.Pos().y += movementAmount,
               Camera::Pos().y += movementAmount;
-        if (display.ReadKeyboardState(codes[display.S]))
+        if (Display::ReadKeyboardState(codes[Display::S]))
             transform.Pos().y -= movementAmount,
               Camera::Pos().y -= movementAmount;
-        if (display.ReadKeyboardState(codes[display.A]))
+        if (Display::ReadKeyboardState(codes[Display::A]))
             transform.Pos().x += movementAmount,
               Camera::Pos().x += movementAmount;
-        if (display.ReadKeyboardState(codes[display.D]))
+        if (Display::ReadKeyboardState(codes[Display::D]))
             transform.Pos().x -= movementAmount,
               Camera::Pos().x -= movementAmount;
     }
-    if (display.ReadKeyboardState(codes[display.SPACE]))
+    if (Display::ReadKeyboardState(codes[Display::SPACE]))
         isPcAlive = true;
 }

@@ -171,9 +171,22 @@ namespace helpers
         return b > a ? b - a : a - b;
     }
 
+    template <typename It, typename Et, typename Out, typename Pred>
+    void copy_iter_if(It it, Et et, Out out, Pred pred)
+    {
+        while(it != et)
+        {
+            if(pred(it))
+            {
+                out = it;
+                out++;
+            }
+            it++;
+        }
+    }
+
     struct Core
     {
-        Display &display;
         PlayerStats &stats;
     };
 

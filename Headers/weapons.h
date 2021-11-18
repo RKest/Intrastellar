@@ -12,6 +12,10 @@
 #include "Core/camera.h"
 
 #include <string>
+#include <algorithm>
+#include <cmath>
+
+#include "enemy.h"
 
 using samplerArray_t = std::array<uiUni, WEAPONS_NO_WEAPONS>;
 
@@ -130,6 +134,7 @@ public:
     void Draw();
     void Update(const glm::mat4 &pcModel, const std::vector<glm::mat4> &enemyInstanceTransforms);
     void Reset();
+    inline void SetEnemyInterface(EnemyInterface* interface) { m_enemyInterfacePtr = interface; }
 
     inline auto &WeaponInterfaces() { return _weaponInterfaces; }
 
@@ -140,7 +145,6 @@ private:
     friend struct RocketBehaviour;
     friend struct LaserBehaviour;
 
-    Display                     &_display;
     PlayerStats                 &_pcStats;
     TexturedInstancedMesh       _iconMesh;
     UntexturedMesh              _overlayMesh;
@@ -148,6 +152,8 @@ private:
     UntexturedInstancedMesh     _blasterProjMesh;
     UntexturedInstancedMesh     _rocketProjMesh;
     UntexturedInstancedMesh     _laserProjMesh;
+
+    EnemyInterface *m_enemyInterfacePtr = nullptr;
 
     BlasterBehaviour            _blasterBehaviour;
     RocketBehaviour             _rocketBehaviour;

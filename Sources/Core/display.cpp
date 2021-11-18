@@ -2,15 +2,8 @@
 #include <iostream>
 #include "Core/display.h"
 
-Display::Display(int _width, int _height, const std::string &title)
+void Display::Construct(const std::string &title)
 {
-    width = _width;
-    height = _height;
-    aspectRatio = static_cast<float>(_width) / static_cast<float>(_height);
-
-    halfWidth = static_cast<float>(_width) / 2;
-    halfHeight = static_cast<float>(_height) / 2;
-
     std::cout << "Constructed" << std::endl;
     SDL_Init(SDL_INIT_EVERYTHING);
     SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
@@ -21,41 +14,30 @@ Display::Display(int _width, int _height, const std::string &title)
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
-    window = SDL_CreateWindow(title.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, _width, _height, SDL_WINDOW_OPENGL);
+    window = SDL_CreateWindow(title.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_OPENGL);
     if(window == NULL) LOG(SDL_GetError());
     glContext = SDL_GL_CreateContext(window);
 
-    const GLenum err = glewInit();
-    if(err) LOG(glewGetErrorString(err));
 
 #ifdef _WIN32
     SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
-    glewInit();
 #endif
-
     // glEnable(GL_DEPTH_TEST);
     // glEnable(GL_CULL_FACE);
     // glCullFace(GL_BACK);
     // glEnable(GL_TEXTURE_CUBE_MAP);
 
     GLenum status = glewInit();
-
     if (status != GLEW_OK)
     {
         std::cerr << "Glew failed to initialise" << std::endl;
+        LOG(glewGetErrorString(status));
     }
-
-    isClosed = false;
 }
 
-Display::~Display()
+void Display::Destruct()
 {
     std::cout << "Destructed" << std::endl;
-    // TTF_CloseFont(font);
-    // SDL_DestroyRenderer(renderer);
-
-    // font = NULL;
-    // renderer = NULL;
 
     SDL_GL_DeleteContext(glContext);
     SDL_DestroyWindow(window);
@@ -85,11 +67,6 @@ void Display::Clear(float r = 0.0f, float g = 0.0f, float b = 0.0f, float a = 1.
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
-float Display::Aspect()
-{
-    return aspectRatio;
-}
-
 //Checks if the LBM is pressed and get the coords of the cursour
 void Display::FetchMouseState(int &x, int &y, bool &isLbmPressed)
 {
@@ -106,32 +83,3 @@ SDL_Scancode *Display::KeyScancodeMap()
 {
     return keyScancodeMap;
 }
-
-// TTF_Font *Display::LoadFont(const std::string &path)
-// {
-//     TTF_Font *font = TTF_OpenFont(path.c_str(), 24);
-//     if (!font)
-//     {
-//         std::cerr << "Error: " << TTF_GetError() << std::endl;
-//     }
-
-//     return font;
-// }
-
-// void Display::RenderText(const std::string &text, SDL_Rect textBox)
-// {
-//     font = LoadFont("./Resources/Roboto-Black.ttf");
-//     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
-
-//     SDL_Color fg = {0, 0, 0};
-//     SDL_Surface *surf = TTF_RenderText_Solid(font, text.c_str(), fg);
-
-//     textBox.w = surf->w;
-//     textBox.h = surf->h;
-
-//     SDL_Texture *tex = SDL_CreateTextureFromSurface(renderer, surf);
-
-//     SDL_RenderCopy(renderer, tex, NULL, &textBox);
-//     SDL_DestroyTexture(tex);
-//     SDL_FreeSurface(surf);
-// }

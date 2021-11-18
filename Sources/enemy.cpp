@@ -246,7 +246,7 @@ void Enemy::Draw()
 EnemyManager::EnemyManager(helpers::Core &core, const UntexturedMeshParams &params, EnemyStats &enemyStats, const UntexturedMeshParams &projParams, 
 		IPlayerCharacter *pcInterface, weaponInterfaceArray_t &weaponInterfaces)
  :  _pcStats(core.stats), _enemyStats(enemyStats), _enemyParams(params), _enemyProjParams(projParams), _pcInterface(pcInterface), 
- _weaponInterfaces(weaponInterfaces), m_spawnClock(ENEMY_SPAWN_DELAY, [this]{ m_spawn(); })
+ _weaponInterfaces(weaponInterfaces), m_spawnClock(ENEMY_SPAWN_DELAY, [this]{ m_spawn(); }), m_interfacePtr(new EnemyInterface(this))
 {
 	behavoiurPtrVec_t chaserVec;
 	behavoiurPtrVec_t shooterVec;
@@ -297,12 +297,7 @@ void EnemyManager::UpdateBehaviour(const std::vector<glm::vec2> &pcPositions, st
 				{
 					if((weaponInterface->ProjHitCb())(collisionIndex, enemy.data.ids[i]))
 					{
-						enemy.data.healths[i] -= decl_cast(enemy.data.healths, _pcStats.actualDamage);
-						if(enemy.data.healths[i] <= 0)
-						{
-							fatalityCallback(enemy.data.instanceTransforms[i], 3);
-							enemy.data.Erase(i);
-						}
+						m_hit(i);
 					}
 				}
 			}
@@ -344,6 +339,16 @@ void EnemyManager::m_spawn()
 		_enemies[ORBITER_ENEMY].Spawn(instanceTransform, true);
 	else
 		_enemies[CHASER_ENEMY] .Spawn(instanceTransform);
+}
+
+void EnemyManager::m_hit(const ui i)
+{
+	enemy.data.healths[i] -= decl_cast(enemy.data.healths, _pcStats.actualDamage);
+	if(enemy.data.healths[i] <= 0)
+	{
+		fatalityCallback(enemy.data.instanceTransforms[i], 3);
+		enemy.data.Erase(i);
+	}
 }
 
 void EnemyManager::checkForProjIntersection(std::vector<glm::mat4> &projInstanceTransforms)

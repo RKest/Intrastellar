@@ -6,35 +6,33 @@
 class Display
 {
 public:
-    Display(int _width, int _height, const std::string &title);
+    Display() = delete;
+    static void Construct(const std::string &title)
+    static void Destruct();
 
-    void Clear(float r, float g, float b, float a);
-    void Update();
-    void FetchMouseState(int &x, int &y, bool &isLbmPressed = _dummy_bool);
-    bool ReadKeyboardState(SDL_Scancode code);
+    static void Clear(float r, float g, float b, float a);
+    static void Update();
+    static void FetchMouseState(int &x, int &y, bool &isLbmPressed = _dummy_bool);
+    static bool ReadKeyboardState(SDL_Scancode code);
 
     enum { W, A, S, D, LCTRL, SPACE, TAB};
-    SDL_Scancode *KeyScancodeMap();
+    static SDL_Scancode *KeyScancodeMap();
 
-    bool IsClosed();
-    float Aspect();
-    virtual ~Display();
-
-    int width, height;
+    static bool IsClosed();
 protected:
 private:
-    SDL_Window *window;
-    SDL_GLContext glContext;
-    bool isClosed;
-    float aspectRatio;
-    float halfWidth, halfHeight;
-    int mouseX = 0, mouseY = 0;
+    inline static SDL_Window *window;
+    inline static SDL_GLContext glContext;
+    inline static bool isClosed{};
+    inline static float aspectRatio;
+    inline static float halfWidth, halfHeight;
+    inline static int mouseX = 0, mouseY = 0;
 
-    int mouseXOffset = 0, mouseYOffset = 0;
-    bool mouseEventFilter = false;
+    inline static int mouseXOffset = 0, mouseYOffset = 0;
+    inline static bool mouseEventFilter = false;
 
-    SDL_Scancode keyScancodeMap[7] = { SDL_SCANCODE_W, SDL_SCANCODE_A, SDL_SCANCODE_S, SDL_SCANCODE_D, SDL_SCANCODE_LCTRL, SDL_SCANCODE_SPACE, SDL_SCANCODE_TAB };
+    inline static SDL_Scancode keyScancodeMap[7] = { SDL_SCANCODE_W, SDL_SCANCODE_A, SDL_SCANCODE_S, SDL_SCANCODE_D, SDL_SCANCODE_LCTRL, SDL_SCANCODE_SPACE, SDL_SCANCODE_TAB };
 
-    const Uint8 *keys = SDL_GetKeyboardState(NULL);
+    inline static const Uint8 *keys = SDL_GetKeyboardState(NULL);
 
 };
