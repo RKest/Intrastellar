@@ -58,19 +58,20 @@ struct LaserBehaviour : public WeaponBehaviour
     void Draw() override;
 
 private:
-    UntexturedDynamicBezierMesh _projMesh       {MAX_PROJ_AMOUNT, 10};
+    UntexturedDynamicBezierMesh _projMesh       { MAX_PROJ_AMOUNT, 10 };
 
-    std::vector<glm::vec2>  _laserBezierCurves = std::vector<glm::vec2>(MAX_PROJ_AMOUNT * 3 + 1);
+    std::vector<glm::vec2>  _laserBezierCurves = std::vector<glm::vec2>( MAX_PROJ_AMOUNT * 3 + 1 );
     ui                      _laserBezierCurvesSZ = 0;
     ui                      _noBezierCurves = 1;
     glm::mat4               _laserOrigin;
-    ui                      _laserLingerClockId;
-    db                      _laserLingerClockDuration = WEAPONS_LASER_LINGER_DURATION;
-    bool                    _hasTheLaserFired{};
+    Clock                   m_laserLingerClock;
+    bool                    m_isLaserVisible{};
+    bool                    m_hasLaserFired{};
 };
 
 struct IWeapon;
 using weaponInterfaceArray_t = std::array<IWeapon*, Weapons::NO_IMPLEMENTED_WEAPONS>;
+using shotClock_t = Clock<glm::mat4 const&>;
 
 class WeaponsManager;
 class Weapon {
@@ -79,7 +80,6 @@ public:
     void Draw();
     void Fire(const glm::mat4 &pcModel);
     void Init();
-    void Uninit();
     void Update(const std::vector<glm::mat4> &enemyInstanceTransforms);
     inline IWeapon *Interface() { return _interface; }
 
@@ -101,7 +101,7 @@ protected:
 	std::vector<ui>         _alreadyHitEnemyIds     [MAX_PROJ_AMOUNT];
     ui                      _noProjs = 0;
 
-    ui _shotClockId{};
+    shotClock_t m_shotClock;
     ui _oldestProjIndex{};
 	bool _projHit(const ui projIndex, const ui enemyIndex);
     void _commonUpdate();
@@ -158,10 +158,10 @@ private:
     PlayerStats                 _rocketStatAltarations;
     PlayerStats                 _laserStatAltarations;
 
-    Shader                      _overlayShader          {"./Shaders/Overlay"    };
-    Shader                      _weaponIconShader       {"./Shaders/WeaponIcon" };
-    Shader                      _projShader             {"./Shaders/Projectile" };
-    Shader                      _bezierProjShader       {"./Shaders/Bezier"     };    
+    Shader                      _overlayShader          { "./Shaders/Overlay"    };
+    Shader                      _weaponIconShader       { "./Shaders/WeaponIcon" };
+    Shader                      _projShader             { "./Shaders/Projectile" };
+    Shader                      _bezierProjShader       { "./Shaders/Bezier"     };    
     Texture                     _weaponTextures         {WEAPONS_NO_WEAPONS};
 
     glm::mat4                   _instanceTransforms     [WEAPONS_NO_WEAPONS];
@@ -169,24 +169,22 @@ private:
     ReqBoundingBox              _boundingBoxes          [WEAPONS_NO_WEAPONS];
     std::unique_ptr<Weapon>     _weapons                [WEAPONS_NO_WEAPONS];
     weaponInterfaceArray_t      _weaponInterfaces;
-    samplerArray_t  _samplerIds = arr_ini::makeSampArr(std::make_index_sequence<WEAPONS_NO_WEAPONS>{}); 
+    samplerArray_t              _samplerIds = arr_ini::makeSampArr(std::make_index_sequence<WEAPONS_NO_WEAPONS>{}); 
 
-    uiUni _selectedWeaponIndexUni   {"chosenWeaponInx", 0};
-    ftUni _overlayAlpthaUni         {"overlayAlpha", 0.0f};
-    ui _weaponTransitionClockId{};
-    db _scaledTransitionTime = OVERLAY_TRANSITION_TIME;
+    uiUni                       _selectedWeaponIndexUni   { "chosenWeaponInx", 0 };
+    ftUni                       _overlayAlpthaUni         { "overlayAlpha", 0.0f };
 
-    ui _weaponCooldownClockId{};
-    db _weaponCooldownTime = WEAPONS_COOLDOWN;
+    Clock                       m_weaponTransitionClock;
+    Clock                       m_weaponCooldownClock;
 
-    bool _isThereWeaponCooldown{};
-    bool _isWeaopnsTabVisible{};
-    bool _isWeaponsFullyDrawn{};
-    bool _isLBMPressed{};
+    bool                        _isThereWeaponCooldown{};
+    bool                        _isWeaopnsTabVisible{};
+    bool                        _isWeaponsFullyDrawn{};
+    bool                        _isLBMPressed{};
     
-    const ft _iconRealestate = WEAPONS_ICON_DIMS + 1.0f;
-    const glm::mat4 _projection         = glm::ortho(0.0f, static_cast<ft>(SCREEN_WIDTH), 0.0f, static_cast<ft>(SCREEN_HEIGHT));
-    const glm::mat4 _inverseProjection  = glm::inverse(_projection);
+    const ft                    _iconRealestate     = WEAPONS_ICON_DIMS + 1.0f;
+    const glm::mat4             _projection         = glm::ortho(0.0f, static_cast<ft>(SCREEN_WIDTH), 0.0f, static_cast<ft>(SCREEN_HEIGHT));
+    const glm::mat4             _inverseProjection  = glm::inverse(_projection);
 
     void _closeWeaponTab();
     void _switchWeapons(const ui weaponIndex);

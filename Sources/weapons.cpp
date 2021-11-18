@@ -8,12 +8,9 @@ void WeaponBehaviour::Draw()
 
 void WeaponBehaviour::Fire(const glm::mat4 &pcModel)
 {
-    if(_weaponPtr->_manager._timer.HeapIsItTime(_weaponPtr->_shotClockId))
-    {
-        const ui replacedProjIndex = helpers::pushToCappedArr(_weaponPtr->_projInstanceTransforms, pcModel, _weaponPtr->_noProjs, 
-            _weaponPtr->_oldestProjIndex, MAX_PROJ_AMOUNT);
-        _weaponPtr->_noLeftProjPiercings[replacedProjIndex] = _weaponPtr->_weaponStats.noPiercings;
-    }
+    const ui replacedProjIndex = helpers::pushToCappedArr(_weaponPtr->_projInstanceTransforms, pcModel, _weaponPtr->_noProjs, 
+        _weaponPtr->_oldestProjIndex, MAX_PROJ_AMOUNT);
+    _weaponPtr->_noLeftProjPiercings[replacedProjIndex] = _weaponPtr->_weaponStats.noPiercings;
 }
 
 void BlasterBehaviour::Update([[maybe_unused]]const std::vector<glm::mat4> &enemyInstanceTransforms)
@@ -49,10 +46,11 @@ void RocketBehaviour::Update([[maybe_unused]]const std::vector<glm::mat4> &enemy
 
 void LaserBehaviour::Update([[maybe_unused]]const std::vector<glm::mat4> &enemyInstanceTransforms)
 {
-    if(_hasTheLaserFired)
+    m_laserLingerClock.Inspect();
+    if(m_hasLaserFired)
     {
-        _noBezierCurves = 1;
-        _hasTheLaserFired       = false;
+        _noBezierCurves         = 1;
+        m_hasLaserFired         = false;
         _laserBezierCurvesSZ    = 0;
         ft fireAngle            = helpers::rotTransformAngle(_laserOrigin);
         const glm::vec2 firstFirePos{_laserOrigin * glm::vec4(0,0,0,1)};
@@ -96,13 +94,15 @@ void LaserBehaviour::Update([[maybe_unused]]const std::vector<glm::mat4> &enemyI
 void LaserBehaviour::Fire(const glm::mat4 &pcModel)
 {
     _laserOrigin = pcModel;
-    _weaponPtr->_manager._timer.InitHeapClock(_laserLingerClockId, _laserLingerClockDuration);
-    _hasTheLaserFired = true;
+    m_laserLingerClock = Clock(WEAPONS_LASER_LINGER_DURATION, [this]{
+        m_isLaserVisible = false;
+    });
+    m_isLaserVisible = true;
 }
 
 void LaserBehaviour::Draw()
 {
-    if(_weaponPtr->_manager._timer.HeapIsItTime(_laserLingerClockId))
+    if(m_isLaserVisible)
     {
         _projMesh.Update(_laserBezierCurves.data(), _noBezierCurves);
         helpers::render(_weaponPtr->_projShader, _projMesh, _blankTransform, _weaponPtr->_manager._camera.ViewProjection());
@@ -121,7 +121,7 @@ void Weapon::Update(const std::vector<glm::mat4> &enemyInstanceTransforms)
 }
 void Weapon::Fire(const glm::mat4 &pcModel)
 {
-    _behaviour.Fire(pcModel);
+    m_shotClock.Inspect(pcModel);
 }
 void Weapon::Draw()
 {
@@ -129,15 +129,13 @@ void Weapon::Draw()
 }
 void Weapon::Init()
 {
-    _manager._timer.InitHeapClock(_shotClockId, _weaponStats.shotDelay);
-}
-void Weapon::Uninit()
-{
-    _manager._timer.DestroyHeapClock(_shotClockId);
+    _manager.m_shotClock = shotClock_t(_weaponStats.shotDelay, [this](const glm::mat4 &pcModel){
+        _behaviour.Fire(pcModel);
+    });
 }
 void Weapon::_commonUpdate()
 {
-    const ft scaledTravelDistance  = _manager._timer.Scale(_weaponStats.shotSpeed);
+    const ft scaledTravelDistance  = Timer::Scale(_weaponStats.shotSpeed);
     const glm::mat4 localTransform = glm::translate(glm::vec3(scaledTravelDistance, 0.0f, 0.0f));
     for (size_t i = 0; i < _noProjs; ++i)
         _projInstanceTransforms[i] *= localTransform;
@@ -164,7 +162,7 @@ bool Weapon::_projHit(const ui projIndex, const ui enemyIndex)
 
 WeaponsManager::WeaponsManager(helpers::Core &core, const TexturedMeshParams &iconMeshParams, const UntexturedMeshParams &overlayMeshParams, 
         const UntexturedMeshParams &blasterProjParams, const UntexturedMeshParams &rocketMeshParams)
-    : _display(core.display), _timer(core.timer), _pcStats(core.stats), _camera(core.camera), _iconMesh(iconMeshParams, WEAPONS_NO_WEAPONS), 
+    : _display(core.display), _pcStats(core.stats), _camera(core.camera), _iconMesh(iconMeshParams, WEAPONS_NO_WEAPONS), 
         _overlayMesh(overlayMeshParams), _blasterProjMesh(blasterProjParams, MAX_PROJ_AMOUNT), _rocketProjMesh(rocketMeshParams, MAX_PROJ_AMOUNT),
         _laserProjMesh(blasterProjParams, MAX_PROJ_AMOUNT)
 {
@@ -181,7 +179,7 @@ WeaponsManager::WeaponsManager(helpers::Core &core, const TexturedMeshParams &ic
     }
 
     _rocketStatAltarations += stat_altarations::SHOT_HOMING_STRENGTH(99.0f)  + stat_altarations::SHOT_SPEED(-0.01f);
-    _laserStatAltarations  += stat_altarations::SHOT_SPEED(0.05f)           + stat_altarations::NO_PIERCINGS(99);
+    _laserStatAltarations  += stat_altarations::SHOT_SPEED(0.05f)            + stat_altarations::NO_PIERCINGS(99);
 
     _weapons[Weapons::BLASTER]          .reset(new Weapon(*this, _blasterProjMesh, _blasterBehaviour, _blasterStatAltarations, _projShader));
     _weapons[Weapons::ROCEKT_LANCHER]   .reset(new Weapon(*this, _rocketProjMesh , _rocketBehaviour , _rocketStatAltarations , _projShader));
@@ -208,33 +206,27 @@ void WeaponsManager::Draw()
         if(!_isWeaopnsTabVisible)
         {
             _isWeaopnsTabVisible = true;
-            _timer.InitHeapClock(_weaponTransitionClockId, _scaledTransitionTime);
-        }
-        else if(!_isWeaponsFullyDrawn)
-        {
-            if(_timer.HeapIsItTime(_weaponTransitionClockId))
-            {
+            m_weaponTransitionClock = Clock(OVERLAY_TRANSITION_TIME, [this]{
                 for(ui i = 0; i < WEAPONS_NO_WEAPONS; ++i)
                 {
                     _instanceTransforms[i] = _baseInstanceTransforms[i] * glm::translate(glm::vec3(0.0f, _iconRealestate, 0.0f));
                     _overlayAlpthaUni.second = OVERLAY_MAX_APLHA; 
                 }
-                _timer.DestroyHeapClock(_weaponTransitionClockId);
                 _isWeaponsFullyDrawn = true;
-            }
-            else
-            {
-                const db remainingClockTime = _timer.RemainingTime(_weaponTransitionClockId);
-                const db remainingTimeFraction = 1.0 - remainingClockTime / _scaledTransitionTime;
-                const ft overlayAlpha = decl_cast(overlayAlpha, remainingTimeFraction) * OVERLAY_MAX_APLHA;
-                const ft hiddenIconDimY =  _iconRealestate * decl_cast(hiddenIconDimY, remainingTimeFraction);
-                for(ui i = 0; i < WEAPONS_NO_WEAPONS; ++i)
-                    _instanceTransforms[i] = _baseInstanceTransforms[i] * glm::translate(glm::vec3(0.0f, hiddenIconDimY, 0.0f));
-                _overlayAlpthaUni.second = overlayAlpha;
-            }
+            });
+        }
+        else if(!_isWeaponsFullyDrawn && !m_weaponTransitionClock.Inspect())
+        {
+            const db remainingClockTime = m_weaponTransitionClock.RemainingTime();
+            const db remainingTimeFraction = 1.0 - remainingClockTime / OVERLAY_TRANSITION_TIME;
+            const ft overlayAlpha = decl_cast(overlayAlpha, remainingTimeFraction) * OVERLAY_MAX_APLHA;
+            const ft hiddenIconDimY =  _iconRealestate * decl_cast(hiddenIconDimY, remainingTimeFraction);
+            for(ui i = 0; i < WEAPONS_NO_WEAPONS; ++i)
+                _instanceTransforms[i] = _baseInstanceTransforms[i] * glm::translate(glm::vec3(0.0f, hiddenIconDimY, 0.0f));
+            _overlayAlpthaUni.second = overlayAlpha;
         }
         ui tempSelectedWeaponIndex = _selectedWeaponIndexUni.second;
-        _timer.SetScalingFactor(WEAPONS_TIMER_SCALING_ARG);
+        Timer::SetScalingFactor(WEAPONS_TIMER_SCALING_ARG);
         for(ui i = 0; i < WEAPONS_NO_WEAPONS; ++i)
         {
             if(_boundingBoxes[i].IsThereAnIntersection(helpers::mouseCoordsTransformed(_inverseProjection)))
@@ -246,7 +238,9 @@ void WeaponsManager::Draw()
             _closeWeaponTab();
             _switchWeapons(tempSelectedWeaponIndex);
 
-            _timer.InitHeapClock(_weaponCooldownClockId, _weaponCooldownTime);
+            m_weaponCooldownClock = Clock(WEAPONS_COOLDOWN, [this]{
+                _isThereWeaponCooldown = false;
+            });
             _isThereWeaponCooldown = true;
             _isLBMPressed = false;
             return;
@@ -261,11 +255,7 @@ void WeaponsManager::Draw()
     }
     else
     {
-        if(_isThereWeaponCooldown && _timer.HeapIsItTime(_weaponCooldownClockId))
-        {
-            _timer.DestroyHeapClock(_weaponCooldownClockId);
-            _isThereWeaponCooldown = false;
-        }
+        m_weaponCooldownClock.Inspect();
         _closeWeaponTab();
     }
     for(size_t i = 0; i < Weapons::NO_IMPLEMENTED_WEAPONS; ++i)
@@ -275,8 +265,6 @@ void WeaponsManager::Draw()
 void WeaponsManager::Reset()
 {
     _switchWeapons(0);
-    if(_isWeaopnsTabVisible && !_isWeaponsFullyDrawn)
-        _timer.DestroyHeapClock(_weaponCooldownClockId);
     _isLBMPressed           = false;
     _isThereWeaponCooldown  = false;
     _isWeaopnsTabVisible    = false;
@@ -288,7 +276,6 @@ void WeaponsManager::_closeWeaponTab()
 {
     if(_isWeaopnsTabVisible)
     {
-        _timer.DestroyHeapClock(_weaponTransitionClockId);
         _weaponTextures.Bind();
         for(ui i = 0; i < WEAPONS_NO_WEAPONS; ++i)
             _instanceTransforms[i] = _baseInstanceTransforms[i];
@@ -300,7 +287,6 @@ void WeaponsManager::_closeWeaponTab()
 
 void WeaponsManager::_switchWeapons(const ui weaponIndex)
 {
-    _weapons[_selectedWeaponIndexUni.second]->Uninit();
     _selectedWeaponIndexUni.second = weaponIndex;
     _weapons[_selectedWeaponIndexUni.second]->Init();
 }
