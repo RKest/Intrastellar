@@ -20,6 +20,7 @@ struct Character
 class Text
 {
 public:
+	Text() = delete;
 	static void Construct(const std::string &fontPath);
 	static void Render(const std::string &text, ft x, const ft y, const ft scale, const glm::vec3 &colour);
 

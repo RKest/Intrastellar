@@ -13,7 +13,7 @@ int main()
 {
 	Text::Construct("./Resources/Fonts/slkscr.ttf");
 	Display display(SCREEN_WIDTH, SCREEN_HEIGHT, "Intrastellar");
-	Camera camera(glm::vec3(0.0f, 0.0f, -CAMERA_DISTANCE), 70.0f, display.Aspect(), 0.01f, 1000.0f);
+	Camera::Construct(glm::vec3(0.0f, 0.0f, -CAMERA_DISTANCE), 70.0f, display.Aspect(), 0.01f, 1000.0f);
 
 	const glm::vec3 expBarVertices[] = {{0,0,0}, {0,1,0}, {1,0,0}, {1,1,0}};
 	const ui expBarIndices[] = {0, 2, 1, 2, 3, 1};
@@ -33,12 +33,12 @@ int main()
 
 	PlayerStats playerStats = defaultStats;
 	EnemyStats enemyStats = defaultEnemyStats;
-	helpers::Core core				{display, camera, playerStats};
+	helpers::Core core				{display, playerStats};
 	ExpManager expManager			(core, expParams, expBarParams);
 	PlayerCharacter playerCharacter	(core, pcParams);
 	WeaponsManager weaponsManager	(core, weaponIconParams, overlayParams, blasterProjParams, rocketProjParams);
 	EnemyManager enemyManager		(core, enemyMeshParams, enemyStats, blasterProjParams, playerCharacter.Interface(), weaponsManager.WeaponInterfaces());
-	Controler controler				(display, camera, playerCharacter.Interface()->Transform());
+	Controler controler				(display, playerCharacter.Interface()->Transform());
 	CardDeck cardDeck				(core, overlayParams, cardBorderParams);
 
 	const auto render = [&]
@@ -57,6 +57,7 @@ int main()
 		glm::mat4 pcModel = playerCharacter.Interface()->Transform().Model();
 		controler.CaptureKeyboardPresses(playerCharacter.IsAlive());
 		controler.CaptureMouseMovement();
+		Camera::Recalc();
 
 		enemyManager.Spawn();
 		
@@ -101,8 +102,8 @@ int main()
 				playerCharacter.Reset();
 				playerCharacter.Interface()->Transform().Pos().x = 0;
 				playerCharacter.Interface()->Transform().Pos().y = 0;
-				camera.Pos().x = 0;
-				camera.Pos().y = 0;
+				Camera::Pos().x = 0;
+				Camera::Pos().y = 0;
 			}
 		}
 	}

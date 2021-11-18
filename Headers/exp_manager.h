@@ -45,7 +45,6 @@ public:
 	
 protected:
 private:
-	Camera &_camera;
 	CustomRand _customRand;
 	Shader _expParticleShader{"Shaders/Exp"};
 	Shader _expBarShader{"Shaders/ExpBar"};

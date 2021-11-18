@@ -7,28 +7,35 @@
 class Camera
 {
 public:
-    Camera(const glm::vec3 &pos, ft fov, ft aspect, ft zNear, ft zFar)
+    Camera() = delete;
+    inline static void Construct(const glm::vec3 &pos, ft fov, ft aspect, ft zNear, ft zFar)
     {
         perspective = glm::perspective(fov, aspect, zNear, zFar);
         position = pos;
         forward = glm::vec3(0, 0, 1);
         up = glm::vec3(0, 1, 0);
+        Recalc();
     }
 
-    inline glm::vec3 &Pos() { return position; }
-    inline glm::vec3 &Fwd() { return forward; }
-    inline glm::vec3 &Up()  { return up; }
+    inline static glm::vec3 &Pos() { return position; }
+    inline static glm::vec3 &Fwd() { return forward; }
+    inline static glm::vec3 &Up()  { return up; }
 
-
-    inline glm::mat4 ViewProjection() const
+    inline static void Recalc()
     {
-        return perspective * glm::lookAt(position, position + forward, up);
+        projection = perspective * glm::lookAt(position, position + forward, up); 
+    }
+
+    inline static glm::mat4 &ViewProjection() const
+    {
+        return projection;
     }
 
 protected:
 private:
-    glm::mat4 perspective;
-    glm::vec3 position;
-    glm::vec3 forward;
-    glm::vec3 up;
+    inline static glm::mat4 projection;
+    inline static glm::mat4 perspective;
+    inline static glm::vec3 position;
+    inline static glm::vec3 forward;
+    inline static glm::vec3 up;
 };

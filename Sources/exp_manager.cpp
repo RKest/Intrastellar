@@ -1,7 +1,7 @@
 clockId#include "exp_manager.h"
 
 ExpManager::ExpManager(helpers::Core &core, const UntexturedMeshParams &expMeshParams, const UntexturedMeshParams &expBarMeshParams)
-	: _camera(core.camera), _customRand(CUSTOM_RAND_SEED), _expMesh(expMeshParams, MAX_EXP_PART_NO), _expBarMesh(expBarMeshParams)
+	: _customRand(CUSTOM_RAND_SEED), _expMesh(expMeshParams, MAX_EXP_PART_NO), _expBarMesh(expBarMeshParams)
 {
 }
 
@@ -65,7 +65,7 @@ void ExpManager::UpdateExpParticles(const glm::mat4 &pcModel)
 	std::transform(_instanceStates.begin(), _instanceStates.end(), std::back_inserter(instanceTransforms), 
 		[](InstanceState &state){ return state.transform; });
 	
-	helpers::render(_expParticleShader, _expMesh, instanceTransforms.data(), noInstances, _blankTransform, _camera.ViewProjection());
+	helpers::render(_expParticleShader, _expMesh, instanceTransforms.data(), noInstances, _blankTransform, Camera::ViewProjection());
 	helpers::render(_expBarShader, _expBarMesh, _blankTransform, _expBarProjection);
 }
 

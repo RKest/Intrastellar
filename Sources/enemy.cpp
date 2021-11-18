@@ -230,7 +230,7 @@ void Enemy::Spawn(const glm::mat4 &instanceTransform, bool hasProjectiles)
 
 void Enemy::Draw()
 {
-	helpers::render(_manager._enemyShader, _mesh, data.instanceTransforms.data(), data.size, _blankTransform, _manager._camera.ViewProjection(), 
+	helpers::render(_manager._enemyShader, _mesh, data.instanceTransforms.data(), data.size, _blankTransform, Camera::ViewProjection(), 
 		_colourUni);
 	if(!data.clockOrphanedProjsParis.empty() || !data.projInstanceTransforms.empty())
 	{
@@ -239,14 +239,13 @@ void Enemy::Draw()
 		std::for_each(begin(data.clockOrphanedProjsParis), end(data.clockOrphanedProjsParis),
 			[&projectilesVector](auto& pair){ projectilesVector.insert(projectilesVector.end(), pair.second.begin(), pair.second.end()); });
 		projectilesVector.insert(end(projectilesVector), begin(flattenedVec), end(flattenedVec));
-		helpers::render(_manager._enemyProjShader, _projMesh, projectilesVector.data(), projectilesVector.size(), _blankTransform, 
-			_manager._camera.ViewProjection());
+		helpers::render(_manager._enemyProjShader, _projMesh, projectilesVector.data(), projectilesVector.size(), _blankTransform, Camera::ViewProjection());
 	}
 }
 
 EnemyManager::EnemyManager(helpers::Core &core, const UntexturedMeshParams &params, EnemyStats &enemyStats, const UntexturedMeshParams &projParams, 
 		IPlayerCharacter *pcInterface, weaponInterfaceArray_t &weaponInterfaces)
- : _camera(core.camera), _pcStats(core.stats), _enemyStats(enemyStats), _enemyParams(params), _enemyProjParams(projParams), _pcInterface(pcInterface), 
+ :  _pcStats(core.stats), _enemyStats(enemyStats), _enemyParams(params), _enemyProjParams(projParams), _pcInterface(pcInterface), 
  _weaponInterfaces(weaponInterfaces), m_spawnClock(ENEMY_SPAWN_DELAY, [this]{ m_spawn(); })
 {
 	behavoiurPtrVec_t chaserVec;

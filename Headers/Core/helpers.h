@@ -174,7 +174,6 @@ namespace helpers
     struct Core
     {
         Display &display;
-        Camera &camera;
         PlayerStats &stats;
     };
 

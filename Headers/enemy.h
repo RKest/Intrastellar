@@ -174,7 +174,6 @@ private:
 
 	Shader _enemyShader{"./Shaders/Enemy"};
 	Shader _enemyProjShader{"./Shaders/EnemyProjectile"};
-	Camera &_camera;
 	PlayerStats &_pcStats;
 	EnemyData _enemyData{*this};
 	EnemyStats &_enemyStats;

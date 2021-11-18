@@ -142,7 +142,6 @@ private:
 
     Display                     &_display;
     PlayerStats                 &_pcStats;
-    Camera                      &_camera;
     TexturedInstancedMesh       _iconMesh;
     UntexturedMesh              _overlayMesh;
 

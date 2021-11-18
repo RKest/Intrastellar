@@ -12,8 +12,8 @@
 class Controler
 {
 public:
-    Controler(Display &display, Camera &camera, Transform &transform) 
-    : display(display), camera(camera), transform(transform) {};
+    Controler(Display &display, Transform &transform) 
+    : display(display), transform(transform) {};
     void CaptureMouseMovement();
     void CaptureKeyboardPresses(bool &isPcAlive);
     inline bool IsTabPressed() { return display.ReadKeyboardState(codes[display.TAB]); }
@@ -21,7 +21,6 @@ public:
 protected:
 private:
     Display &display;
-    Camera &camera;
     Transform &transform;
 
     SDL_Scancode *codes = display.KeyScancodeMap();

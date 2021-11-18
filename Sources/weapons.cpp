@@ -3,7 +3,7 @@
 void WeaponBehaviour::Draw()
 {
     helpers::render(_weaponPtr->_projShader, _weaponPtr->_projMesh, _weaponPtr->_projInstanceTransforms, _weaponPtr->_noProjs, 
-        _blankTransform, _weaponPtr->_manager._camera.ViewProjection());
+        _blankTransform, Camera::ViewProjection());
 }
 
 void WeaponBehaviour::Fire(const glm::mat4 &pcModel)
@@ -34,7 +34,7 @@ void RocketBehaviour::Update([[maybe_unused]]const std::vector<glm::mat4> &enemy
     const ft homingStrength = _weaponPtr->_weaponStats.shotHomingStrength;
     if(fpclassify(homingStrength) != FP_ZERO)
     {
-        const glm::vec2 worldMousePos = helpers::mouseCoordsTransformed(inverse(_weaponPtr->_manager._camera.ViewProjection()), 0.001f);
+        const glm::vec2 worldMousePos = helpers::mouseCoordsTransformed(inverse(Camera::ViewProjection()), 0.001f);
         const glm::mat4 worldMouseModel = glm::translate(glm::vec3(worldMousePos * CAMERA_DISTANCE, 0.0f));
         const ft maxTurningRadius = Timer::Scale(MAX_PROJ_TURNING_RAD);
         for(size_t i = 0; i < _weaponPtr->_noProjs; ++i)
@@ -105,7 +105,7 @@ void LaserBehaviour::Draw()
     if(m_isLaserVisible)
     {
         _projMesh.Update(_laserBezierCurves.data(), _noBezierCurves);
-        helpers::render(_weaponPtr->_projShader, _projMesh, _blankTransform, _weaponPtr->_manager._camera.ViewProjection());
+        helpers::render(_weaponPtr->_projShader, _projMesh, _blankTransform, Camera::ViewProjection());
     }
 }
 
@@ -162,9 +162,8 @@ bool Weapon::_projHit(const ui projIndex, const ui enemyIndex)
 
 WeaponsManager::WeaponsManager(helpers::Core &core, const TexturedMeshParams &iconMeshParams, const UntexturedMeshParams &overlayMeshParams, 
         const UntexturedMeshParams &blasterProjParams, const UntexturedMeshParams &rocketMeshParams)
-    : _display(core.display), _pcStats(core.stats), _camera(core.camera), _iconMesh(iconMeshParams, WEAPONS_NO_WEAPONS), 
-        _overlayMesh(overlayMeshParams), _blasterProjMesh(blasterProjParams, MAX_PROJ_AMOUNT), _rocketProjMesh(rocketMeshParams, MAX_PROJ_AMOUNT),
-        _laserProjMesh(blasterProjParams, MAX_PROJ_AMOUNT)
+    : _display(core.display), _pcStats(core.stats), _iconMesh(iconMeshParams, WEAPONS_NO_WEAPONS), _overlayMesh(overlayMeshParams), 
+        _blasterProjMesh(blasterProjParams, MAX_PROJ_AMOUNT), _rocketProjMesh(rocketMeshParams, MAX_PROJ_AMOUNT), _laserProjMesh(blasterProjParams, MAX_PROJ_AMOUNT)
 {
     constexpr const char *basePath = "./Resources/Textures/WeaponIcons/";
     const ft baseLeftIconMargin = (SCREEN_WIDTH - _iconRealestate * static_cast<ft>(WEAPONS_NO_WEAPONS)) / 2.0f;

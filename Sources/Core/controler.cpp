@@ -14,7 +14,7 @@ void Controler::CaptureMouseMovement()
     const ft xPcCoord = (decl_cast(halfDisplayWidth, xCoord) - halfDisplayWidth) / halfDisplayWidth;
     const ft yPcCoord = -(decl_cast(halfDisplayHeight, yCoord) - halfDisplayHeight) / halfDisplayHeight;
 
-    const glm::mat4 cameraProjectionInverse = glm::inverse(camera.ViewProjection()); 
+    const glm::mat4 cameraProjectionInverse = glm::inverse(Camera::ViewProjection()); 
     const glm::vec2 mousePos = glm::vec2(cameraProjectionInverse * glm::vec4(xPcCoord, yPcCoord, 0.0f, 0.0f));
     const glm::vec2 pcPos = glm::vec2(0);
     const glm::vec2 vecToMouse = glm::normalize(pcPos - mousePos);
@@ -30,16 +30,16 @@ void Controler::CaptureKeyboardPresses(bool &isPcAlive)
         const ft movementAmount = decl_cast(movementAmount, timer.Scale(defaultMovementAmount));
         if (display.ReadKeyboardState(codes[display.W]))
             transform.Pos().y += movementAmount,
-            camera.Pos().y += movementAmount;
+              Camera::Pos().y += movementAmount;
         if (display.ReadKeyboardState(codes[display.S]))
             transform.Pos().y -= movementAmount,
-            camera.Pos().y -= movementAmount;
+              Camera::Pos().y -= movementAmount;
         if (display.ReadKeyboardState(codes[display.A]))
             transform.Pos().x += movementAmount,
-            camera.Pos().x += movementAmount;
+              Camera::Pos().x += movementAmount;
         if (display.ReadKeyboardState(codes[display.D]))
             transform.Pos().x -= movementAmount,
-            camera.Pos().x -= movementAmount;
+              Camera::Pos().x -= movementAmount;
     }
     if (display.ReadKeyboardState(codes[display.SPACE]))
         isPcAlive = true;

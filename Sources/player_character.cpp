@@ -3,7 +3,7 @@
 #include <iostream>
 
 PlayerCharacter::PlayerCharacter(helpers::Core &core, const UntexturedMeshParams &pcParams)
-	: _camera(core.camera), _pcStats(core.stats), _pcMesh(pcParams), _pcBoundingBox(pcParams), 
+	:  _pcStats(core.stats), _pcMesh(pcParams), _pcBoundingBox(pcParams), 
 	_pcInterface(new IPlayerCharacter(this))
 {
 }
@@ -52,7 +52,7 @@ void PlayerCharacter::Update()
 
 void PlayerCharacter::Draw()
 {
-	helpers::render(_pcShader, _pcMesh, _pcTransform.Model(), _camera.ViewProjection(), _pcAlphaValue);
+	helpers::render(_pcShader, _pcMesh, _pcTransform.Model(), Camera::ViewProjection(), _pcAlphaValue);
 }
 
 void PlayerCharacter::_pcIntersection()
