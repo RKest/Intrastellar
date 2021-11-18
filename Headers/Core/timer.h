@@ -19,6 +19,7 @@ struct Timer
 	friend class Clock;
 	static void RecordFrame();
 	static void SetScalngFactor(cosnt db arg);
+	static void RenderFPS();
 	template <typename T>
 	inline static T Scale(T num)
 	{

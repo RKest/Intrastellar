@@ -1,6 +1,6 @@
 #include "Core/text.h"
 
-Text::Text(const std::string &fontPath, const ui screenWidth, const ui screenHieght) : shader("Shaders/Text")
+Text::Construct(const std::string &fontPath)
 {
 	if (FT_Init_FreeType(&ftl))
 		std::cerr << "ERROR:FREETYPE: Failed to initialize freetype" << std::endl;
@@ -31,8 +31,7 @@ Text::Text(const std::string &fontPath, const ui screenWidth, const ui screenHie
 	}
 
 	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);  
-	projection = glm::ortho(0.0f, static_cast<ft>(screenWidth), 0.0f, static_cast<ft>(screenHieght));
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	shader.Bind();
 	shader.SetUni("projection", projection);
 

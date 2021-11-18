@@ -3,7 +3,7 @@
 #include <iostream>
 
 PlayerCharacter::PlayerCharacter(helpers::Core &core, const UntexturedMeshParams &pcParams)
-	: _camera(core.camera), _text(core.text), _pcStats(core.stats), _pcMesh(pcParams), _pcBoundingBox(pcParams), 
+	: _camera(core.camera), _pcStats(core.stats), _pcMesh(pcParams), _pcBoundingBox(pcParams), 
 	_pcInterface(new IPlayerCharacter(this))
 {
 }
@@ -34,7 +34,7 @@ void PlayerCharacter::RenderScore()
 		}
 	}
 		
-	_text.Render(scoreString, 10.0f, static_cast<ft>(SCREEN_HEIGHT) - 40.0f, 1.0f, glm::vec3(1));
+	Text::Render(scoreString, 10.0f, static_cast<ft>(SCREEN_HEIGHT) - 40.0f, 1.0f, glm::vec3(1));
 }
 
 void PlayerCharacter::Update()

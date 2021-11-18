@@ -35,7 +35,6 @@ public:
 private:
 	friend struct IPlayerCharacter;
 	Camera &_camera;
-	Text &_text;
     PlayerStats &_pcStats;
 	Shader _pcShader{"Shaders/PC"};
 	UntexturedMesh _pcMesh;

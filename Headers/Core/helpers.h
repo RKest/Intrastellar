@@ -175,7 +175,6 @@ namespace helpers
     {
         Display &display;
         Camera &camera;
-        Text &text;
         PlayerStats &stats;
     };
 

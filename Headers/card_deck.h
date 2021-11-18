@@ -37,7 +37,6 @@ public:
 
 protected:
 private:
-    Text &_text;
     PlayerStats  &_stats;
     CustomRand _customRand;
     Shader _cardBorderShader{"Shaders/CardBorder"};

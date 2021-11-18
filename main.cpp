@@ -11,6 +11,7 @@
 
 int main()
 {
+	Text::Construct("./Resources/Fonts/slkscr.ttf");
 	Display display(SCREEN_WIDTH, SCREEN_HEIGHT, "Intrastellar");
 	Camera camera(glm::vec3(0.0f, 0.0f, -CAMERA_DISTANCE), 70.0f, display.Aspect(), 0.01f, 1000.0f);
 
@@ -32,8 +33,7 @@ int main()
 
 	PlayerStats playerStats = defaultStats;
 	EnemyStats enemyStats = defaultEnemyStats;
-	Text text("./Resources/Fonts/slkscr.ttf", SCREEN_WIDTH, SCREEN_HEIGHT);
-	helpers::Core core				{display, camera, text, playerStats};
+	helpers::Core core				{display, camera, playerStats};
 	ExpManager expManager			(core, expParams, expBarParams);
 	PlayerCharacter playerCharacter	(core, pcParams);
 	WeaponsManager weaponsManager	(core, weaponIconParams, overlayParams, blasterProjParams, rocketProjParams);
@@ -47,6 +47,7 @@ int main()
 		enemyManager.Draw();
 		playerCharacter.Draw();
 		weaponsManager.Draw();
+		Timer::RenderFPS();
 		playerCharacter.RenderScore();
 	};
 
@@ -86,8 +87,8 @@ int main()
 			Clock::RecordFrame();
 			render();
 
-			text.Render("GAME OVER!", (static_cast<ft>(SCREEN_WIDTH) / 2.0f) - 300.0f, (static_cast<ft>(SCREEN_HEIGHT) / 2.0f), 2.0f, glm::vec3(1));
-			text.Render("Space to restart", (static_cast<ft>(SCREEN_WIDTH) / 2.0f) - 120.0f, (static_cast<ft>(SCREEN_HEIGHT) / 2.0f) - 60.0f, 0.5f, glm::vec3(1));
+			Text::Render("GAME OVER!", (static_cast<ft>(SCREEN_WIDTH) / 2.0f) - 300.0f, (static_cast<ft>(SCREEN_HEIGHT) / 2.0f), 2.0f, glm::vec3(1));
+			Text::Render("Space to restart", (static_cast<ft>(SCREEN_WIDTH) / 2.0f) - 120.0f, (static_cast<ft>(SCREEN_HEIGHT) / 2.0f) - 60.0f, 0.5f, glm::vec3(1));
 
 			display.Update();
 			controler.CaptureKeyboardPresses(playerCharacter.IsAlive());

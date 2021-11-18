@@ -30,7 +30,7 @@ constexpr size_t ARR_SIZE(T (&)[N]) {
 	const UntexturedMeshParams params = {UN(m).positions.data(), UN(m).indices.data(), static_cast<ui>(UN(m).positions.size()), static_cast<ui>(UN(m).indices.size())};
 #endif
 
-[[maybe_unused]]constexpr std::array UNIFORMS = {"transform", "projection"};
+[[maybe_unused]]constexpr std::array UNIFORMS = { "transform", "projection" };
 
 constexpr const ui CUSTOM_RAND_SEED = 982347557;
 constexpr const ui SCREEN_WIDTH = 960;

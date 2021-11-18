@@ -20,19 +20,18 @@ struct Character
 class Text
 {
 public:
-	Text(const std::string &fontPath, const ui screenWidth, const ui screenHeihgt);
-	void Render(const std::string &text, ft x, const ft y, const ft scale, const glm::vec3 &colour);
-	~Text();
+	static void Construct(const std::string &fontPath);
+	static void Render(const std::string &text, ft x, const ft y, const ft scale, const glm::vec3 &colour);
 
 protected:
 private:
-	FT_Library ftl;
-	FT_Face face;
-	GLuint vertexArrayObject;
-	GLuint vertexArrayBuffer;
+	inline static FT_Library ftl;
+	inline static FT_Face face;
+	inline static GLuint vertexArrayObject;
+	inline static GLuint vertexArrayBuffer;
 
-	Shader shader;
-	std::map<char, Character> characters;
-	glm::mat4 projection;
+	inline static Shader shader{ "Shaders/Text" };
+	inline static std::map<char, Character> characters;
+	inline static const glm::mat4 projection = glm::ortho(0.0f, static_cast<ft>(SCREEN_WIDTH), 0.0f, static_cast<ft>(SCREEN_HEIGHT));
 	
 };

@@ -23,7 +23,7 @@ void CardDeck::DrawCards()
 		if(_cardBoundingBoxes[i].IsThereAnIntersection(helpers::mouseCoordsTransformed(_inverseFlippedCardBorderProjection)))
 		{
 			bool tempIsLBMPressed = helpers::IsLBMPressed();
-			_text.Render(_cards[_chosenCardIndices[i]].cardText, 100.0f, 100.0f, 0.5f, glm::vec3(1));
+			Text::Render(_cards[_chosenCardIndices[i]].cardText, 100.0f, 100.0f, 0.5f, glm::vec3(1));
 			if(_isLBMPressed && !tempIsLBMPressed)
 				_choseCards(i);
 			else
@@ -33,7 +33,7 @@ void CardDeck::DrawCards()
 }
 
 CardDeck::CardDeck(helpers::Core &core, const UntexturedMeshParams &overlayParams, const UntexturedMeshParams &cardBorderParams)
-	:   _text(core.text), _stats(core.stats), _customRand(CUSTOM_RAND_SEED), _overlayMesh(overlayParams),
+	:   _stats(core.stats), _customRand(CUSTOM_RAND_SEED), _overlayMesh(overlayParams),
 	  _cardBorderParams(cardBorderParams), _cardBorderMesh(cardBorderParams, NO_CARDS)
 {
 	for (ui i = 0; i < NO_CARDS; ++i)
