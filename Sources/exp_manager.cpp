@@ -1,29 +1,19 @@
-#include "exp_manager.h"
+clockId#include "exp_manager.h"
 
 ExpManager::ExpManager(helpers::Core &core, const UntexturedMeshParams &expMeshParams, const UntexturedMeshParams &expBarMeshParams)
-	: _timer(core.timer), _camera(core.camera), _customRand(CUSTOM_RAND_SEED),
-	_expMesh(expMeshParams, MAX_EXP_PART_NO),  _expBarMesh(expBarMeshParams)
+	: _camera(core.camera), _customRand(CUSTOM_RAND_SEED), _expMesh(expMeshParams, MAX_EXP_PART_NO), _expBarMesh(expBarMeshParams)
 {
 }
 
 void ExpManager::UpdateExpParticles(const glm::mat4 &pcModel)
 {
 	_hasThereBeenLevelUp = false;
-	std::list<ui>::const_iterator i = _expParticleClusterClockIds.cbegin();
-	std::list<ui>::const_iterator ie = _expParticleClusterClockIds.cend();
+	expStateClockCiter_t i = _expParticleClusterClockIds.cbegin();
+	expStateClockCiter_t ie = _expParticleClusterClockIds.cend();
 	while (i != ie)
 	{
-		if(_timer.HeapIsItTime(*i))
-		{
-			_timer.DestroyHeapClock(*i);
-			_expParticleClusterClockIds.erase(i);
-			for (InstanceState *state : _clockIdToInstanceStatePtrMap.at(*i))
-				state->behaviour = ExpPartcleBehaviour::ATTRACTION;
-			_clockIdToInstanceStatePtrMap.erase(*i);
-			/*if(!std::distance(ie, expParticleClusterClockIds.cend())) <--------- Not nescessery maybe untill it is 
-			cause theoretically only one clock can go off per frame but also if last element is erased weird stuff happens*/
+		if(i->Inspect())
 			break;
-		}
 		else
 			++i;
 	}
@@ -42,7 +32,7 @@ void ExpManager::UpdateExpParticles(const glm::mat4 &pcModel)
 		{
 			const glm::vec2 particlePos = glm::vec2(j->transform * glm::vec4(0,0,0,1));
 			glm::vec2 vecToPc = pcPos - particlePos;
-			bool doDespawnParticle = glm::length(vecToPc) < _timer.Scale(_expParticleAttractionSpeed);
+			bool doDespawnParticle = glm::length(vecToPc) < Timer::Scale(_expParticleAttractionSpeed);
 			if(doDespawnParticle)
 			{
 				_instanceStates.erase(j);
@@ -58,14 +48,13 @@ void ExpManager::UpdateExpParticles(const glm::mat4 &pcModel)
 				if(!std::distance(je, _instanceStates.end()))
 					break;
 			}
-			const glm::vec2 scaledVecToPc = helpers::scale2dVec(vecToPc, decl_cast(scaledVecToPc.x, _timer.Scale(_expParticleAttractionSpeed)));
+			const glm::vec2 scaledVecToPc = helpers::scale2dVec(vecToPc, decl_cast(scaledVecToPc.x, Timer::Scale(_expParticleAttractionSpeed)));
 			const glm::mat4 localTranform = glm::translate(glm::vec3(scaledVecToPc, 0));
 			j->transform *= localTranform;
 			++j;
 		}
 		else
 		{
-			LOG("i");
 			throw std::runtime_error("ERRORR:EXP_MANAGER: Wrong behaviour for the instance state");
 		}
 	}
@@ -84,24 +73,29 @@ void ExpManager::CreateExpParticles(const glm::mat4 &originModel, const ui noPar
 {
 	if(_instanceStates.size() < MAX_EXP_PART_NO)
 	{
-		ui heapClockId;
-		_timer.InitHeapClock(heapClockId, _expParticleAttractionDelay);
-		_expParticleClusterClockIds.push_back(heapClockId);
+		expStateClock_t expStateClock(_expParticleAttractionDelay, [this](expStateClockCiter_t it){
+			_expParticleClusterClockIds.erase(i);
+			for (InstanceState *state : _clockIdToInstanceStatePtrMap.at(i->clockId))
+				state->behaviour = ExpPartcleBehaviour::ATTRACTION;
+			_clockIdToInstanceStatePtrMap.erase(i->clockId);
+		});
+		_expParticleClusterClockIds.push_back(expStateClock);
+		const ui clockId = expStateClock.ClockId();
 
 		for (ui i = 0; i < noParticles; ++i)
 		{
 			if(_instanceStates.size() == MAX_EXP_PART_NO)
 				break;
 			_instanceStates.push_back({
-				glm::translate(glm::vec3(helpers::randomDirVector(_customRand, static_cast<ft>(_timer.Scale(_expParticleEntropySpeed))), 0.0f)),
+				glm::translate(glm::vec3(helpers::randomDirVector(_customRand, static_cast<ft>(Timer::Scale(_expParticleEntropySpeed))), 0.0f)),
 				originModel,
 				ExpPartcleBehaviour::ENTROPY,
-				heapClockId
+				clockId
 			});
-			if(!_clockIdToInstanceStatePtrMap.count(heapClockId))
-				_clockIdToInstanceStatePtrMap.insert(std::pair(heapClockId, std::vector<InstanceState *>{&_instanceStates.back()}));
+			if(!_clockIdToInstanceStatePtrMap.count(clockId))
+				_clockIdToInstanceStatePtrMap.insert(std::pair(clockId, std::vector<InstanceState *>{&_instanceStates.back()}));
 			else
-				_clockIdToInstanceStatePtrMap.at(heapClockId).push_back(&_instanceStates.back());
+				_clockIdToInstanceStatePtrMap.at(clockId).push_back(&_instanceStates.back());
 
 		}
 	}
@@ -109,8 +103,6 @@ void ExpManager::CreateExpParticles(const glm::mat4 &originModel, const ui noPar
 
 void ExpManager::Reset()
 {
-	for(ui clockId :  _expParticleClusterClockIds)
-		_timer.DestroyHeapClock(clockId);
 	_expParticleClusterClockIds.clear();
 	_clockIdToInstanceStatePtrMap.clear();
 	_instanceStates.clear();

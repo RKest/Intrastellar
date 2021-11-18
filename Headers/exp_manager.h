@@ -29,6 +29,8 @@ struct InstanceState
 };
 
 using namespace std::placeholders;
+using expStateClockCiter_t = std::list<Clock>::const_iterator;
+using expStateClock_t = Clock<expStateClockCiter_t>;
 class ExpManager
 {
 public:
@@ -58,7 +60,7 @@ private:
 	const glm::mat4 _expBarProjection = glm::ortho(0.0f, static_cast<ft>(SCREEN_WIDTH), 0.0f, static_cast<ft>(SCREEN_HEIGHT));
 	std::array<glm::vec3, 4> _expBarPositions{{glm::vec3(0), glm::vec3(0,1,0), glm::vec3(0), glm::vec3(0)}};
 
-	std::list<ui> _expParticleClusterClockIds;
+	std::list<expStateClock_t> _expParticleClusterClockIds;
 	std::map<ui, std::vector<InstanceState*>> _clockIdToInstanceStatePtrMap;
 	std::list<InstanceState> _instanceStates;
 

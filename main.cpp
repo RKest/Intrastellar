@@ -57,9 +57,8 @@ int main()
 		controler.CaptureKeyboardPresses(playerCharacter.IsAlive());
 		controler.CaptureMouseMovement();
 
-		//tiem
 		enemyManager.Spawn();
-
+		
 		weaponsManager.Update(pcModel, enemyManager.InstanceTransforms());
 		playerCharacter.Update();
 		if(expManager.HasThereBeenLevelUp())

@@ -3,7 +3,7 @@
 #include <iostream>
 
 PlayerCharacter::PlayerCharacter(helpers::Core &core, const UntexturedMeshParams &pcParams)
-	: _camera(core.camera), _text(core.text), _timer(core.timer), _pcStats(core.stats), _pcMesh(pcParams), _pcBoundingBox(pcParams), 
+	: _camera(core.camera), _text(core.text), _pcStats(core.stats), _pcMesh(pcParams), _pcBoundingBox(pcParams), 
 	_pcInterface(new IPlayerCharacter(this))
 {
 }

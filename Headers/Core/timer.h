@@ -25,19 +25,20 @@ struct Timer
 		return (num * static_cast<T>(s_durationSinceLastFrame.count() * s_scalingFactor));
 	}
 private:
-	inline static timePt_t s_lastFramePt = g_clock_t::now();
-	inline static milliDuration_t s_durationSinceLastFrame;
+	inline static ui 				s_nextClockId = 0;
+	inline static timePt_t 			s_lastFramePt = g_clock_t::now();
+	inline static milliDuration_t 	s_durationSinceLastFrame;
 
 	// Scaling
-	inline static db s_scalingFactor;
-	inline static db s_scalingChangeFactor{ 1.0 };
-	inline static bool s_wasScalingFactorChanged{};
+	inline static db 				s_scalingFactor;
+	inline static db 				s_scalingChangeFactor{ 1.0 };
+	inline static bool 				s_wasScalingFactorChanged{};
 
 	// FPS
-	inline static milliDuration_t s_fpsDuration = milliDuration_t( 0.0 );
-	inline static std::list<ui> s_pastFPSValues;
-	inline static ui s_framesThisSecond{};
-	inline static const ui s_maxPolledFrames{ 5 };
+	inline static milliDuration_t 	s_fpsDuration = milliDuration_t( 0.0 );
+	inline static std::list<ui> 	s_pastFPSValues;
+	inline static ui 				s_framesThisSecond{};
+	inline static const ui 			s_maxPolledFrames{ 5 };
 };
 
 template <typename... T>
@@ -47,7 +48,7 @@ public:
 	Clock() = default;
 	Clock(const db delay, const clockCB_t<T...> cb)
 		: m_delayDB(delay), m_cb(cb), m_delay(delay) {}
-	inline void Inspect(T... ts)
+	inline bool Inspect(T... ts)
 	{
 		if (Timer::s_wasScalingFactorChanged)
 			m_delay = static_cast<milliDuration_t>(RemainingTime() * s_scalingChangeFactor);
@@ -57,11 +58,15 @@ public:
 			m_delay = static_cast<milliDuration_t>(m_delay / Timer::s_scalingFactor);
 			m_latestTimePoint = Timer::s_lastFramePt;
 			m_cb(ts...);
+			return true;
 		}
+		return false;
 	}
 	db RemainingTime();
+	inline ui ClockId() { return clockId; } 
 
 private:
+	const ui clockId = Timer::s_nextClockId++;
 	const db m_delayDB;
 	const clockCB_t<T...> m_cb;
 	milliDuration_t m_delay;

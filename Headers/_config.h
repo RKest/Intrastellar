@@ -60,7 +60,8 @@ constexpr const db PI_d = glm::pi<db>();
 constexpr const ft MAX_PROJ_TURNING_RAD = glm::radians(0.1f);
 constexpr const ft DEF_ANGLE_BETWEEN_SHOTS = glm::radians(15.0f);
 
-inline db ENEMY_ORPHANDED_PROJ_LIFETIME = 5000.0;
+constexpr const db ENEMY_SPAWN_DELAY = 500.0;
+constexpr const db ENEMY_ORPHANDED_PROJ_LIFETIME = 5000.0;
 constexpr const ft ENEMY_ORBIT_RADIUS = 5.0f;
 constexpr const ft ENEMY_ORBIT_CIRC = ENEMY_ORBIT_RADIUS * TAU;
 constexpr const ft ENEMY_ORBIT_TICS_TO_DESIERED_ANGLE = 1000.0F;

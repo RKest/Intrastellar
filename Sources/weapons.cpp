@@ -22,7 +22,7 @@ void BlasterBehaviour::Update([[maybe_unused]]const std::vector<glm::mat4> &enem
     const ft homingStrength =_weaponPtr->_weaponStats.shotHomingStrength; 
     if(fpclassify(homingStrength) != FP_ZERO)
     {
-        const ft maxTurningRadius = _weaponPtr->_manager._timer.Scale(MAX_PROJ_TURNING_RAD);
+        const ft maxTurningRadius = Timer::Scale(MAX_PROJ_TURNING_RAD);
         for(size_t i = 0; i < _weaponPtr->_noProjs; ++i)
         {
             _weaponPtr->_projInstanceTransforms[i] *= helpers::rotateTowardsClosest(enemyInstanceTransforms, _weaponPtr->_projInstanceTransforms[i], 
@@ -39,7 +39,7 @@ void RocketBehaviour::Update([[maybe_unused]]const std::vector<glm::mat4> &enemy
     {
         const glm::vec2 worldMousePos = helpers::mouseCoordsTransformed(inverse(_weaponPtr->_manager._camera.ViewProjection()), 0.001f);
         const glm::mat4 worldMouseModel = glm::translate(glm::vec3(worldMousePos * CAMERA_DISTANCE, 0.0f));
-        const ft maxTurningRadius = _weaponPtr->_manager._timer.Scale(MAX_PROJ_TURNING_RAD);
+        const ft maxTurningRadius = Timer::Scale(MAX_PROJ_TURNING_RAD);
         for(size_t i = 0; i < _weaponPtr->_noProjs; ++i)
         {
             _weaponPtr->_projInstanceTransforms[i] *= helpers::rotateTowards(worldMouseModel, _weaponPtr->_projInstanceTransforms[i], maxTurningRadius);
@@ -281,7 +281,7 @@ void WeaponsManager::Reset()
     _isThereWeaponCooldown  = false;
     _isWeaopnsTabVisible    = false;
     _isWeaponsFullyDrawn    = false;
-    _timer.SetScalingFactor(1.0);
+    Timer::.SetScalingFactor(1.0);
 }
 
 void WeaponsManager::_closeWeaponTab()
@@ -295,7 +295,7 @@ void WeaponsManager::_closeWeaponTab()
     }
     _isWeaopnsTabVisible    = false;
     _isWeaponsFullyDrawn    = false;
-    _timer.SetScalingFactor(1.0);
+    Timer::SetScalingFactor(1.0);
 }
 
 void WeaponsManager::_switchWeapons(const ui weaponIndex)

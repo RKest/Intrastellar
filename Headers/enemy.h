@@ -182,6 +182,7 @@ private:
 	const UntexturedMeshParams _enemyProjParams;
 	IPlayerCharacter _pcInterface;
 	weaponInterfaceArray_t &_weaponInterfaces;
+	Clock m_spawnClock;
 
 	glm::mat4 _pcModel;
 	Transform _enemyTransform;
@@ -191,5 +192,5 @@ private:
 	ui _newestEnemyId = 0;
 
 	void checkForProjIntersection(std::vector<glm::mat4> &projInstanceTransforms);
-
+	void m_spawn();
 };

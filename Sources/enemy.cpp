@@ -30,7 +30,7 @@ void ChaseBehaviour::Update(const ui dataIndex)
 {
 	auto &instanceTransform 		= _manager._enemyData.instanceTransforms	[dataIndex];
 	auto &projInstanceTransforms 	= _manager._enemyData.projInstanceTransforms[dataIndex];
-	instanceTransform *= helpers::transformTowards(instanceTransform, _manager._pcModel, static_cast<ft>(_manager._timer.Scale(_manager._enemyStats.speed)));
+	instanceTransform *= helpers::transformTowards(instanceTransform, _manager._pcModel, static_cast<ft>(Timer::Scale(_manager._enemyStats.speed)));
 	EnemyBehaviuor::UpdateProjs(projInstanceTransforms);
 }
 
@@ -121,7 +121,7 @@ void OrbiterBehaviour::Update(const ui dataIndex)
 		const ft angleDifference = desieredAngle - i->first;
 		const ft absAngleDifference = angleDifference < -minAngleToTravel ? -minAngleToTravel : angleDifference;
 		const ft cappedAngleDifference = absAngleDifference / ENEMY_ORBIT_TICS_TO_DESIERED_ANGLE; 
-		const ft angleToAdd = minAngleToTravel + _manager._timer.Scale(cappedAngleDifference);
+		const ft angleToAdd = minAngleToTravel + Timer::Scale(cappedAngleDifference);
 		const ft nextFrameAngle = i->first + angleToAdd;
 
 		const glm::mat4 nextFrameRotationTransform = instanceTransform * helpers::rotateZ(nextFrameAngle) * ENEMY_ORBIT_TO_ORBIT_TRANSLATE;
@@ -246,8 +246,8 @@ void Enemy::Draw()
 
 EnemyManager::EnemyManager(helpers::Core &core, const UntexturedMeshParams &params, EnemyStats &enemyStats, const UntexturedMeshParams &projParams, 
 		IPlayerCharacter *pcInterface, weaponInterfaceArray_t &weaponInterfaces)
- : _camera(core.camera), _pcStats(core.stats), _enemyStats(enemyStats), 
- 	_enemyParams(params), _enemyProjParams(projParams), _pcInterface(pcInterface), _weaponInterfaces(weaponInterfaces)
+ : _camera(core.camera), _pcStats(core.stats), _enemyStats(enemyStats), _enemyParams(params), _enemyProjParams(projParams), _pcInterface(pcInterface), 
+ _weaponInterfaces(weaponInterfaces), m_spawnClock(ENEMY_SPAWN_DELAY, [this]{ m_spawn(); })
 {
 	behavoiurPtrVec_t chaserVec;
 	behavoiurPtrVec_t shooterVec;
@@ -326,6 +326,11 @@ std::vector<glm::mat4> EnemyManager::InstanceTransforms()
 }
 
 void EnemyManager::Spawn()
+{
+	m_spawnClock.Inspect();
+}
+
+void EnemyManager::m_spawn()
 {
 	const glm::vec2 pcPos{_pcModel * glm::vec4(0,0,0,1)};
 	const ft enemyX = _customRand.NextUi() % 2 ? _customRand.NextFloat(pcPos.x - 9.0f, pcPos.x - 11.0f) : 
