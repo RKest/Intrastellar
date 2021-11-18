@@ -37,7 +37,8 @@ class EnemyBehaviuor
 public:
 	EnemyBehaviuor(EnemyManager &manager, bool isDefault = false);
 	virtual ~EnemyBehaviuor() = default;
-	virtual void Update(glm::mat4 &instanceTransform, std::vector<glm::mat4> &projInstanceTransforms,[[maybe_unused]]Clock &shotClock) = 0;
+	virtual void Update	(const ui dataIndex) = 0;
+	virtual void Fire	(const ui dataIndex);
 	[[nodiscard]]BehavoiurStatus EnemyBehaviuorStatus(const glm::mat4 &enemyModel);
 	inline bool &IsActive() { return _isActive; }
 protected:
@@ -53,7 +54,7 @@ class ChaseBehaviour : public EnemyBehaviuor
 {
 public:
 	ChaseBehaviour(EnemyManager &manager) : EnemyBehaviuor(manager, true) {}
-	void Update(glm::mat4 &instanceTransform, std::vector<glm::mat4> &projInstanceTransforms,[[maybe_unused]]Clock<> &shotClock) override;
+	void Update	(const ui dataIndex) override;
 
 private:
 };
@@ -62,7 +63,8 @@ class ShootBehavoiur : public EnemyBehaviuor
 {
 public:
 	ShootBehavoiur(EnemyManager &manager);
-	void Update(glm::mat4 &instanceTransform, std::vector<glm::mat4> &projInstanceTransforms,[[maybe_unused]]Clock<> &shotClock) override;
+	void Update	(const ui dataIndex) override;
+	void Fire	(const ui dataIndex) override;
 
 private:
 	bool HasMetPredicate(const glm::mat4 &enemyModel);
@@ -73,7 +75,8 @@ class OrbiterBehaviour : public EnemyBehaviuor
 {
 public:
 	OrbiterBehaviour(EnemyManager &manager);
-	void Update(glm::mat4 &instanceTransform, std::vector<glm::mat4> &projInstanceTransforms,[[maybe_unused]]Clock<> &shotClock) override;
+	void Update	(const ui dataIndex) override;
+	void Fire	(const ui dataIndex) override;
 
 private:
 	ui _latestShotIndex{};
@@ -104,14 +107,14 @@ using orphanedProjPair_t = std::pair<Clock<ui>, std::vector<glm::mat4>>;
 struct EnemyData
 {
 	EnemyData(EnemyManager &manager);
-	std::vector<glm::mat4>				instanceTransforms;
-	std::vector<ReqBoundingBox>			boundingBoxes;
-	std::vector<si>						healths;
-	behavoiurPtrVec_t					enemyBehaviours;
-	std::vector<std::vector<glm::mat4>>	projInstanceTransforms;
-	std::vector<orphanedProjPair_t> 	clockOrphanedProjsParis;
-	std::vector<Clock>					shotClocks;
-	std::vector<ui>						ids;
+	std::vector<glm::mat4>					instanceTransforms;
+	std::vector<ReqBoundingBox>				boundingBoxes;
+	std::vector<si>							healths;
+	behavoiurPtrVec_t						enemyBehaviours;
+	std::vector<std::vector<glm::mat4>>		projInstanceTransforms;
+	std::vector<orphanedProjPair_t> 		clockOrphanedProjsParis;
+	std::vector<Clock<EnemyBehaviuor*, ui>>	shotClocks;
+	std::vector<ui>							ids;
 
 	size_t 	size = 0;
 	void Clear();

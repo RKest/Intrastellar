@@ -5,6 +5,10 @@ EnemyBehaviuor::EnemyBehaviuor(EnemyManager &manager, bool isDefault)
 {
 }
 
+EnemyBehaviuor::Fire(const ui dataIndex)
+{
+}
+
 BehavoiurStatus EnemyBehaviuor::EnemyBehaviuorStatus(const glm::mat4 &enemyModel)
 {
 	if(_isDefault)
@@ -22,8 +26,10 @@ void EnemyBehaviuor::UpdateProjs(std::vector<glm::mat4> &projInstanceTransforms)
 	_manager.checkForProjIntersection(projInstanceTransforms);
 }
 
-void ChaseBehaviour::Update(glm::mat4 &instanceTransform, std::vector<glm::mat4> &projInstanceTransforms,[[maybe_unused]]Clock<> &shotClock)
+void ChaseBehaviour::Update(const ui dataIndex)
 {
+	auto &instanceTransform 		= _manager._enemyData.instanceTransforms	[dataIndex];
+	auto &projInstanceTransforms 	= _manager._enemyData.projInstanceTransforms[dataIndex];
 	instanceTransform *= helpers::transformTowards(instanceTransform, _manager._pcModel, static_cast<ft>(_manager._timer.Scale(_manager._enemyStats.speed)));
 	EnemyBehaviuor::UpdateProjs(projInstanceTransforms);
 }
@@ -32,15 +38,21 @@ ShootBehavoiur::ShootBehavoiur(EnemyManager &manager) : EnemyBehaviuor(manager, 
 {
 }
 
-void ShootBehavoiur::Update(glm::mat4 &instanceTransform, std::vector<glm::mat4> &projInstanceTransforms,[[maybe_unused]]Clock<> &shotClock)
+ShootBehavoiur::Fire(const ui dataIndex)
 {
+	const glm::mat4 instanceTransform = _manager._enemyData.instanceTransforms[dataIndex];
+	const ft angle = helpers::angleBetweenVectors(instanceTransform, _manager._pcModel);
+	const glm::mat4 aimTransform = helpers::rotateZ(angle);
+	const glm::mat4 initProjTransform = instanceTransform * aimTransform;
+	helpers::pushToCappedVector(_manager._enemyData.projInstanceTransforms[dataIndex], initProjTransform, _latestShotIndex, MAX_PROJ_AMOUNT_PER_ENEMY);
+}
+void ShootBehavoiur::Update(const ui dataIndex)
+{
+	auto &instanceTransform 		= _manager._enemyData.instanceTransforms	[dataIndex];
+	auto &projInstanceTransforms 	= _manager._enemyData.projInstanceTransforms[dataIndex];
+	_manager._enemyData.shotClocks[dataIndex].Inspect(this, dataIndex);
 	EnemyBehaviuor::UpdateProjs(projInstanceTransforms);
-	shotClock.ManualInspect([this, &instanceTransform, &projInstanceTransforms]{
-		const ft angle = helpers::angleBetweenVectors(instanceTransform, _manager._pcModel);
-		const glm::mat4 aimTransform = helpers::rotateZ(angle);
-		const glm::mat4 initProjTransform = instanceTransform * aimTransform;
-		helpers::pushToCappedVector(projInstanceTransforms, initProjTransform, _latestShotIndex, MAX_PROJ_AMOUNT_PER_ENEMY);
-	});
+
 }
 
 bool ShootBehavoiur::HasMetPredicate(const glm::mat4 &enemyModel)
@@ -54,8 +66,17 @@ OrbiterBehaviour::OrbiterBehaviour(EnemyManager &manager) : EnemyBehaviuor(manag
 {
 }
 
-void OrbiterBehaviour::Update(glm::mat4 &instanceTransform, std::vector<glm::mat4> &projInstanceTransforms,[[maybe_unused]]Clock<> &shotClock)
+OrbiterBehaviour::Fire(const ui dataIndex)
 {
+	auto &instanceTransform 		= _manager._enemyData.instanceTransforms	[dataIndex];
+	auto &projInstanceTransforms 	= _manager._enemyData.projInstanceTransforms[dataIndex];
+	_manager._enemyData.projInstanceTransforms[dataIndex].push_back(_manager._enemyData.instanceTransforms[dataIndex]);
+}
+
+void OrbiterBehaviour::Update(const ui dataIndex)
+{
+	auto &instanceTransform 		= _manager._enemyData.instanceTransforms	[dataIndex];
+	auto &projInstanceTransforms 	= _manager._enemyData.projInstanceTransforms[dataIndex];
 	_manager.checkForProjIntersection(projInstanceTransforms);
 
 	const ft scaledProjDistanceToTravelPerFrame = decl_cast(scaledProjDistanceToTravelPerFrame, Timer::Scale(_manager._enemyStats.shotSpeed));
@@ -63,9 +84,7 @@ void OrbiterBehaviour::Update(glm::mat4 &instanceTransform, std::vector<glm::mat
 	const size_t noProjectiles = projInstanceTransforms.size();
 	if(noProjectiles < MAX_PROJ_AMOUNT_PER_ORBIT)
 	{
-		shotClock.ManualInspect([&projInstanceTransforms, &instanceTransform]{
-			projInstanceTransforms.push_back(instanceTransform);
-		});
+		_manager._enemyData.shotClocks[dataIndex].Inspect(this, dataIndex);
 	}
 	const ft desieredAngleBetweenShots = TAU / static_cast<ft>(noProjectiles);
 	std::vector<std::pair<ft, std::reference_wrapper<glm::mat4>>> orbitProjData;
@@ -175,7 +194,7 @@ void EnemyData::Push(const glm::mat4 &instanceTransform, const UntexturedMeshPar
 	boundingBoxes			.emplace_back(params, instanceTransform);
 	projInstanceTransforms	.emplace_back();
 	healths					.push_back(stats.health);
-	shotClocks				.emplace_back();
+	shotClocks				.emplace_back(stats.shotDelay, [](EnemyBehaviuor* behaviour, ui i){ behaviour->Fire(i); });
 	ids						.push_back(_manager.NextId());
 
 	size++;
@@ -192,7 +211,7 @@ void Enemy::Update()
 	for(ui i = 0; i < data.size; ++i)
 	{
 		const auto chosenBehavoiurIter = choseBehaviour(_behaviours, data.instanceTransforms[i]);
-		chosenBehavoiurIter->get()->Update(data.instanceTransforms[i], data.projInstanceTransforms[i], data.shotClocks[i]);
+		chosenBehavoiurIter->get()->Update(i);
 		data.boundingBoxes[i].UpdateCoords(data.instanceTransforms[i]);
 	}
 	for(ui i = 0; i < data.clockOrphanedProjsParis.size(); ++i)

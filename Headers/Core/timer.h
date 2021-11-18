@@ -59,18 +59,6 @@ public:
 			m_cb(ts...);
 		}
 	}
-	inline void ManualInspect(auto cb)
-	{
-		if (Timer::s_wasScalingFactorChanged)
-			m_delay = static_cast<milliDuration_t>(RemainingTime() * Timer::s_scalingChangeFactor);
-
-		if (std::chrono::duration_cast<milliDuration_t>(Timer::s_lastFramePt - m_latestTimePoint) > m_delay)
-		{
-			m_delay = static_cast<milliDuration_t>(m_delay / Timer::s_scalingFactor);
-			m_latestTimePoint = Timer::s_lastFramePt;
-			cb();
-		}
-	}
 	db RemainingTime();
 
 private:
