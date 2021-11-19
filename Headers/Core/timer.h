@@ -31,8 +31,8 @@ private:
 	inline static milliDuration_t 	s_durationSinceLastFrame;
 
 	// Scaling
-	inline static db 				s_scalingFactor;
-	inline static db 				s_scalingChangeFactor{ 1.0 };
+	inline static db 				s_scalingFactor{ 1.0 };
+	inline static db 				s_scalingChangeFactor;
 	inline static bool 				s_wasScalingFactorChanged{};
 
 	// FPS
@@ -46,13 +46,25 @@ template <typename... T>
 class Clock
 {
 public:
-	Clock(){}
+	Clock()
+		: m_clockId(Timer::s_nextClockId++) 
+	{
+	}
+	Clock(const db delay, const clockCB_t<T...> cb)
+		: m_clockId(Timer::s_nextClockId++) 
+	{
+		Init(delay, cb);
+	}
 	Clock(Clock const&) = default;
 	Clock(Clock &&) 	= default;
 	Clock operator=(Clock &&rhs) 		{ return Clock(rhs); }
 	Clock operator=(const Clock &rhs) 	{ return Clock(rhs); }
-	Clock(const db delay, const clockCB_t<T...> cb)
-		: m_clockId(Timer::s_nextClockId++), m_delayDB(delay), m_cb(cb), m_delay(delay) {}
+	inline void Init(const db delay, const clockCB_t<T...> cb)
+	{
+		m_delayDB = delay;
+		m_delay = milliDuration_t(delay);
+		m_cb = cb;
+	}
 	inline bool Inspect(T... ts)
 	{
 		if (Timer::s_wasScalingFactorChanged)
@@ -60,7 +72,7 @@ public:
 
 		if (std::chrono::duration_cast<milliDuration_t>(Timer::s_lastFramePt - m_latestTimePoint) > m_delay)
 		{
-			m_delay = static_cast<milliDuration_t>(m_delay / Timer::s_scalingFactor);
+			m_delay = milliDuration_t(m_delay / Timer::s_scalingFactor);
 			m_latestTimePoint = Timer::s_lastFramePt;
 			m_cb(ts...);
 			return true;
@@ -75,8 +87,8 @@ public:
 
 private:
 	const ui m_clockId{};
-	const db m_delayDB{};
-	const clockCB_t<T...> m_cb{};
-	milliDuration_t m_delay;
-	timePt_t m_latestTimePoint;
+	db m_delayDB{};
+	clockCB_t<T...> m_cb{};
+	milliDuration_t m_delay{};
+	timePt_t m_latestTimePoint{};
 };

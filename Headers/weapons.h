@@ -3,7 +3,6 @@
 
 #include "Core/shader.h"
 #include "Core/mesh.h"
-#include "Core/display.h"
 #include "Core/helpers.h"
 #include "Core/transform.h"
 #include "Core/bounding_box.h"

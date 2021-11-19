@@ -1,8 +1,8 @@
 #include <GL/glew.h>
 #include <iostream>
-#include "Core/display.h"
+#include "_config.h"
 
-void Display::Construct(const std::string &title)
+Display::Display(const std::string &title)
 {
     std::cout << "Constructed" << std::endl;
     SDL_Init(SDL_INIT_EVERYTHING);

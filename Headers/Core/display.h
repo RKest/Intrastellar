@@ -3,11 +3,12 @@
 #include <string>
 #include <SDL2/SDL.h>
 
+inline bool _dummy_bool;
+
 class Display
 {
 public:
-    Display() = delete;
-    static void Construct(const std::string &title);
+    Display(const std::string &title);
     static void Destruct();
 
     static void Clear(float r, float g, float b, float a);
@@ -21,6 +22,7 @@ public:
     static bool IsClosed();
 protected:
 private:
+    friend class IDisplay;
     inline static SDL_Window *window;
     inline static SDL_GLContext glContext;
     inline static bool isClosed{};
@@ -35,4 +37,10 @@ private:
 
     inline static const Uint8 *keys = SDL_GetKeyboardState(NULL);
 
+};
+
+class IDisplay
+{
+public:
+    inline static Display I{"Intrastellar"};
 };

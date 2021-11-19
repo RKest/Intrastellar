@@ -3,7 +3,6 @@
 #include "_config.h"
 #include "Core/random.h"
 #include "Core/mesh.h"
-#include "Core/display.h"
 #include "Core/camera.h"
 #include "Core/shader.h"
 #include "Core/text.h"

@@ -59,7 +59,7 @@ void CardDeck::RollCards()
 	ui rolledCards = 0;
 	ui rAcc = 0;
 
-	m_overlayClock = Clock<>(OVERLAY_TRANSITION_TIME, [this]{
+	m_overlayClock.Init(OVERLAY_TRANSITION_TIME, [this]{
 		_overlayAlphaUni.second = OVERLAY_MAX_APLHA;
 		_areCardsFullyDrawn = true;
 	});

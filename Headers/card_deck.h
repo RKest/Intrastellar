@@ -9,7 +9,6 @@
 #include "Core/stats.h"
 #include "Core/timer.h"
 #include "Core/helpers.h"
-#include "Core/display.h"
 #include "Core/bounding_box.h"
 
 #include <string>

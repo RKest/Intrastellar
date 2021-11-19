@@ -1,7 +1,7 @@
 #include "enemy.h"
 
-EnemyBehaviuor::EnemyBehaviuor(EnemyManager &manager, bool isDefault)
-	: _manager(manager), _isDefault(isDefault)
+EnemyBehaviuor::EnemyBehaviuor(EnemyManager &manager, EnemyTypeEnum enemyType, bool isDefault)
+	: _manager(manager), m_enemyType(enemyType), _isDefault(isDefault)
 {
 }
 
@@ -28,29 +28,33 @@ void EnemyBehaviuor::UpdateProjs(std::vector<glm::mat4> &projInstanceTransforms)
 
 void ChaseBehaviour::Update(const ui dataIndex)
 {
-	auto &instanceTransform 		= _manager._enemyData.instanceTransforms	[dataIndex];
-	auto &projInstanceTransforms 	= _manager._enemyData.projInstanceTransforms[dataIndex];
+	auto &data = _manager._enemies[m_enemyType].data;
+	auto &instanceTransform			= data.instanceTransforms		[dataIndex];
+	auto &projInstanceTransforms 	= data.projInstanceTransforms 	[dataIndex];
 	instanceTransform *= helpers::transformTowards(instanceTransform, _manager._pcModel, static_cast<ft>(Timer::Scale(_manager._enemyStats.speed)));
 	EnemyBehaviuor::UpdateProjs(projInstanceTransforms);
 }
 
-ShootBehavoiur::ShootBehavoiur(EnemyManager &manager) : EnemyBehaviuor(manager, false) 
+ShootBehavoiur::ShootBehavoiur(EnemyManager &manager, EnemyTypeEnum enemyType) : EnemyBehaviuor(manager, enemyType, false)
 {
 }
 
 void ShootBehavoiur::Fire(const ui dataIndex)
 {
-	const glm::mat4 instanceTransform = _manager._enemyData.instanceTransforms[dataIndex];
+	auto &data = _manager._enemies[m_enemyType].data;
+	auto &instanceTransform			= data.instanceTransforms		[dataIndex];
+	auto &projInstanceTransforms 	= data.projInstanceTransforms 	[dataIndex];
 	const ft angle = helpers::angleBetweenVectors(instanceTransform, _manager._pcModel);
 	const glm::mat4 aimTransform = helpers::rotateZ(angle);
 	const glm::mat4 initProjTransform = instanceTransform * aimTransform;
-	helpers::pushToCappedVector(_manager._enemyData.projInstanceTransforms[dataIndex], initProjTransform, _latestShotIndex, MAX_PROJ_AMOUNT_PER_ENEMY);
+	helpers::pushToCappedVector(projInstanceTransforms, initProjTransform, _latestShotIndex, MAX_PROJ_AMOUNT_PER_ENEMY);
 }
 void ShootBehavoiur::Update(const ui dataIndex)
 {
-	auto &instanceTransform 		= _manager._enemyData.instanceTransforms	[dataIndex];
-	auto &projInstanceTransforms 	= _manager._enemyData.projInstanceTransforms[dataIndex];
-	_manager._enemyData.shotClocks[dataIndex].Inspect(this, dataIndex);
+	auto &data = _manager._enemies[m_enemyType].data;
+	auto &instanceTransform			= data.instanceTransforms		[dataIndex];
+	auto &projInstanceTransforms 	= data.projInstanceTransforms 	[dataIndex];
+	data.shotClocks[dataIndex].Inspect(this, dataIndex);
 	EnemyBehaviuor::UpdateProjs(projInstanceTransforms);
 	helpers::pushToCappedVector(projInstanceTransforms, instanceTransform, _latestShotIndex, MAX_ENEMY_PROJ_AMOUNT);
 }
@@ -62,21 +66,23 @@ bool ShootBehavoiur::HasMetPredicate(const glm::mat4 &enemyModel)
 	return glm::distance(pcPos, enemyPos) < 15.0f;
 }
 
-OrbiterBehaviour::OrbiterBehaviour(EnemyManager &manager) : EnemyBehaviuor(manager, true) 
+OrbiterBehaviour::OrbiterBehaviour(EnemyManager &manager, EnemyTypeEnum enemyType) : EnemyBehaviuor(manager, enemyType, true)
 {
 }
 
 void OrbiterBehaviour::Fire(const ui dataIndex)
 {
-	auto &instanceTransform 		= _manager._enemyData.instanceTransforms	[dataIndex];
-	auto &projInstanceTransforms 	= _manager._enemyData.projInstanceTransforms[dataIndex];
+	auto &data = _manager._enemies[m_enemyType].data;
+	auto &instanceTransform			= data.instanceTransforms		[dataIndex];
+	auto &projInstanceTransforms 	= data.projInstanceTransforms 	[dataIndex];
 	projInstanceTransforms.push_back(instanceTransform);
 }
 
 void OrbiterBehaviour::Update(const ui dataIndex)
 {
-	auto &instanceTransform 		= _manager._enemyData.instanceTransforms	[dataIndex];
-	auto &projInstanceTransforms 	= _manager._enemyData.projInstanceTransforms[dataIndex];
+	auto &data = _manager._enemies[m_enemyType].data;
+	auto &instanceTransform			= data.instanceTransforms		[dataIndex];
+	auto &projInstanceTransforms 	= data.projInstanceTransforms 	[dataIndex];
 	_manager.checkForProjIntersection(projInstanceTransforms);
 
 	const ft scaledProjDistanceToTravelPerFrame = decl_cast(scaledProjDistanceToTravelPerFrame, Timer::Scale(_manager._enemyStats.shotSpeed));
@@ -84,7 +90,7 @@ void OrbiterBehaviour::Update(const ui dataIndex)
 	const size_t noProjectiles = projInstanceTransforms.size();
 	if(noProjectiles < MAX_PROJ_AMOUNT_PER_ORBIT)
 	{
-		_manager._enemyData.shotClocks[dataIndex].Inspect(this, dataIndex);
+		data.shotClocks[dataIndex].Inspect(this, dataIndex);
 	}
 	const ft desieredAngleBetweenShots = TAU / static_cast<ft>(noProjectiles);
 	std::vector<std::pair<ft, std::reference_wrapper<glm::mat4>>> orbitProjData;
@@ -253,10 +259,10 @@ EnemyManager::EnemyManager(helpers::Core &core, const UntexturedMeshParams &para
 	behavoiurPtrVec_t shooterVec;
 	behavoiurPtrVec_t orbiterVec;
 	_enemies.reserve(EnemyTypeEnum::NO_ENEMY_TYPES);
-	chaserVec .push_back(std::make_unique<ChaseBehaviour>(*this));
-	shooterVec.push_back(std::make_unique<ChaseBehaviour>(*this));
-	shooterVec.push_back(std::make_unique<ShootBehavoiur>(*this));
-	orbiterVec.push_back(std::make_unique<OrbiterBehaviour>(*this));
+	chaserVec .push_back(std::make_unique<ChaseBehaviour>(*this, EnemyTypeEnum::CHASER_ENEMY ));
+	shooterVec.push_back(std::make_unique<ChaseBehaviour>(*this, EnemyTypeEnum::SHOOTER_ENEMY));
+	shooterVec.push_back(std::make_unique<ShootBehavoiur>(*this, EnemyTypeEnum::SHOOTER_ENEMY));
+	orbiterVec.push_back(std::make_unique<OrbiterBehaviour>(*this, EnemyTypeEnum::ORBITER_ENEMY));
 	_enemies.emplace_back(*this, chaserVec,  glm::vec3(0.25f, 0.57f, 0.38f), MAX_NO_ENEMIES);
 	_enemies.emplace_back(*this, shooterVec, glm::vec3(0.63f, 0.16f, 0.16f), MAX_NO_SHOOTER_ENEMIES);
 	_enemies.emplace_back(*this, orbiterVec, glm::vec3(0.94f, 0.90f, .055f), MAX_NO_ORBITER_ENEMIES);

@@ -30,12 +30,22 @@ enum BehavoiurStatus
 	DEFAULT
 };
 
+enum EnemyTypeEnum : ui 
+{
+	CHASER_ENEMY,
+	SHOOTER_ENEMY,
+	ORBITER_ENEMY,
+
+	NO_ENEMY_TYPES
+};
+
 class EnemyManager;
+class EnemyData;
 
 class EnemyBehaviuor
 {
 public:
-	EnemyBehaviuor(EnemyManager &manager, bool isDefault = false);
+	EnemyBehaviuor(EnemyManager &manager, EnemyTypeEnum enemyType, bool isDefault = false);
 	virtual ~EnemyBehaviuor() = default;
 	virtual void Update	(const ui dataIndex) = 0;
 	virtual void Fire	(const ui dataIndex);
@@ -45,6 +55,7 @@ protected:
 	virtual bool HasMetPredicate([[maybe_unused]]const glm::mat4 &enemyModel) { return true; };
 	void UpdateProjs(std::vector<glm::mat4> &projInstanceTransforms);
 	EnemyManager &_manager;
+	EnemyTypeEnum m_enemyType;
 	bool _isActive{};
 	const bool _isDefault;
 };
@@ -53,7 +64,7 @@ using behavoiurPtrVec_t = std::vector<std::unique_ptr<EnemyBehaviuor>>;
 class ChaseBehaviour : public EnemyBehaviuor
 {
 public:
-	ChaseBehaviour(EnemyManager &manager) : EnemyBehaviuor(manager, true) {}
+	ChaseBehaviour(EnemyManager &manager, EnemyTypeEnum enemyType) : EnemyBehaviuor(manager, enemyType, true) {}
 	void Update	(const ui dataIndex) override;
 
 private:
@@ -62,7 +73,7 @@ private:
 class ShootBehavoiur : public EnemyBehaviuor
 {
 public:
-	ShootBehavoiur(EnemyManager &manager);
+	ShootBehavoiur(EnemyManager &manager, EnemyTypeEnum enemyType);
 	void Update	(const ui dataIndex) override;
 	void Fire	(const ui dataIndex) override;
 
@@ -74,7 +85,7 @@ private:
 class OrbiterBehaviour : public EnemyBehaviuor
 {
 public:
-	OrbiterBehaviour(EnemyManager &manager);
+	OrbiterBehaviour(EnemyManager &manager, EnemyTypeEnum enemyType);
 	void Update	(const ui dataIndex) override;
 	void Fire	(const ui dataIndex) override;
 
@@ -167,19 +178,10 @@ private:
 	friend class ShootBehavoiur;
 	friend class OrbiterBehaviour;
 	friend class EnemyInterface;
-	enum EnemyTypeEnum : std::size_t
-	{
-		CHASER_ENEMY,
-		SHOOTER_ENEMY,
-		ORBITER_ENEMY,
-
-		NO_ENEMY_TYPES
-	};
 
 	Shader _enemyShader{"./Shaders/Enemy"};
 	Shader _enemyProjShader{"./Shaders/EnemyProjectile"};
 	PlayerStats &_pcStats;
-	EnemyData _enemyData{*this};
 	EnemyStats &_enemyStats;
 	const UntexturedMeshParams _enemyParams;
 	const UntexturedMeshParams _enemyProjParams;

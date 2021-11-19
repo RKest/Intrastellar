@@ -6,6 +6,7 @@
 #include <array>
 #include "glm/gtx/string_cast.hpp"      
 #include "glm/gtx/vector_angle.hpp"
+#include "Core/display.h"
 
 typedef unsigned long long u64; 
 typedef unsigned int ui;
@@ -84,7 +85,6 @@ constexpr const ft OVERLAY_MAX_APLHA = 0.5F;
 constexpr const ui MAX_NO_TEXTURES = 10;
 
 inline size_t _dummy_size_t;
-inline bool _dummy_bool;
 inline si _dummy_si;
 inline const glm::mat4 _blankTransform = glm::mat4(1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1);
 template<typename T, typename ...Ts>

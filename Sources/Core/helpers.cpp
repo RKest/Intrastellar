@@ -49,7 +49,7 @@ ft helpers::matDistance(const glm::mat4 &mat1, const glm::mat4 &mat2)
 void helpers::transformMatVec(std::vector<glm::mat4> &vec, const ft xTransformVal)
 {
 	const glm::mat4 model = glm::translate(glm::vec3(xTransformVal, 0.0f, 0.0f));
-	std::for_each(vec.begin(), vec.end(), [&model](auto &mat){ mat *= model; });
+	std::for_each(begin(vec), end(vec), [&model](auto &mat){ mat *= model; });
 }
 
 glm::vec2 helpers::mouseCoordsTransformed(const glm::mat4 &transform, const ft transformScalingFactor)

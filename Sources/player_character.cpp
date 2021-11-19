@@ -64,10 +64,9 @@ void PlayerCharacter::_pcIntersection()
 			_isAlive = false;
 		else
 		{
-			m_invincibilityClock = Clock<>(_invincibilityDuration, [this]{
+			m_invincibilityClock.Init(_invincibilityDuration, [this](){
 				_isInvincible = false;
 			});
-			_isInvincible = true;
 		}
 	}
 }

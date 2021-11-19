@@ -48,7 +48,8 @@ void LaserBehaviour::Update([[maybe_unused]]const std::vector<glm::mat4> &enemyI
 {
     typedef std::remove_reference<decltype(enemyInstanceTransforms)>::type nonRefVec;
     typedef std::remove_const<nonRefVec>::type nonConstVec;
-    m_laserLingerClock.Inspect();
+    if(m_isLaserVisible)
+        m_laserLingerClock.Inspect();
     if(m_hasLaserFired)
     {
         std::vector<nonConstVec::const_iterator> alreadyHitIters;
@@ -107,10 +108,11 @@ void LaserBehaviour::Update([[maybe_unused]]const std::vector<glm::mat4> &enemyI
 void LaserBehaviour::Fire(const glm::mat4 &pcModel)
 {
     _laserOrigin = pcModel;
-    m_laserLingerClock = Clock<>(WEAPONS_LASER_LINGER_DURATION, [this]{
+    m_laserLingerClock.Init(WEAPONS_LASER_LINGER_DURATION, [this]{
         m_isLaserVisible = false;
     });
     m_isLaserVisible = true;
+    m_hasLaserFired = true;
 }
 
 void LaserBehaviour::Draw()
@@ -142,7 +144,7 @@ void Weapon::Draw()
 }
 void Weapon::Init()
 {
-    m_shotClock = shotClock_t(_weaponStats.shotDelay, [this](const glm::mat4 &pcModel){
+    m_shotClock.Init(_weaponStats.shotDelay, [this](glm::mat4 const& pcModel){
         _behaviour.Fire(pcModel);
     });
 }
@@ -213,12 +215,12 @@ void WeaponsManager::Update(const glm::mat4 &pcModel, const std::vector<glm::mat
 
 void WeaponsManager::Draw()
 {
-    if(!_isThereWeaponCooldown && Display::ReadKeyboardState(Display::KeyScancodeMap()[Display::TAB]))
+    if(!_isThereWeaponCooldown && IDisplay::I.ReadKeyboardState(IDisplay::I.KeyScancodeMap()[IDisplay::I.TAB]))
     {
         if(!_isWeaopnsTabVisible)
         {
             _isWeaopnsTabVisible = true;
-            m_weaponTransitionClock = Clock<>(OVERLAY_TRANSITION_TIME, [this]{
+            m_weaponTransitionClock.Init(OVERLAY_TRANSITION_TIME, [this](){
                 for(ui i = 0; i < WEAPONS_NO_WEAPONS; ++i)
                 {
                     _instanceTransforms[i] = _baseInstanceTransforms[i] * glm::translate(glm::vec3(0.0f, _iconRealestate, 0.0f));
@@ -250,7 +252,7 @@ void WeaponsManager::Draw()
             _closeWeaponTab();
             _switchWeapons(tempSelectedWeaponIndex);
 
-            m_weaponCooldownClock = Clock<>(WEAPONS_COOLDOWN, [this]{
+            m_weaponCooldownClock.Init(WEAPONS_COOLDOWN, [this]{
                 _isThereWeaponCooldown = false;
             });
             _isThereWeaponCooldown = true;
@@ -265,9 +267,12 @@ void WeaponsManager::Draw()
         _weaponIconShader.SetUni(_selectedWeaponIndexUni.first, tempSelectedWeaponIndex);
         helpers::render(_weaponIconShader, _iconMesh, _instanceTransforms, WEAPONS_NO_WEAPONS, _blankTransform, _projection, _samplerIds);
     }
-    else
+    else if(_isThereWeaponCooldown)
     {
         m_weaponCooldownClock.Inspect();
+    }
+    else
+    {
         _closeWeaponTab();
     }
     for(size_t i = 0; i < Weapons::NO_IMPLEMENTED_WEAPONS; ++i)

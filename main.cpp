@@ -12,7 +12,6 @@
 int main()
 {
 	Text	::Construct("./Resources/Fonts/slkscr.ttf");
-	Display	::Construct("Intrastellar");
 	Camera	::Construct(glm::vec3(0.0f, 0.0f, -CAMERA_DISTANCE), 70.0f, SCREEN_ASPECT, 0.01f, 1000.0f);
 
 	const glm::vec3 expBarVertices[] = {{0,0,0}, {0,1,0}, {1,0,0}, {1,1,0}};
@@ -45,7 +44,7 @@ int main()
 
 	const auto render = [&]
 	{
-		Display::Clear(0.1f, 0.1f, 0.2f, 1.0f);
+		IDisplay::I.Clear(0.1f, 0.1f, 0.2f, 1.0f);
 		enemyManager.Draw();
 		playerCharacter.Draw();
 		weaponsManager.Draw();
@@ -53,7 +52,7 @@ int main()
 		playerCharacter.RenderScore();
 	};
 
-	while (!Display::IsClosed())
+	while (!IDisplay::I.IsClosed())
 	{
 		Timer::RecordFrame();
 		glm::mat4 pcModel = playerCharacter.Interface()->Transform().Model();
@@ -73,19 +72,19 @@ int main()
 		enemyManager.UpdateBehaviour(helpers::transformStdVector(pcParams, pcModel));
 		render();
 		expManager.UpdateExpParticles(pcModel);
-		Display::Update();
+		IDisplay::I.Update();
 
-		while (cardDeck.AreCarsDrawn() && !Display::IsClosed())
+		while (cardDeck.AreCarsDrawn() && !IDisplay::I.IsClosed())
 		{
 			Timer::RecordFrame();
 			render();
 			cardDeck.DrawCards();
-			Display::Update();
+			IDisplay::I.Update();
 		}
 
 		usleep(10000);
 
-		while (!playerCharacter.IsAlive() && !Display::IsClosed())
+		while (!playerCharacter.IsAlive() && !IDisplay::I.IsClosed())
 		{
 			Timer::RecordFrame();
 			render();
@@ -93,7 +92,7 @@ int main()
 			Text::Render("GAME OVER!", (static_cast<ft>(SCREEN_WIDTH) / 2.0f) - 300.0f, (static_cast<ft>(SCREEN_HEIGHT) / 2.0f), 2.0f, glm::vec3(1));
 			Text::Render("Space to restart", (static_cast<ft>(SCREEN_WIDTH) / 2.0f) - 120.0f, (static_cast<ft>(SCREEN_HEIGHT) / 2.0f) - 60.0f, 0.5f, glm::vec3(1));
 
-			Display::Update();
+			IDisplay::I.Update();
 			controler.CaptureKeyboardPresses(playerCharacter.IsAlive());
 
 			if (playerCharacter.IsAlive())
@@ -109,7 +108,7 @@ int main()
 			}
 		}
 	}
-	Display::Destruct();
+	IDisplay::I.Destruct();
 
 	return 0;
 }

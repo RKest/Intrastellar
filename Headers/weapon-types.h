@@ -81,7 +81,7 @@ protected:
 	std::vector<ui>         _alreadyHitEnemyIds     [MAX_PROJ_AMOUNT];
     ui                      _noProjs = 0;
 
-    shotClock_t m_shotClock;
+    Clock<glm::mat4 const&> m_shotClock;
     ui _oldestProjIndex{};
 	bool _projHit(const ui projIndex, const ui enemyIndex);
     void _commonUpdate();

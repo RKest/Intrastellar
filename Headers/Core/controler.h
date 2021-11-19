@@ -1,7 +1,6 @@
 #pragma once
 #include "_config.h"
 #include "Core/transform.h"
-#include "Core/display.h"
 #include "Core/camera.h"
 #include "Core/timer.h"
 #include "Core/helpers.h"
@@ -16,13 +15,13 @@ public:
     : transform(transform) {};
     void CaptureMouseMovement();
     void CaptureKeyboardPresses(bool &isPcAlive);
-    inline bool IsTabPressed() { return Display::ReadKeyboardState(codes[Display::TAB]); }
+    inline bool IsTabPressed() { return IDisplay::I.ReadKeyboardState(codes[IDisplay::I.TAB]); }
 
 protected:
 private:
     Transform &transform;
 
-    SDL_Scancode *codes = Display::KeyScancodeMap();
+    SDL_Scancode *codes = IDisplay::I.KeyScancodeMap();
     db defaultMovementAmount = 0.02f;
 
 };
