@@ -1,6 +1,7 @@
 #include "Core/timer.h"
 
-db Clock::RemainingTime()
+template <typename ...T>
+db Clock<T...>::RemainingTime()
 {
 	return m_delay.count() - std::chrono::duration_cast<milliDuration_t>(Timer::s_lastFramePt - m_latestTimePoint).count();
 }
@@ -39,6 +40,6 @@ void Timer::SetScalngFactor(const db arg)
 	if(s_scalingFactor != arg)
 	{
 		s_scalingChangeFactor = s_scalingFactor * arg;
-		scalingFactor = arg;
+		s_scalingFactor = arg;
 	}
 }

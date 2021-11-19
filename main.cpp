@@ -54,7 +54,7 @@ int main()
 
 	while (!Display::IsClosed())
 	{
-		Clock::RecordFrame();
+		Timer::RecordFrame();
 		glm::mat4 pcModel = playerCharacter.Interface()->Transform().Model();
 		controler.CaptureKeyboardPresses(playerCharacter.IsAlive());
 		controler.CaptureMouseMovement();
@@ -76,7 +76,7 @@ int main()
 
 		while (cardDeck.AreCarsDrawn() && !Display::IsClosed())
 		{
-			Clock::RecordFrame();
+			Timer::RecordFrame();
 			render();
 			cardDeck.DrawCards();
 			Display::Update();
@@ -86,7 +86,7 @@ int main()
 
 		while (!playerCharacter.IsAlive() && !Display::IsClosed())
 		{
-			Clock::RecordFrame();
+			Timer::RecordFrame();
 			render();
 
 			Text::Render("GAME OVER!", (static_cast<ft>(SCREEN_WIDTH) / 2.0f) - 300.0f, (static_cast<ft>(SCREEN_HEIGHT) / 2.0f), 2.0f, glm::vec3(1));

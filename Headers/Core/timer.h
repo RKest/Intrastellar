@@ -16,7 +16,7 @@ using clockCB_t = std::function<void(T...)>;
 
 struct Timer
 {
-	friend class Clock;
+	template <typename... T> friend class Clock;
 	static void RecordFrame();
 	static void SetScalngFactor(cosnt db arg);
 	static void RenderFPS();
@@ -52,7 +52,7 @@ public:
 	inline bool Inspect(T... ts)
 	{
 		if (Timer::s_wasScalingFactorChanged)
-			m_delay = static_cast<milliDuration_t>(RemainingTime() * s_scalingChangeFactor);
+			m_delay = static_cast<milliDuration_t>(RemainingTime() * Timer::s_scalingChangeFactor);
 
 		if (std::chrono::duration_cast<milliDuration_t>(Timer::s_lastFramePt - m_latestTimePoint) > m_delay)
 		{

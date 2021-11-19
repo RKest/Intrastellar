@@ -57,7 +57,7 @@ private:
     bool _isLBMPressed = false;
 
     ftUni _overlayAlphaUni{"overlayAlpha", 0.0f};
-    Clock m_overlayClock;
+    Clock<> m_overlayClock;
 
     void _choseCards(const ui cardIndex);
     std::vector<ui> _chosenCardIndices = std::vector<ui>(3, 9999);
