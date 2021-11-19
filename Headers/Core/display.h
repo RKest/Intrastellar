@@ -7,7 +7,7 @@ class Display
 {
 public:
     Display() = delete;
-    static void Construct(const std::string &title)
+    static void Construct(const std::string &title);
     static void Destruct();
 
     static void Clear(float r, float g, float b, float a);

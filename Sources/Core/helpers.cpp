@@ -42,6 +42,10 @@ ft helpers::matDistance(const glm::mat4 &mat, const glm::vec2 &vec)
 {
 	return glm::distance(glm::vec2(mat * glm::vec4(0,0,0,1)), vec);
 }
+ft helpers::matDistance(const glm::mat4 &mat1, const glm::mat4 &mat2)
+{
+	return matDistance(mat1, glm::vec2(mat2 * glm::vec4(0,0,0,1)));
+}
 void helpers::transformMatVec(std::vector<glm::mat4> &vec, const ft xTransformVal)
 {
 	const glm::mat4 model = glm::translate(glm::vec3(xTransformVal, 0.0f, 0.0f));

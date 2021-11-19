@@ -1,4 +1,4 @@
-clockId#include "exp_manager.h"
+#include "exp_manager.h"
 
 ExpManager::ExpManager(helpers::Core &core, const UntexturedMeshParams &expMeshParams, const UntexturedMeshParams &expBarMeshParams)
 	: _customRand(CUSTOM_RAND_SEED), _expMesh(expMeshParams, MAX_EXP_PART_NO), _expBarMesh(expBarMeshParams)
@@ -8,11 +8,12 @@ ExpManager::ExpManager(helpers::Core &core, const UntexturedMeshParams &expMeshP
 void ExpManager::UpdateExpParticles(const glm::mat4 &pcModel)
 {
 	_hasThereBeenLevelUp = false;
-	expStateClockCiter_t i = _expParticleClusterClockIds.cbegin();
-	expStateClockCiter_t ie = _expParticleClusterClockIds.cend();
+	auto b = _expParticleClusterClockIds.begin();
+	auto i = b;
+	auto ie = _expParticleClusterClockIds.end();
 	while (i != ie)
 	{
-		if(i->Inspect())
+		if(i->Inspect(static_cast<ui>(std::distance(b, i))))
 			break;
 		else
 			++i;
@@ -73,11 +74,13 @@ void ExpManager::CreateExpParticles(const glm::mat4 &originModel, const ui noPar
 {
 	if(_instanceStates.size() < MAX_EXP_PART_NO)
 	{
-		expStateClock_t expStateClock(_expParticleAttractionDelay, [this](expStateClockCiter_t it){
-			_expParticleClusterClockIds.erase(i);
-			for (InstanceState *state : _clockIdToInstanceStatePtrMap.at(i->clockId))
+		expStateClock_t expStateClock(_expParticleAttractionDelay, [this](ui i){
+			auto it = begin(_expParticleClusterClockIds);
+			std::advance(it, i);
+			_expParticleClusterClockIds.erase(it);
+			for (InstanceState *state : _clockIdToInstanceStatePtrMap.at(it->ClockId()))
 				state->behaviour = ExpPartcleBehaviour::ATTRACTION;
-			_clockIdToInstanceStatePtrMap.erase(i->clockId);
+			_clockIdToInstanceStatePtrMap.erase(it->ClockId());
 		});
 		_expParticleClusterClockIds.push_back(expStateClock);
 		const ui clockId = expStateClock.ClockId();

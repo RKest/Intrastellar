@@ -26,7 +26,7 @@ public:
         projection = perspective * glm::lookAt(position, position + forward, up); 
     }
 
-    inline static glm::mat4 &ViewProjection() const
+    inline static glm::mat4 &ViewProjection()
     {
         return projection;
     }

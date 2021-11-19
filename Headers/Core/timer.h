@@ -18,7 +18,7 @@ struct Timer
 {
 	template <typename... T> friend class Clock;
 	static void RecordFrame();
-	static void SetScalngFactor(cosnt db arg);
+	static void SetScalingFactor(const db arg);
 	static void RenderFPS();
 	template <typename T>
 	inline static T Scale(T num)
@@ -46,9 +46,13 @@ template <typename... T>
 class Clock
 {
 public:
-	Clock() = default;
+	Clock(){}
+	Clock(Clock const&) = default;
+	Clock(Clock &&) 	= default;
+	Clock operator=(Clock &&rhs) 		{ return Clock(rhs); }
+	Clock operator=(const Clock &rhs) 	{ return Clock(rhs); }
 	Clock(const db delay, const clockCB_t<T...> cb)
-		: m_delayDB(delay), m_cb(cb), m_delay(delay) {}
+		: m_clockId(Timer::s_nextClockId++), m_delayDB(delay), m_cb(cb), m_delay(delay) {}
 	inline bool Inspect(T... ts)
 	{
 		if (Timer::s_wasScalingFactorChanged)
@@ -63,13 +67,16 @@ public:
 		}
 		return false;
 	}
-	db RemainingTime();
-	inline ui ClockId() { return clockId; } 
+	db RemainingTime()
+	{
+		return m_delay.count() - std::chrono::duration_cast<milliDuration_t>(Timer::s_lastFramePt - m_latestTimePoint).count();
+	}
+	inline ui ClockId() { return m_clockId; }
 
 private:
-	const ui clockId = Timer::s_nextClockId++;
-	const db m_delayDB;
-	const clockCB_t<T...> m_cb;
+	const ui m_clockId{};
+	const db m_delayDB{};
+	const clockCB_t<T...> m_cb{};
 	milliDuration_t m_delay;
 	timePt_t m_latestTimePoint;
 };

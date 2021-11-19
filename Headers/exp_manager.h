@@ -29,8 +29,7 @@ struct InstanceState
 };
 
 using namespace std::placeholders;
-using expStateClockCiter_t = std::list<Clock>::const_iterator;
-using expStateClock_t = Clock<expStateClockCiter_t>;
+using expStateClock_t = Clock<ui>;
 class ExpManager
 {
 public:

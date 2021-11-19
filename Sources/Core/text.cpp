@@ -1,6 +1,6 @@
 #include "Core/text.h"
 
-Text::Construct(const std::string &fontPath)
+void Text::Construct(const std::string &fontPath)
 {
 	if (FT_Init_FreeType(&ftl))
 		std::cerr << "ERROR:FREETYPE: Failed to initialize freetype" << std::endl;
@@ -81,8 +81,8 @@ void Text::Render(const std::string &text, ft x, const ft y, const ft scale, con
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-Text::~Text()
-{
-	FT_Done_Face(face);
-	FT_Done_FreeType(ftl);
-}
+// Text::~Text(4dd)
+// {
+// 	FT_Done_Face(face);
+// 	FT_Done_FreeType(ftl);
+// }

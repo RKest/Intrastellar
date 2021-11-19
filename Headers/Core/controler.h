@@ -22,7 +22,7 @@ protected:
 private:
     Transform &transform;
 
-    SDL_Scancode *codes = display.KeyScancodeMap();
+    SDL_Scancode *codes = Display::KeyScancodeMap();
     db defaultMovementAmount = 0.02f;
 
 };

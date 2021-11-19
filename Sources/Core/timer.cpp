@@ -1,11 +1,5 @@
 #include "Core/timer.h"
 
-template <typename ...T>
-db Clock<T...>::RemainingTime()
-{
-	return m_delay.count() - std::chrono::duration_cast<milliDuration_t>(Timer::s_lastFramePt - m_latestTimePoint).count();
-}
-
 void Timer::RecordFrame()
 {
 	timePt_t newFramePt = g_clock_t::now();
@@ -35,7 +29,7 @@ void Timer::RenderFPS()
 	Text::Render("FPS: " + std::to_string(averageFPS), static_cast<ft>(SCREEN_WIDTH) - 150.0f, static_cast<ft>(SCREEN_HEIGHT) - 30.0f, 0.5f, glm::vec3(1));
 }
 
-void Timer::SetScalngFactor(const db arg)
+void Timer::SetScalingFactor(const db arg)
 {
 	if(s_scalingFactor != arg)
 	{

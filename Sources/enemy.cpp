@@ -5,7 +5,7 @@ EnemyBehaviuor::EnemyBehaviuor(EnemyManager &manager, bool isDefault)
 {
 }
 
-EnemyBehaviuor::Fire(const ui dataIndex)
+void EnemyBehaviuor::Fire([[maybe_unused]]const ui dataIndex)
 {
 }
 
@@ -22,7 +22,7 @@ BehavoiurStatus EnemyBehaviuor::EnemyBehaviuorStatus(const glm::mat4 &enemyModel
 
 void EnemyBehaviuor::UpdateProjs(std::vector<glm::mat4> &projInstanceTransforms)
 {
-	helpers::transformMatVec(projInstanceTransforms, clk::Scale(_manager._enemyStats.shotSpeed));
+	helpers::transformMatVec(projInstanceTransforms, Timer::Scale(_manager._enemyStats.shotSpeed));
 	_manager.checkForProjIntersection(projInstanceTransforms);
 }
 
@@ -38,7 +38,7 @@ ShootBehavoiur::ShootBehavoiur(EnemyManager &manager) : EnemyBehaviuor(manager, 
 {
 }
 
-ShootBehavoiur::Fire(const ui dataIndex)
+void ShootBehavoiur::Fire(const ui dataIndex)
 {
 	const glm::mat4 instanceTransform = _manager._enemyData.instanceTransforms[dataIndex];
 	const ft angle = helpers::angleBetweenVectors(instanceTransform, _manager._pcModel);
@@ -52,7 +52,7 @@ void ShootBehavoiur::Update(const ui dataIndex)
 	auto &projInstanceTransforms 	= _manager._enemyData.projInstanceTransforms[dataIndex];
 	_manager._enemyData.shotClocks[dataIndex].Inspect(this, dataIndex);
 	EnemyBehaviuor::UpdateProjs(projInstanceTransforms);
-
+	helpers::pushToCappedVector(projInstanceTransforms, instanceTransform, _latestShotIndex, MAX_ENEMY_PROJ_AMOUNT);
 }
 
 bool ShootBehavoiur::HasMetPredicate(const glm::mat4 &enemyModel)
@@ -66,11 +66,11 @@ OrbiterBehaviour::OrbiterBehaviour(EnemyManager &manager) : EnemyBehaviuor(manag
 {
 }
 
-OrbiterBehaviour::Fire(const ui dataIndex)
+void OrbiterBehaviour::Fire(const ui dataIndex)
 {
 	auto &instanceTransform 		= _manager._enemyData.instanceTransforms	[dataIndex];
 	auto &projInstanceTransforms 	= _manager._enemyData.projInstanceTransforms[dataIndex];
-	_manager._enemyData.projInstanceTransforms[dataIndex].push_back(_manager._enemyData.instanceTransforms[dataIndex]);
+	projInstanceTransforms.push_back(instanceTransform);
 }
 
 void OrbiterBehaviour::Update(const ui dataIndex)
@@ -188,7 +188,7 @@ void EnemyData::Erase(const ui index)
 	size--;
 }
 
-void EnemyData::Push(const glm::mat4 &instanceTransform, const UntexturedMeshParams &params, EnemyStats &stats, bool hasProjectiles)
+void EnemyData::Push(const glm::mat4 &instanceTransform, const UntexturedMeshParams &params, EnemyStats &stats)
 {
 	instanceTransforms		.push_back(instanceTransform);
 	boundingBoxes			.emplace_back(params, instanceTransform);
@@ -216,16 +216,16 @@ void Enemy::Update()
 	}
 	for(ui i = 0; i < data.clockOrphanedProjsParis.size(); ++i)
 	{
-		data.clockOrphanedProjsParis[i].first.Inspect();
-		helpers::transformMatVec(data.clockOrphanedProjsParis[i].second, Clock::Scale(_manager._enemyStats.shotSpeed));
+		data.clockOrphanedProjsParis[i].first.Inspect(i);
+		helpers::transformMatVec(data.clockOrphanedProjsParis[i].second, Timer::Scale(_manager._enemyStats.shotSpeed));
 		_manager.checkForProjIntersection(data.clockOrphanedProjsParis[i].second);
 	}
 }
 
-void Enemy::Spawn(const glm::mat4 &instanceTransform, bool hasProjectiles)
+void Enemy::Spawn(const glm::mat4 &instanceTransform)
 {
 	if(_maxNoInstances > data.size)
-		data.Push(instanceTransform, _manager._enemyParams, _manager._enemyStats, hasProjectiles);
+		data.Push(instanceTransform, _manager._enemyParams, _manager._enemyStats);
 }
 
 void Enemy::Draw()
@@ -244,9 +244,10 @@ void Enemy::Draw()
 }
 
 EnemyManager::EnemyManager(helpers::Core &core, const UntexturedMeshParams &params, EnemyStats &enemyStats, const UntexturedMeshParams &projParams, 
-		IPlayerCharacter *pcInterface, weaponInterfaceArray_t &weaponInterfaces)
+		IPlayerCharacter *pcInterface, weaponInterfaceArray_t &weaponInterfaces, fatalityCallback_t fatalityCallback)
  :  _pcStats(core.stats), _enemyStats(enemyStats), _enemyParams(params), _enemyProjParams(projParams), _pcInterface(pcInterface), 
- _weaponInterfaces(weaponInterfaces), m_spawnClock(ENEMY_SPAWN_DELAY, [this]{ m_spawn(); }), m_interfacePtr(new EnemyInterface(this))
+ 	_weaponInterfaces(weaponInterfaces), m_spawnClock(ENEMY_SPAWN_DELAY, [this]{ m_spawn(); }), m_interfacePtr(new EnemyInterface(this)),
+ 	m_fatalityCallback(fatalityCallback)
 {
 	behavoiurPtrVec_t chaserVec;
 	behavoiurPtrVec_t shooterVec;
@@ -273,7 +274,7 @@ void EnemyManager::Draw()
 		enemy.Draw();
 }
 
-void EnemyManager::UpdateBehaviour(const std::vector<glm::vec2> &pcPositions, std::function<void(const glm::mat4&, const ui)> fatalityCallback)
+void EnemyManager::UpdateBehaviour(const std::vector<glm::vec2> &pcPositions)
 {
 	_pcModel = _pcInterface.Transform().Model();
 	for(auto &enemy : _enemies)
@@ -297,7 +298,12 @@ void EnemyManager::UpdateBehaviour(const std::vector<glm::vec2> &pcPositions, st
 				{
 					if((weaponInterface->ProjHitCb())(collisionIndex, enemy.data.ids[i]))
 					{
-						m_hit(i);
+						enemy.data.healths[i] -= decl_cast(enemy.data.healths, _pcStats.actualDamage);
+						if(enemy.data.healths[i] <= 0)
+						{
+							m_fatalityCallback(enemy.data.instanceTransforms[i], 3);
+							enemy.data.Erase(i);
+						}
 					}
 				}
 			}
@@ -310,12 +316,22 @@ void EnemyManager::UpdateBehaviour(const std::vector<glm::vec2> &pcPositions, st
 std::vector<glm::mat4> EnemyManager::InstanceTransforms()
 {
 	size_t totalSize = 0;
+	ui nextIndex = 0;
 	std::vector<glm::mat4> enemyInstanceTransforms;
 	for(auto &enemy : _enemies)
 		totalSize += enemy.data.instanceTransforms.size();
-	enemyInstanceTransforms.reserve(totalSize);
-	for(auto &enemy : _enemies)
-		enemyInstanceTransforms.insert(end(enemyInstanceTransforms), begin(enemy.data.instanceTransforms), end(enemy.data.instanceTransforms));
+	m_instanceTransformToEnemyIndexMap	.resize(totalSize);
+	enemyInstanceTransforms				.reserve(totalSize);
+	for(ui i = 0; i < EnemyTypeEnum::NO_ENEMY_TYPES; ++i)
+	{
+		for(ui j = 0; j < _enemies[i].data.size; ++j)
+		{
+			m_instanceTransformToEnemyIndexMap[nextIndex].first = i;
+			m_instanceTransformToEnemyIndexMap[nextIndex].second = j;
+			++nextIndex; 
+		}
+		enemyInstanceTransforms.insert(end(enemyInstanceTransforms), begin(_enemies[i].data.instanceTransforms), end(_enemies[i].data.instanceTransforms));
+	}
 	return enemyInstanceTransforms;
 }
 
@@ -334,20 +350,22 @@ void EnemyManager::m_spawn()
 
 	const glm::mat4 instanceTransform = _enemyTransform.Model() * glm::translate(glm::vec3(enemyX, enemyY, 0));
 	if(!(_customRand.NextUi() % 10))
-		_enemies[SHOOTER_ENEMY].Spawn(instanceTransform, true);
+		_enemies[SHOOTER_ENEMY].Spawn(instanceTransform);
 	else if (!(_customRand.NextUi() % 10))
-		_enemies[ORBITER_ENEMY].Spawn(instanceTransform, true);
+		_enemies[ORBITER_ENEMY].Spawn(instanceTransform);
 	else
 		_enemies[CHASER_ENEMY] .Spawn(instanceTransform);
 }
 
 void EnemyManager::m_hit(const ui i)
 {
-	enemy.data.healths[i] -= decl_cast(enemy.data.healths, _pcStats.actualDamage);
-	if(enemy.data.healths[i] <= 0)
+	const auto enemyIndexPair = m_instanceTransformToEnemyIndexMap[i];
+	auto &enemy = _enemies[enemyIndexPair.first];
+	enemy.data.healths[enemyIndexPair.second] -= decl_cast(enemy.data.healths, _pcStats.actualDamage);
+	if(enemy.data.healths[enemyIndexPair.second] <= 0)
 	{
-		fatalityCallback(enemy.data.instanceTransforms[i], 3);
-		enemy.data.Erase(i);
+		m_fatalityCallback(enemy.data.instanceTransforms[enemyIndexPair.second], 3);
+		enemy.data.Erase(enemyIndexPair.second);
 	}
 }
 

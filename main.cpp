@@ -37,7 +37,8 @@ int main()
 	ExpManager expManager			(core, expParams, expBarParams);
 	PlayerCharacter playerCharacter	(core, pcParams);
 	WeaponsManager weaponsManager	(core, weaponIconParams, overlayParams, blasterProjParams, rocketProjParams);
-	EnemyManager enemyManager		(core, enemyMeshParams, enemyStats, blasterProjParams, playerCharacter.Interface(), weaponsManager.WeaponInterfaces());
+	EnemyManager enemyManager		(core, enemyMeshParams, enemyStats, blasterProjParams, playerCharacter.Interface(), weaponsManager.WeaponInterfaces(),
+		expManager.CreateExpParticlesCb());
 	weaponsManager.SetEnemyInterface(enemyManager.Interface());
 	Controler controler				(playerCharacter.Interface()->Transform());
 	CardDeck cardDeck				(core, overlayParams, cardBorderParams);
@@ -69,7 +70,7 @@ int main()
 			playerStats.enemySpawnRate *= 0.5f;
 			cardDeck.RollCards();
 		}
-		enemyManager.UpdateBehaviour(helpers::transformStdVector(pcParams, pcModel), expManager.CreateExpParticlesCb());
+		enemyManager.UpdateBehaviour(helpers::transformStdVector(pcParams, pcModel));
 		render();
 		expManager.UpdateExpParticles(pcModel);
 		Display::Update();

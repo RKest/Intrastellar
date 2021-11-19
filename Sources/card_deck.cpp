@@ -10,7 +10,7 @@ void CardDeck::DrawCards()
 	if(!_areCardsFullyDrawn)
 	{
 		const db remainingTime = m_overlayClock.RemainingTime();
-		const db remainingTimeFraction = 1.0 - remainingTime / _overlayTransitionTime;
+		const db remainingTimeFraction = 1.0 - remainingTime / OVERLAY_TRANSITION_TIME;
 		const ft overlayAlpha = decl_cast(overlayAlpha, remainingTimeFraction) * OVERLAY_MAX_APLHA;
 		_overlayAlphaUni.second = overlayAlpha;
 		m_overlayClock.Inspect();
@@ -59,7 +59,7 @@ void CardDeck::RollCards()
 	ui rolledCards = 0;
 	ui rAcc = 0;
 
-	m_overlayClock = Clock(OVERLAY_TRANSITION_TIME, [this]{
+	m_overlayClock = Clock<>(OVERLAY_TRANSITION_TIME, [this]{
 		_overlayAlphaUni.second = OVERLAY_MAX_APLHA;
 		_areCardsFullyDrawn = true;
 	});

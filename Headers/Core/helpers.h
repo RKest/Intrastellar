@@ -36,6 +36,7 @@ namespace helpers
     ft angleDiff(const ft a, const ft b); 
     ft rotTransformAngle(const glm::mat4 &matrix);
     ft matDistance(const glm::mat4&, const glm::vec2&);
+    ft matDistance(const glm::mat4&, const glm::mat4&);
     glm::mat4 rotateTowardsClosest(const std::vector<glm::mat4>&, const glm::mat4&, const ft, const ft);
     glm::mat4 rotateTowards(const glm::mat4&, const glm::mat4&, const ft);
     glm::vec2 vecDistanceAway(const glm::vec2&, const ft, const ft);

@@ -12,7 +12,6 @@
 #include "Core/stats.h"
 #include "Core/bounding_box.h"
 #include "player_character.h"
-#include "weapons.h"
 
 #include <execution>
 #include <algorithm>
@@ -22,6 +21,7 @@
 #include <array>
 #include <iterator>
 
+#include "weapon-types.h"
 
 enum BehavoiurStatus
 {
@@ -119,7 +119,7 @@ struct EnemyData
 	size_t 	size = 0;
 	void Clear();
 	void Erase(const ui index);
-	void Push(const glm::mat4 &instanceTransform, const UntexturedMeshParams &params, EnemyStats &stats, bool hasProjectiles);
+	void Push(const glm::mat4 &instanceTransform, const UntexturedMeshParams &params, EnemyStats &stats);
 private:
 	EnemyManager &_manager;
 };
@@ -131,7 +131,7 @@ public:
 	Enemy(const Enemy&) = delete;
 	Enemy(Enemy&&) = default;
 	void Update();
-	void Spawn(const glm::mat4 &instanceTransform, bool hasProjectiles = false);
+	void Spawn(const glm::mat4 &instanceTransform);
 	void Draw();
 	EnemyData data;
 private:
@@ -143,19 +143,21 @@ private:
 	const ui _maxNoInstances;
 };
 
+using fatalityCallback_t = std::function<void(const glm::mat4&, const ui)>;
+struct EnemyInterface;
 class EnemyManager
 {
 public:
 	EnemyManager(helpers::Core &core, const UntexturedMeshParams &params, EnemyStats &enemyStats, const UntexturedMeshParams &projParams, 
-		IPlayerCharacter *pcInterface, weaponInterfaceArray_t &weaponInterfaces);
+		IPlayerCharacter *pcInterface, weaponInterfaceArray_t &weaponInterfaces, fatalityCallback_t fatalityCallback);
 
 	void Reset();
 	void Draw();
 	void Spawn();
-	void UpdateBehaviour(const std::vector<glm::vec2> &pcPositions, std::function<void(const glm::mat4&, const ui)> fatalityCallback);
+	void UpdateBehaviour(const std::vector<glm::vec2> &pcPositions);
 	std::vector<glm::mat4> InstanceTransforms();
 	inline ui NextId() { return _newestEnemyId++; }
-	inline auto Interface() { return interface; }
+	inline auto Interface() { return m_interfacePtr; }
 
 private:
 	friend class Enemy;
@@ -183,13 +185,15 @@ private:
 	const UntexturedMeshParams _enemyProjParams;
 	IPlayerCharacter _pcInterface;
 	weaponInterfaceArray_t &_weaponInterfaces;
-	Clock m_spawnClock;
+	Clock<> m_spawnClock;
 	EnemyInterface *m_interfacePtr;
+	fatalityCallback_t m_fatalityCallback;
 
 	glm::mat4 _pcModel;
 	Transform _enemyTransform;
 	CustomRand _customRand{CUSTOM_RAND_SEED};
 	std::vector<Enemy> _enemies;
+	std::vector<std::pair<ui, ui>> m_instanceTransformToEnemyIndexMap;
 
 	ui _newestEnemyId = 0;
 
@@ -202,8 +206,8 @@ using namespace std::placeholders;
 struct EnemyInterface
 {
 	EnemyInterface(EnemyManager *managerPtr) : m_managerPtr(managerPtr) {}
-	inline void EnemyHit() { return enemyHit; }
+	inline auto EnemyHit() { return enemyHit; }
 private:
-	DECL_INST(enemyHit, std::bind(&EnemyManager::m_hit, m_managerPtr, _1));
 	EnemyManager *m_managerPtr;
+	DECL_INST(enemyHit, std::bind(&EnemyManager::m_hit, m_managerPtr, _1));
 };

@@ -46,10 +46,12 @@ void RocketBehaviour::Update([[maybe_unused]]const std::vector<glm::mat4> &enemy
 
 void LaserBehaviour::Update([[maybe_unused]]const std::vector<glm::mat4> &enemyInstanceTransforms)
 {
+    typedef std::remove_reference<decltype(enemyInstanceTransforms)>::type nonRefVec;
+    typedef std::remove_const<nonRefVec>::type nonConstVec;
     m_laserLingerClock.Inspect();
     if(m_hasLaserFired)
     {
-        std::vector<decltype(enemyInstanceTransforms)::const_iterator> alreadyHitIters;
+        std::vector<nonConstVec::const_iterator> alreadyHitIters;
         _noBezierCurves         = 1;
         m_hasLaserFired         = false;
         _laserBezierCurvesSZ    = 0;
@@ -59,13 +61,14 @@ void LaserBehaviour::Update([[maybe_unused]]const std::vector<glm::mat4> &enemyI
         for (ui i = 0; i < MAX_PROJ_AMOUNT; ++i)
         {
             const glm::vec2 firePos{_laserOrigin * glm::vec4(0,0,0,1)};
-            std::vector<decltype(enemyInstanceTransforms)::const_iterator> filteredVector;
+            std::vector<nonConstVec::const_iterator> filteredVector;
             filteredVector.reserve(MAX_NO_ENEMIES);
-            helpers::copy_iter_if(cbegin(enemyInstanceTransforms), cend(enemyInstanceTransforms), std::back_inserter(filteredVector), [this, fireAngle](auto it){
+            helpers::copy_iter_if(cbegin(enemyInstanceTransforms), cend(enemyInstanceTransforms), std::back_inserter(filteredVector), 
+            [this, fireAngle, alreadyHitIters](auto it){
                 if(helpers::contains(alreadyHitIters, it))
                     return false;
                 const ft distanceToEnemy = helpers::matDistance(_laserOrigin, *it);
-                const ft desieredAngle = WEAPONS_LASER_MAX_HOMING_ANGLE / std::powf(distanceToEnemy + 0.001f, 2.0f);
+                const ft desieredAngle = WEAPONS_LASER_MAX_HOMING_ANGLE / decl_cast(desieredAngle, std::pow(distanceToEnemy + 0.001f, 2));
                 const ft minAcceptableAngle = std::clamp(desieredAngle, WEAPONS_LASER_MIN_HOMING_ANGLE, WEAPONS_LASER_MAX_HOMING_ANGLE);
                 return helpers::diff(helpers::angleBetweenVectors(_laserOrigin, *it), fireAngle) < minAcceptableAngle; 
             });
@@ -80,10 +83,9 @@ void LaserBehaviour::Update([[maybe_unused]]const std::vector<glm::mat4> &enemyI
                 return helpers::matDistance(*m1, firePos) < helpers::matDistance(*m2, firePos);
             });
 
-            const ui hitIndex = std::distance(cbegin(enemyInstanceTransforms), *closestConeEnemyIter);
+            const ui hitIndex = decl_cast(hitIndex, std::distance(cbegin(enemyInstanceTransforms), *closestConeEnemyIter));
             alreadyHitIters.push_back(*closestConeEnemyIter);
-            (_manager.m_enemyInterfacePtr->EnemyHit())(hitIndex);
-
+            (_weaponPtr->_manager.m_enemyInterfacePtr->EnemyHit())(hitIndex);
             const glm::vec2 enemyPos{**closestConeEnemyIter * glm::vec4(0,0,0,1)};
             const ft fireDistance = distance(firePos, enemyPos);
             const ft distanceToControl = fireDistance / 3.0f;
@@ -105,7 +107,7 @@ void LaserBehaviour::Update([[maybe_unused]]const std::vector<glm::mat4> &enemyI
 void LaserBehaviour::Fire(const glm::mat4 &pcModel)
 {
     _laserOrigin = pcModel;
-    m_laserLingerClock = Clock(WEAPONS_LASER_LINGER_DURATION, [this]{
+    m_laserLingerClock = Clock<>(WEAPONS_LASER_LINGER_DURATION, [this]{
         m_isLaserVisible = false;
     });
     m_isLaserVisible = true;
@@ -140,7 +142,7 @@ void Weapon::Draw()
 }
 void Weapon::Init()
 {
-    _manager.m_shotClock = shotClock_t(_weaponStats.shotDelay, [this](const glm::mat4 &pcModel){
+    m_shotClock = shotClock_t(_weaponStats.shotDelay, [this](const glm::mat4 &pcModel){
         _behaviour.Fire(pcModel);
     });
 }
@@ -216,7 +218,7 @@ void WeaponsManager::Draw()
         if(!_isWeaopnsTabVisible)
         {
             _isWeaopnsTabVisible = true;
-            m_weaponTransitionClock = Clock(OVERLAY_TRANSITION_TIME, [this]{
+            m_weaponTransitionClock = Clock<>(OVERLAY_TRANSITION_TIME, [this]{
                 for(ui i = 0; i < WEAPONS_NO_WEAPONS; ++i)
                 {
                     _instanceTransforms[i] = _baseInstanceTransforms[i] * glm::translate(glm::vec3(0.0f, _iconRealestate, 0.0f));
@@ -248,7 +250,7 @@ void WeaponsManager::Draw()
             _closeWeaponTab();
             _switchWeapons(tempSelectedWeaponIndex);
 
-            m_weaponCooldownClock = Clock(WEAPONS_COOLDOWN, [this]{
+            m_weaponCooldownClock = Clock<>(WEAPONS_COOLDOWN, [this]{
                 _isThereWeaponCooldown = false;
             });
             _isThereWeaponCooldown = true;
@@ -279,9 +281,12 @@ void WeaponsManager::Reset()
     _isThereWeaponCooldown  = false;
     _isWeaopnsTabVisible    = false;
     _isWeaponsFullyDrawn    = false;
-    Timer::.SetScalingFactor(1.0);
+    Timer::SetScalingFactor(1.0);
 }
-
+void WeaponsManager::SetEnemyInterface(EnemyInterface* interface)
+{
+    m_enemyInterfacePtr = interface; 
+}
 void WeaponsManager::_closeWeaponTab()
 {
     if(_isWeaopnsTabVisible)
