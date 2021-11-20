@@ -61,7 +61,7 @@ constexpr const db PI_d = glm::pi<db>();
 constexpr const ft MAX_PROJ_TURNING_RAD = glm::radians(0.1f);
 constexpr const ft DEF_ANGLE_BETWEEN_SHOTS = glm::radians(15.0f);
 
-constexpr const db ENEMY_SPAWN_DELAY = 500.0;
+constexpr const db ENEMY_SPAWN_DELAY = 100.0;
 constexpr const db ENEMY_ORPHANDED_PROJ_LIFETIME = 5000.0;
 constexpr const ft ENEMY_ORBIT_RADIUS = 5.0f;
 constexpr const ft ENEMY_ORBIT_CIRC = ENEMY_ORBIT_RADIUS * TAU;
@@ -74,7 +74,7 @@ constexpr const ft WEAPONS_ICON_DIMS = static_cast<ft>(SCREEN_HEIGHT) / static_c
 constexpr const db WEAPONS_COOLDOWN = 2000.0;
 constexpr const ft WEAPONS_LASER_MIN_HOMING_ANGLE = glm::radians(30.0f);  //A test value
 constexpr const ft WEAPONS_LASER_MAX_HOMING_ANGLE = glm::radians(180.0f); //Maybe actually not test value though
-constexpr const db WEAPONS_LASER_LINGER_DURATION = 100.0;
+constexpr const db WEAPONS_LASER_LINGER_DURATION = 200.0;
 
 //Overlay
 constexpr const db WEAPONS_TIMER_SCALING_ARG = 0.05;

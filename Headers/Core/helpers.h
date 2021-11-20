@@ -138,7 +138,7 @@ namespace helpers
         std::size_t total_size = 0;
         for (const auto& sub : v)
            total_size += sub.size();
-         std::vector<T> result;
+        std::vector<T> result;
         result.reserve(total_size);
         for (const auto& sub : v)
             result.insert(result.end(), sub.begin(), sub.end());

@@ -114,7 +114,7 @@ inline static auto choseBehaviour(behavoiurPtrVec_t &behavoiurs, const glm::mat4
 	throw std::runtime_error("ERROR:choseBehaviour: Failed to chose a behaviour");
 }
 
-using orphanedProjPair_t = std::pair<Clock<ui>, std::vector<glm::mat4>>;
+using orphanedProjPair_t = std::pair<Clock<>, std::vector<glm::mat4>>;
 struct EnemyData
 {
 	EnemyData(EnemyManager &manager);

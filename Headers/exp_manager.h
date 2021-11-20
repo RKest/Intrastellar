@@ -25,7 +25,6 @@ struct InstanceState
 	glm::mat4 randomEntropyDirection;
 	glm::mat4 transform;
 	ExpPartcleBehaviour behaviour;
-	ui clockId;
 };
 
 using namespace std::placeholders;
@@ -67,4 +66,11 @@ private:
 	const db _expParticleAttractionSpeed = 0.1;
 
 	void _updateExpBar();
+	inline InstanceState initInstanceState(const glm::mat4 &originModel) 
+	{ 
+		return InstanceState{
+			glm::translate(glm::vec3(helpers::randomDirVector(_customRand, static_cast<ft>(Timer::Scale(_expParticleEntropySpeed))), 0.0f)),
+			originModel, ExpPartcleBehaviour::ENTROPY
+		}; 
+	}
 };

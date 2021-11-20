@@ -205,12 +205,12 @@ WeaponsManager::WeaponsManager(helpers::Core &core, const TexturedMeshParams &ic
 
 void WeaponsManager::Update(const glm::mat4 &pcModel, const std::vector<glm::mat4> &enemyInstanceTransforms)
 {
-    for(size_t i = 0; i < Weapons::NO_IMPLEMENTED_WEAPONS; ++i)
-        _weapons[i]->Update(enemyInstanceTransforms);
     const ui chosenWeaponIndex = _selectedWeaponIndexUni.second;
     if (chosenWeaponIndex >= Weapons::NO_IMPLEMENTED_WEAPONS)
         return;
     _weapons[chosenWeaponIndex]->Fire(pcModel);
+    for(size_t i = 0; i < Weapons::NO_IMPLEMENTED_WEAPONS; ++i)
+        _weapons[i]->Update(enemyInstanceTransforms);
 }
 
 void WeaponsManager::Draw()

@@ -61,7 +61,6 @@ int main()
 		Camera::Recalc();
 
 		enemyManager.Spawn();
-		
 		weaponsManager.Update(pcModel, enemyManager.InstanceTransforms());
 		playerCharacter.Update();
 		if(expManager.HasThereBeenLevelUp())

@@ -52,11 +52,8 @@ void ShootBehavoiur::Fire(const ui dataIndex)
 void ShootBehavoiur::Update(const ui dataIndex)
 {
 	auto &data = _manager._enemies[m_enemyType].data;
-	auto &instanceTransform			= data.instanceTransforms		[dataIndex];
-	auto &projInstanceTransforms 	= data.projInstanceTransforms 	[dataIndex];
 	data.shotClocks[dataIndex].Inspect(this, dataIndex);
-	EnemyBehaviuor::UpdateProjs(projInstanceTransforms);
-	helpers::pushToCappedVector(projInstanceTransforms, instanceTransform, _latestShotIndex, MAX_ENEMY_PROJ_AMOUNT);
+	EnemyBehaviuor::UpdateProjs(data.projInstanceTransforms[dataIndex]);
 }
 
 bool ShootBehavoiur::HasMetPredicate(const glm::mat4 &enemyModel)
@@ -166,15 +163,8 @@ void EnemyData::Clear()
 
 void EnemyData::Erase(const ui index)
 {
-	//Can be inlined but would be very unclean
-	Clock<ui> orphanedClock(ENEMY_ORPHANDED_PROJ_LIFETIME, [this](ui i){
-		const size_t noOrphanedProjs = clockOrphanedProjsParis.size();
-		if(i != noOrphanedProjs - 1)
-			clockOrphanedProjsParis[i] = clockOrphanedProjsParis[noOrphanedProjs - 1];
-		clockOrphanedProjsParis.pop_back();
-	});
-
-	clockOrphanedProjsParis.emplace_back(orphanedClock, std::vector<glm::mat4>());
+	clockOrphanedProjsParis.emplace_back(Clock<>(ENEMY_ORPHANDED_PROJ_LIFETIME, []{}), std::vector<glm::mat4>());
+	clockOrphanedProjsParis.back().second.reserve(projInstanceTransforms[index].size());
 	clockOrphanedProjsParis.back().second.insert(end(clockOrphanedProjsParis.back().second), 
 		begin(projInstanceTransforms[index]), end(projInstanceTransforms[index]));
 
@@ -222,7 +212,13 @@ void Enemy::Update()
 	}
 	for(ui i = 0; i < data.clockOrphanedProjsParis.size(); ++i)
 	{
-		data.clockOrphanedProjsParis[i].first.Inspect(i);
+		if(data.clockOrphanedProjsParis[i].first.Inspect())
+		{
+			const size_t noOrphanedProjs = data.clockOrphanedProjsParis.size();
+			if(i != noOrphanedProjs - 1)
+				data.clockOrphanedProjsParis[i] = data.clockOrphanedProjsParis[noOrphanedProjs - 1];
+			data.clockOrphanedProjsParis.pop_back();
+		}
 		helpers::transformMatVec(data.clockOrphanedProjsParis[i].second, Timer::Scale(_manager._enemyStats.shotSpeed));
 		_manager.checkForProjIntersection(data.clockOrphanedProjsParis[i].second);
 	}
@@ -240,12 +236,10 @@ void Enemy::Draw()
 		_colourUni);
 	if(!data.clockOrphanedProjsParis.empty() || !data.projInstanceTransforms.empty())
 	{
-		const auto flattenedVec = helpers::flattenVec(data.projInstanceTransforms);
-		std::vector<glm::mat4> projectilesVector;
+		std::vector<glm::mat4> flattenedVec(helpers::flattenVec(data.projInstanceTransforms));
 		std::for_each(begin(data.clockOrphanedProjsParis), end(data.clockOrphanedProjsParis),
-			[&projectilesVector](auto& pair){ projectilesVector.insert(projectilesVector.end(), pair.second.begin(), pair.second.end()); });
-		projectilesVector.insert(end(projectilesVector), begin(flattenedVec), end(flattenedVec));
-		helpers::render(_manager._enemyProjShader, _projMesh, projectilesVector.data(), projectilesVector.size(), _blankTransform, Camera::ViewProjection());
+			[&flattenedVec](auto& pair){ flattenedVec.insert(flattenedVec.end(), pair.second.begin(), pair.second.end()); });
+		helpers::render(_manager._enemyProjShader, _projMesh, flattenedVec.data(), flattenedVec.size(), _blankTransform, Camera::ViewProjection());
 	}
 }
 

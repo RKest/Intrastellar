@@ -25,6 +25,8 @@ struct Timer
 	{
 		return (num * static_cast<T>(s_durationSinceLastFrame.count() * s_scalingFactor));
 	}
+
+	inline static bool s_inspectBool = false;
 private:
 	inline static ui 				s_nextClockId = 0;
 	inline static timePt_t 			s_lastFramePt = g_clock_t::now();
@@ -47,11 +49,11 @@ class Clock
 {
 public:
 	Clock()
-		: m_clockId(Timer::s_nextClockId++) 
+		: m_clockId(Timer::s_nextClockId++), m_latestTimePoint(Timer::s_lastFramePt)
 	{
 	}
 	Clock(const db delay, const clockCB_t<T...> cb)
-		: m_clockId(Timer::s_nextClockId++) 
+		: m_clockId(Timer::s_nextClockId++), m_latestTimePoint(Timer::s_lastFramePt)
 	{
 		Init(delay, cb);
 	}
@@ -67,12 +69,13 @@ public:
 	}
 	inline bool Inspect(T... ts)
 	{
-		if (Timer::s_wasScalingFactorChanged)
-			m_delay = static_cast<milliDuration_t>(RemainingTime() * Timer::s_scalingChangeFactor);
-
+		if(Timer::s_inspectBool)
+			LOG("Delay:    ", m_delay.count());
+		m_delay = milliDuration_t(m_delayDB / Timer::s_scalingFactor);
+		if(Timer::s_inspectBool)
+			LOG("Duration: ", std::chrono::duration_cast<milliDuration_t>(Timer::s_lastFramePt - m_latestTimePoint).count());
 		if (std::chrono::duration_cast<milliDuration_t>(Timer::s_lastFramePt - m_latestTimePoint) > m_delay)
 		{
-			m_delay = milliDuration_t(m_delay / Timer::s_scalingFactor);
 			m_latestTimePoint = Timer::s_lastFramePt;
 			m_cb(ts...);
 			return true;
@@ -90,5 +93,5 @@ private:
 	db m_delayDB{};
 	clockCB_t<T...> m_cb{};
 	milliDuration_t m_delay{};
-	timePt_t m_latestTimePoint{};
+	timePt_t m_latestTimePoint;
 };

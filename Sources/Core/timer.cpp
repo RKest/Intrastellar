@@ -5,7 +5,7 @@ void Timer::RecordFrame()
 	timePt_t newFramePt = g_clock_t::now();
 	s_durationSinceLastFrame = newFramePt - s_lastFramePt;
 	s_lastFramePt = newFramePt;
-
+	
 	//FPS
 	s_fpsDuration += s_durationSinceLastFrame;
 	s_framesThisSecond++;
@@ -33,7 +33,6 @@ void Timer::SetScalingFactor(const db arg)
 {
 	if(s_scalingFactor != arg)
 	{
-		s_scalingChangeFactor = s_scalingFactor * arg;
 		s_scalingFactor = arg;
 	}
 }

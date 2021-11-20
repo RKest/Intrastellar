@@ -13,12 +13,15 @@ void ExpManager::UpdateExpParticles(const glm::mat4 &pcModel)
 	auto ie = _expParticleClusterClockIds.end();
 	while (i != ie)
 	{
-		if(i->Inspect(static_cast<ui>(std::distance(b, i))))
+		if(i->Inspect(i->ClockId()))
+		{
+			_expParticleClusterClockIds.erase(i);
 			break;
+		}
 		else
 			++i;
-	}
 
+	}
 	const glm::vec2 pcPos = glm::vec2(pcModel * glm::vec4(0,0,0,1));
 	std::list<InstanceState>::iterator j = _instanceStates.begin();
 	std::list<InstanceState>::iterator je = _instanceStates.end();
@@ -74,31 +77,18 @@ void ExpManager::CreateExpParticles(const glm::mat4 &originModel, const ui noPar
 {
 	if(_instanceStates.size() < MAX_EXP_PART_NO)
 	{
-		expStateClock_t expStateClock(_expParticleAttractionDelay, [this](ui i){
-			auto it = begin(_expParticleClusterClockIds);
-			std::advance(it, i);
-			_expParticleClusterClockIds.erase(it);
-			for (InstanceState *state : _clockIdToInstanceStatePtrMap.at(it->ClockId()))
+		_expParticleClusterClockIds.emplace_back(_expParticleAttractionDelay, [this](ui clockId){
+			for (auto state : _clockIdToInstanceStatePtrMap.at(clockId))
 				state->behaviour = ExpPartcleBehaviour::ATTRACTION;
-			_clockIdToInstanceStatePtrMap.erase(it->ClockId());
 		});
-		_expParticleClusterClockIds.push_back(expStateClock);
-		const ui clockId = expStateClock.ClockId();
-
+		const ui clockId = _expParticleClusterClockIds.back().ClockId();
+		_clockIdToInstanceStatePtrMap.emplace(clockId, std::vector<InstanceState *>());
 		for (ui i = 0; i < noParticles; ++i)
 		{
 			if(_instanceStates.size() == MAX_EXP_PART_NO)
 				break;
-			_instanceStates.push_back({
-				glm::translate(glm::vec3(helpers::randomDirVector(_customRand, static_cast<ft>(Timer::Scale(_expParticleEntropySpeed))), 0.0f)),
-				originModel,
-				ExpPartcleBehaviour::ENTROPY,
-				clockId
-			});
-			if(!_clockIdToInstanceStatePtrMap.count(clockId))
-				_clockIdToInstanceStatePtrMap.insert(std::pair(clockId, std::vector<InstanceState *>{&_instanceStates.back()}));
-			else
-				_clockIdToInstanceStatePtrMap.at(clockId).push_back(&_instanceStates.back());
+			_instanceStates.push_back(initInstanceState(originModel));
+			_clockIdToInstanceStatePtrMap.at(clockId).push_back(&_instanceStates.back());
 
 		}
 	}
