@@ -134,7 +134,7 @@ void OrbiterBehaviour::Update(const ui dataIndex)
 
 	for(auto &wrap : movingToOrbitProjData)
 	{
-		wrap.get() *=  glm::translate(glm::vec3(0.0f, scaledProjDistanceToTravelPerFrame, 0.0f));
+		wrap.get() *=  glm::translate(glm::vec3(scaledProjDistanceToTravelPerFrame, 0.0f, 0.0f));
 	}
 
 }
@@ -164,9 +164,8 @@ void EnemyData::Clear()
 void EnemyData::Erase(const ui index)
 {
 	clockOrphanedProjsParis.emplace_back(Clock<>(ENEMY_ORPHANDED_PROJ_LIFETIME, []{}), std::vector<glm::mat4>());
-	clockOrphanedProjsParis.back().second.reserve(projInstanceTransforms[index].size());
 	clockOrphanedProjsParis.back().second.insert(end(clockOrphanedProjsParis.back().second), 
-		begin(projInstanceTransforms[index]), end(projInstanceTransforms[index]));
+		std::move_iterator(begin(projInstanceTransforms[index])), std::move_iterator(end(projInstanceTransforms[index])));
 
 	instanceTransforms		[index] = instanceTransforms	[size - 1];
 	boundingBoxes			[index] = boundingBoxes			[size - 1];
@@ -212,6 +211,8 @@ void Enemy::Update()
 	}
 	for(ui i = 0; i < data.clockOrphanedProjsParis.size(); ++i)
 	{
+		helpers::transformMatVec(data.clockOrphanedProjsParis[i].second, Timer::Scale(_manager._enemyStats.shotSpeed));
+		_manager.checkForProjIntersection(data.clockOrphanedProjsParis[i].second);
 		if(data.clockOrphanedProjsParis[i].first.Inspect())
 		{
 			const size_t noOrphanedProjs = data.clockOrphanedProjsParis.size();
@@ -219,8 +220,6 @@ void Enemy::Update()
 				data.clockOrphanedProjsParis[i] = data.clockOrphanedProjsParis[noOrphanedProjs - 1];
 			data.clockOrphanedProjsParis.pop_back();
 		}
-		helpers::transformMatVec(data.clockOrphanedProjsParis[i].second, Timer::Scale(_manager._enemyStats.shotSpeed));
-		_manager.checkForProjIntersection(data.clockOrphanedProjsParis[i].second);
 	}
 }
 
@@ -249,16 +248,16 @@ EnemyManager::EnemyManager(helpers::Core &core, const UntexturedMeshParams &para
  	_weaponInterfaces(weaponInterfaces), m_spawnClock(ENEMY_SPAWN_DELAY, [this]{ m_spawn(); }), m_interfacePtr(new EnemyInterface(this)),
  	m_fatalityCallback(fatalityCallback)
 {
-	behavoiurPtrVec_t chaserVec;
-	behavoiurPtrVec_t shooterVec;
+	// behavoiurPtrVec_t chaserVec;
+	// behavoiurPtrVec_t shooterVec;
 	behavoiurPtrVec_t orbiterVec;
 	_enemies.reserve(EnemyTypeEnum::NO_ENEMY_TYPES);
-	chaserVec .push_back(std::make_unique<ChaseBehaviour>(*this, EnemyTypeEnum::CHASER_ENEMY ));
-	shooterVec.push_back(std::make_unique<ChaseBehaviour>(*this, EnemyTypeEnum::SHOOTER_ENEMY));
-	shooterVec.push_back(std::make_unique<ShootBehavoiur>(*this, EnemyTypeEnum::SHOOTER_ENEMY));
-	orbiterVec.push_back(std::make_unique<OrbiterBehaviour>(*this, EnemyTypeEnum::ORBITER_ENEMY));
-	_enemies.emplace_back(*this, chaserVec,  glm::vec3(0.25f, 0.57f, 0.38f), MAX_NO_ENEMIES);
-	_enemies.emplace_back(*this, shooterVec, glm::vec3(0.63f, 0.16f, 0.16f), MAX_NO_SHOOTER_ENEMIES);
+	// chaserVec .push_back(std::make_unique<ChaseBehaviour>(*this, EnemyTypeEnum::CHASER_ENEMY ));
+	// shooterVec.push_back(std::make_unique<ChaseBehaviour>(*this, EnemyTypeEnum::SHOOTER_ENEMY));
+	// shooterVec.push_back(std::make_unique<ShootBehavoiur>(*this, EnemyTypeEnum::SHOOTER_ENEMY));
+	orbiterVec.push_back(std::make_unique<OrbiterBehaviour>(*this, EnemyTypeEnum::CHASER_ENEMY));
+	// _enemies.emplace_back(*this, chaserVec,  glm::vec3(0.25f, 0.57f, 0.38f), MAX_NO_ENEMIES);
+	// _enemies.emplace_back(*this, shooterVec, glm::vec3(0.63f, 0.16f, 0.16f), MAX_NO_SHOOTER_ENEMIES);
 	_enemies.emplace_back(*this, orbiterVec, glm::vec3(0.94f, 0.90f, .055f), MAX_NO_ORBITER_ENEMIES);
 }
 
@@ -322,7 +321,7 @@ std::vector<glm::mat4> EnemyManager::InstanceTransforms()
 		totalSize += enemy.data.instanceTransforms.size();
 	m_instanceTransformToEnemyIndexMap	.resize(totalSize);
 	enemyInstanceTransforms				.reserve(totalSize);
-	for(ui i = 0; i < EnemyTypeEnum::NO_ENEMY_TYPES; ++i)
+	for(ui i = 0; i < 1; ++i)
 	{
 		for(ui j = 0; j < _enemies[i].data.size; ++j)
 		{
@@ -349,11 +348,11 @@ void EnemyManager::m_spawn()
 												 _customRand.NextFloat(pcPos.y + 9.0f, pcPos.y + 11.0f) ;
 
 	const glm::mat4 instanceTransform = _enemyTransform.Model() * glm::translate(glm::vec3(enemyX, enemyY, 0));
-	if(!(_customRand.NextUi() % 10))
-		_enemies[SHOOTER_ENEMY].Spawn(instanceTransform);
-	else if (!(_customRand.NextUi() % 10))
-		_enemies[ORBITER_ENEMY].Spawn(instanceTransform);
-	else
+	// if(!(_customRand.NextUi() % 10))
+		// _enemies[SHOOTER_ENEMY].Spawn(instanceTransform);
+	// else if (!(_customRand.NextUi() % 10))
+		// _enemies[ORBITER_ENEMY].Spawn(instanceTransform);
+	// else
 		_enemies[CHASER_ENEMY] .Spawn(instanceTransform);
 }
 
