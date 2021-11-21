@@ -14,6 +14,17 @@ using timePt_t = g_clock_t::time_point;
 template <typename... T>
 using clockCB_t = std::function<void(T...)>;
 
+enum struct ClockOptions : ui
+{
+	NOOP = 0b0,
+	NOSCALE = 0b1
+};
+
+inline static constexpr ui operator&(ClockOptions a, ClockOptions b)
+{
+	return static_cast<ui>(a) & static_cast<ui>(b);
+} 
+
 struct Timer
 {
 	template <typename... T> friend class Clock;
@@ -48,12 +59,12 @@ template <typename... T>
 class Clock
 {
 public:
-	Clock()
-		: m_clockId(Timer::s_nextClockId++), m_latestTimePoint(Timer::s_lastFramePt)
+	Clock(const ClockOptions options = ClockOptions::NOOP)
+		: m_clockId(Timer::s_nextClockId++), m_latestTimePoint(Timer::s_lastFramePt), m_options(options)
 	{
 	}
-	Clock(const db delay, const clockCB_t<T...> cb)
-		: m_clockId(Timer::s_nextClockId++), m_latestTimePoint(Timer::s_lastFramePt)
+	Clock(const db delay, const clockCB_t<T...> cb, const ClockOptions options = ClockOptions::NOOP)
+		: m_clockId(Timer::s_nextClockId++), m_latestTimePoint(Timer::s_lastFramePt), m_options(options)
 	{
 		Init(delay, cb);
 	}
@@ -63,17 +74,21 @@ public:
 	Clock operator=(const Clock &rhs) 	{ return Clock(rhs); }
 	inline void Init(const db delay, const clockCB_t<T...> cb)
 	{
+		m_latestTimePoint = Timer::s_lastFramePt;
 		m_delayDB = delay;
 		m_delay = milliDuration_t(delay);
 		m_cb = cb;
 	}
+	template <ClockOptions Oops = ClockOptions::NOOP>
 	inline bool Inspect(T... ts)
 	{
+		if constexpr (!(Oops & ClockOptions::NOSCALE))
+			m_delay = milliDuration_t(m_delayDB / Timer::s_scalingFactor);
 		if(Timer::s_inspectBool)
+		{
 			LOG("Delay:    ", m_delay.count());
-		m_delay = milliDuration_t(m_delayDB / Timer::s_scalingFactor);
-		if(Timer::s_inspectBool)
 			LOG("Duration: ", std::chrono::duration_cast<milliDuration_t>(Timer::s_lastFramePt - m_latestTimePoint).count());
+		}
 		if (std::chrono::duration_cast<milliDuration_t>(Timer::s_lastFramePt - m_latestTimePoint) > m_delay)
 		{
 			m_latestTimePoint = Timer::s_lastFramePt;
@@ -90,8 +105,9 @@ public:
 
 private:
 	const ui m_clockId{};
+	timePt_t m_latestTimePoint;
+	const ClockOptions m_options;
 	db m_delayDB{};
 	clockCB_t<T...> m_cb{};
 	milliDuration_t m_delay{};
-	timePt_t m_latestTimePoint;
 };

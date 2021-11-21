@@ -229,7 +229,7 @@ void WeaponsManager::Draw()
                 _isWeaponsFullyDrawn = true;
             });
         }
-        else if(!_isWeaponsFullyDrawn && !m_weaponTransitionClock.Inspect())
+        else if(!_isWeaponsFullyDrawn && !m_weaponTransitionClock.Inspect<ClockOptions::NOSCALE>())
         {
             const db remainingClockTime = m_weaponTransitionClock.RemainingTime();
             const db remainingTimeFraction = 1.0 - remainingClockTime / OVERLAY_TRANSITION_TIME;
@@ -253,6 +253,7 @@ void WeaponsManager::Draw()
             _switchWeapons(tempSelectedWeaponIndex);
 
             m_weaponCooldownClock.Init(WEAPONS_COOLDOWN, [this]{
+                LOG("asd");
                 _isThereWeaponCooldown = false;
             });
             _isThereWeaponCooldown = true;
@@ -269,7 +270,7 @@ void WeaponsManager::Draw()
     }
     else if(_isThereWeaponCooldown)
     {
-        m_weaponCooldownClock.Inspect();
+        m_weaponCooldownClock.Inspect<ClockOptions::NOSCALE>();
     }
     else
     {

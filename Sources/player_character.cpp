@@ -39,10 +39,7 @@ void PlayerCharacter::RenderScore()
 
 void PlayerCharacter::Update()
 {
-	if(_isInvincible)
-		m_invincibilityClock.Inspect();
-
-	if(_isInvincible)
+	if(_isInvincible && !m_invincibilityClock.Inspect())
 		_pcAlphaValue.second = _setAlpha(m_invincibilityClock.RemainingTime());
 	else
 		_pcAlphaValue.second = 1.0f;
@@ -59,6 +56,7 @@ void PlayerCharacter::_pcIntersection()
 {
 	if(!_isInvincible)
 	{
+		_isInvincible = true;
 		_pcStats.currHP -= 1;
 		if(!_pcStats.currHP)
 			_isAlive = false;

@@ -44,7 +44,7 @@ constexpr const ft CAMERA_DISTANCE = 20.0f;
 constexpr const ui MAX_PROJ_AMOUNT = 100;
 constexpr const ui MAX_NO_ENEMIES = 50;
 constexpr const ui MAX_NO_SHOOTER_ENEMIES = 5;
-constexpr const ui MAX_NO_ORBITER_ENEMIES = 1;
+constexpr const ui MAX_NO_ORBITER_ENEMIES = 5;
 
 constexpr const ui MAX_ENEMY_PROJ_AMOUNT = 300;
 constexpr const ui MAX_PROJ_AMOUNT_PER_ENEMY = 10;
@@ -74,7 +74,7 @@ constexpr const ft WEAPONS_ICON_DIMS = static_cast<ft>(SCREEN_HEIGHT) / static_c
 constexpr const db WEAPONS_COOLDOWN = 2000.0;
 constexpr const ft WEAPONS_LASER_MIN_HOMING_ANGLE = glm::radians(30.0f);  //A test value
 constexpr const ft WEAPONS_LASER_MAX_HOMING_ANGLE = glm::radians(180.0f); //Maybe actually not test value though
-constexpr const db WEAPONS_LASER_LINGER_DURATION = 200.0;
+constexpr const db WEAPONS_LASER_LINGER_DURATION = 100.0;
 
 //Overlay
 constexpr const db WEAPONS_TIMER_SCALING_ARG = 0.05;
