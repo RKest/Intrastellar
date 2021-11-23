@@ -184,10 +184,4 @@ namespace helpers
             it++;
         }
     }
-
-    struct Core
-    {
-        PlayerStats &stats;
-    };
-
 }

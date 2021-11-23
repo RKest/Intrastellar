@@ -159,7 +159,7 @@ struct EnemyInterface;
 class EnemyManager
 {
 public:
-	EnemyManager(helpers::Core &core, const UntexturedMeshParams &params, EnemyStats &enemyStats, const UntexturedMeshParams &projParams, 
+	EnemyManager(const UntexturedMeshParams &params, EnemyStats &enemyStats, const UntexturedMeshParams &projParams, 
 		IPlayerCharacter *pcInterface, weaponInterfaceArray_t &weaponInterfaces, fatalityCallback_t fatalityCallback);
 
 	void Reset();
@@ -181,7 +181,6 @@ private:
 
 	Shader _enemyShader{"./Shaders/Enemy"};
 	Shader _enemyProjShader{"./Shaders/EnemyProjectile"};
-	PlayerStats &_pcStats;
 	EnemyStats &_enemyStats;
 	const UntexturedMeshParams _enemyParams;
 	const UntexturedMeshParams _enemyProjParams;

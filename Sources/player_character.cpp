@@ -2,9 +2,8 @@
 #include "glm/gtx/string_cast.hpp"
 #include <iostream>
 
-PlayerCharacter::PlayerCharacter(helpers::Core &core, const UntexturedMeshParams &pcParams)
-	:  _pcStats(core.stats), _pcMesh(pcParams), _pcBoundingBox(pcParams), 
-	_pcInterface(new IPlayerCharacter(this))
+PlayerCharacter::PlayerCharacter(const UntexturedMeshParams &pcParams)
+	:  _pcMesh(pcParams), _pcBoundingBox(pcParams), _pcInterface(new IPlayerCharacter(this))
 {
 }
 
@@ -16,7 +15,7 @@ PlayerCharacter::~PlayerCharacter()
 void PlayerCharacter::Reset()
 {
 	_enemiesShotCounter = 0;
-	_pcStats = defaultStats;
+	g_playerStats = defaultStats;
 }
 
 void PlayerCharacter::RenderScore()
@@ -57,8 +56,8 @@ void PlayerCharacter::_pcIntersection()
 	if(!_isInvincible)
 	{
 		_isInvincible = true;
-		_pcStats.currHP -= 1;
-		if(!_pcStats.currHP)
+		g_playerStats.currHP -= 1;
+		if(!g_playerStats.currHP)
 			_isAlive = false;
 		else
 		{

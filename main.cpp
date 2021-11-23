@@ -30,17 +30,15 @@ int main()
 	const UntexturedMeshParams expBarParams 	= {expBarVertices, expBarIndices, ARR_SIZE(expBarVertices), ARR_SIZE(expBarIndices)};
 	const TexturedMeshParams weaponIconParams 	= {weaponIconVertices, weaponIconTexcoords, weaponIconIndices, ARR_SIZE(weaponIconVertices), ARR_SIZE(weaponIconIndices)};
 
-	PlayerStats playerStats = defaultStats;
 	EnemyStats enemyStats = defaultEnemyStats;
-	helpers::Core core				{playerStats};
-	ExpManager expManager			(core, expParams, expBarParams);
-	PlayerCharacter playerCharacter	(core, pcParams);
-	WeaponsManager weaponsManager	(core, weaponIconParams, overlayParams, blasterProjParams, rocketProjParams);
-	EnemyManager enemyManager		(core, enemyMeshParams, enemyStats, blasterProjParams, playerCharacter.Interface(), weaponsManager.WeaponInterfaces(),
+	ExpManager expManager			(expParams, expBarParams);
+	PlayerCharacter playerCharacter	(pcParams);
+	WeaponsManager weaponsManager	(weaponIconParams, overlayParams, blasterProjParams, rocketProjParams);
+	EnemyManager enemyManager		(enemyMeshParams, enemyStats, blasterProjParams, playerCharacter.Interface(), weaponsManager.WeaponInterfaces(),
 		expManager.CreateExpParticlesCb());
 	weaponsManager.SetEnemyInterface(enemyManager.Interface());
 	Controler controler				(playerCharacter.Interface()->Transform());
-	CardDeck cardDeck				(core, overlayParams, cardBorderParams);
+	CardDeck cardDeck				(overlayParams, cardBorderParams);
 
 	const auto render = [&]
 	{
@@ -65,7 +63,7 @@ int main()
 		playerCharacter.Update();
 		if(expManager.HasThereBeenLevelUp())
 		{
-			playerStats.enemySpawnRate *= 0.5f;
+			g_playerStats.enemySpawnRate *= 0.5f;
 			cardDeck.RollCards();
 		}
 		enemyManager.UpdateBehaviour(helpers::transformStdVector(pcParams, pcModel));

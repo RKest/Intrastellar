@@ -20,7 +20,7 @@ struct IPlayerCharacter;
 class PlayerCharacter
 {
 public:
-	PlayerCharacter(helpers::Core &core, const UntexturedMeshParams &pcParams);
+	PlayerCharacter(const UntexturedMeshParams &pcParams);
 
 	void Reset();
 	void RenderScore();
@@ -34,7 +34,6 @@ public:
 
 private:
 	friend struct IPlayerCharacter;
-    PlayerStats &_pcStats;
 	Shader _pcShader{"Shaders/PC"};
 	UntexturedMesh _pcMesh;
 	TriBoundingBox _pcBoundingBox;

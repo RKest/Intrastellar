@@ -1,6 +1,6 @@
 #include "exp_manager.h"
 
-ExpManager::ExpManager(helpers::Core &core, const UntexturedMeshParams &expMeshParams, const UntexturedMeshParams &expBarMeshParams)
+ExpManager::ExpManager(const UntexturedMeshParams &expMeshParams, const UntexturedMeshParams &expBarMeshParams)
 	: _customRand(CUSTOM_RAND_SEED), _expMesh(expMeshParams, MAX_EXP_PART_NO), _expBarMesh(expBarMeshParams)
 {
 }

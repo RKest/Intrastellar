@@ -126,6 +126,8 @@ struct EnemyStats
     ui health;
 };
 
+inline PlayerStats g_playerStats = defaultStats;
+
 static const EnemyStats defaultEnemyStats{
     0.01,   //speed
     0.01f,  //shotSpeed

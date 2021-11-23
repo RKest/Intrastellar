@@ -30,7 +30,7 @@ namespace arr_ini
 class WeaponsManager
 {
 public:
-    WeaponsManager(helpers::Core &core, const TexturedMeshParams &iconMeshParams, const UntexturedMeshParams &overlayMeshParams, 
+    WeaponsManager(const TexturedMeshParams &iconMeshParams, const UntexturedMeshParams &overlayMeshParams, 
         const UntexturedMeshParams &blasterProjParams, const UntexturedMeshParams &rocketMeshParams);
 
     void Draw();
@@ -47,7 +47,6 @@ private:
     friend struct RocketBehaviour;
     friend struct LaserBehaviour;
 
-    PlayerStats                 &_pcStats;
     TexturedInstancedMesh       _iconMesh;
     UntexturedMesh              _overlayMesh;
 

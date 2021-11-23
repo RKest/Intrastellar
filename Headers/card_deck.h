@@ -29,14 +29,13 @@ using pcDrawFunc = std::function<void(const std::vector<glm::mat4>&, std::vector
 class CardDeck 
 {
 public:
-    CardDeck(helpers::Core &core, const UntexturedMeshParams &overlayParams, const UntexturedMeshParams &cardBorderParams);
+    CardDeck(const UntexturedMeshParams &overlayParams, const UntexturedMeshParams &cardBorderParams);
     void DrawCards();
     void RollCards();
     inline bool &AreCarsDrawn() { return _areCardsDrawn; }
 
 protected:
 private:
-    PlayerStats  &_stats;
     CustomRand _customRand;
     Shader _cardBorderShader{"Shaders/CardBorder"};
     Shader _overlayShader{"Shaders/Overlay"};

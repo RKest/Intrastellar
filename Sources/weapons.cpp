@@ -175,9 +175,9 @@ bool Weapon::_projHit(const ui projIndex, const ui enemyIndex)
 	return false;
 }
 
-WeaponsManager::WeaponsManager(helpers::Core &core, const TexturedMeshParams &iconMeshParams, const UntexturedMeshParams &overlayMeshParams, 
+WeaponsManager::WeaponsManager(const TexturedMeshParams &iconMeshParams, const UntexturedMeshParams &overlayMeshParams, 
         const UntexturedMeshParams &blasterProjParams, const UntexturedMeshParams &rocketMeshParams)
-    : _pcStats(core.stats), _iconMesh(iconMeshParams, WEAPONS_NO_WEAPONS), _overlayMesh(overlayMeshParams), 
+    : _iconMesh(iconMeshParams, WEAPONS_NO_WEAPONS), _overlayMesh(overlayMeshParams), 
     _blasterProjMesh(blasterProjParams, MAX_PROJ_AMOUNT), _rocketProjMesh(rocketMeshParams, MAX_PROJ_AMOUNT), _laserProjMesh(blasterProjParams, MAX_PROJ_AMOUNT)
 {
     constexpr const char *basePath = "./Resources/Textures/WeaponIcons/";

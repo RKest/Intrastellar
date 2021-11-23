@@ -32,8 +32,8 @@ void CardDeck::DrawCards()
 	}
 }
 
-CardDeck::CardDeck(helpers::Core &core, const UntexturedMeshParams &overlayParams, const UntexturedMeshParams &cardBorderParams)
-	:   _stats(core.stats), _customRand(CUSTOM_RAND_SEED), _overlayMesh(overlayParams),
+CardDeck::CardDeck(const UntexturedMeshParams &overlayParams, const UntexturedMeshParams &cardBorderParams)
+	:  _customRand(CUSTOM_RAND_SEED), _overlayMesh(overlayParams),
 	  _cardBorderParams(cardBorderParams), _cardBorderMesh(cardBorderParams, NO_CARDS)
 {
 	for (ui i = 0; i < NO_CARDS; ++i)
@@ -87,5 +87,5 @@ void CardDeck::_choseCards(const ui cardIndex)
 {
 	_isLBMPressed = false;
 	_areCardsDrawn = false;
-	_stats += _cards[_chosenCardIndices[cardIndex]].statAltarations;
+	g_playerStats += _cards[_chosenCardIndices[cardIndex]].statAltarations;
 }

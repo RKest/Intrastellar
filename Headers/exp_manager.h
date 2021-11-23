@@ -32,7 +32,7 @@ using expStateClock_t = Clock<ui>;
 class ExpManager
 {
 public:
-	ExpManager(helpers::Core &core, const UntexturedMeshParams &expMeshParams, const UntexturedMeshParams &expBarMeshParams);
+	ExpManager(const UntexturedMeshParams &expMeshParams, const UntexturedMeshParams &expBarMeshParams);
 
 	void UpdateExpParticles(const glm::mat4 &pcModel);
 	void CreateExpParticles(const glm::mat4 &originModel, const ui noParticles);

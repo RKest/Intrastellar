@@ -242,9 +242,9 @@ void Enemy::Draw()
 	}
 }
 
-EnemyManager::EnemyManager(helpers::Core &core, const UntexturedMeshParams &params, EnemyStats &enemyStats, const UntexturedMeshParams &projParams, 
+EnemyManager::EnemyManager(const UntexturedMeshParams &params, EnemyStats &enemyStats, const UntexturedMeshParams &projParams, 
 		IPlayerCharacter *pcInterface, weaponInterfaceArray_t &weaponInterfaces, fatalityCallback_t fatalityCallback)
- :  _pcStats(core.stats), _enemyStats(enemyStats), _enemyParams(params), _enemyProjParams(projParams), _pcInterface(pcInterface), 
+ :  _enemyStats(enemyStats), _enemyParams(params), _enemyProjParams(projParams), _pcInterface(pcInterface), 
  	_weaponInterfaces(weaponInterfaces), m_spawnClock(ENEMY_SPAWN_DELAY, [this]{ m_spawn(); }), m_interfacePtr(new EnemyInterface(this)),
  	m_fatalityCallback(fatalityCallback)
 {
@@ -297,7 +297,7 @@ void EnemyManager::UpdateBehaviour(const std::vector<glm::vec2> &pcPositions)
 				{
 					if((weaponInterface->ProjHitCb())(collisionIndex, enemy.data.ids[i]))
 					{
-						enemy.data.healths[i] -= decl_cast(enemy.data.healths, _pcStats.actualDamage);
+						enemy.data.healths[i] -= decl_cast(enemy.data.healths, g_playerStats.actualDamage);
 						if(enemy.data.healths[i] <= 0)
 						{
 							m_fatalityCallback(enemy.data.instanceTransforms[i], 3);
@@ -360,7 +360,7 @@ void EnemyManager::m_hit(const ui i)
 {
 	const auto enemyIndexPair = m_instanceTransformToEnemyIndexMap[i];
 	auto &enemy = _enemies[enemyIndexPair.first];
-	enemy.data.healths[enemyIndexPair.second] -= decl_cast(enemy.data.healths, _pcStats.actualDamage);
+	enemy.data.healths[enemyIndexPair.second] -= decl_cast(enemy.data.healths, g_playerStats.actualDamage);
 	if(enemy.data.healths[enemyIndexPair.second] <= 0)
 	{
 		m_fatalityCallback(enemy.data.instanceTransforms[enemyIndexPair.second], 3);
