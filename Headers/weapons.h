@@ -36,9 +36,6 @@ public:
     void Draw();
     void Update(const glm::mat4 &pcModel, const std::vector<glm::mat4> &enemyInstanceTransforms);
     void Reset();
-    void SetEnemyInterface(EnemyInterface* interface);
-
-    inline auto &WeaponInterfaces() { return _weaponInterfaces; }
 
 private:
     friend class Weapon;
@@ -53,8 +50,6 @@ private:
     UntexturedInstancedMesh     _blasterProjMesh;
     UntexturedInstancedMesh     _rocketProjMesh;
     UntexturedInstancedMesh     _laserProjMesh;
-
-    EnemyInterface              *m_enemyInterfacePtr = nullptr;
 
     BlasterBehaviour            _blasterBehaviour;
     RocketBehaviour             _rocketBehaviour;
@@ -74,7 +69,6 @@ private:
     glm::mat4                   _baseInstanceTransforms [WEAPONS_NO_WEAPONS];
     ReqBoundingBox              _boundingBoxes          [WEAPONS_NO_WEAPONS];
     std::unique_ptr<Weapon>     _weapons                [WEAPONS_NO_WEAPONS];
-    weaponInterfaceArray_t      _weaponInterfaces;
     samplerArray_t              _samplerIds = arr_ini::makeSampArr(std::make_index_sequence<WEAPONS_NO_WEAPONS>{}); 
 
     uiUni                       _selectedWeaponIndexUni   { "chosenWeaponInx", 0 };

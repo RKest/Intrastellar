@@ -61,7 +61,6 @@ public:
     void Fire(const glm::mat4 &pcModel);
     void Init();
     void Update(const std::vector<glm::mat4> &enemyInstanceTransforms);
-    inline IWeapon *Interface() { return _interface; }
 
 protected:
     friend struct IWeapon;
@@ -74,7 +73,6 @@ protected:
     UntexturedInstancedMesh &_projMesh;
     WeaponBehaviour         &_behaviour;
     Shader                  &_projShader;
-    IWeapon                 *_interface;
 
     glm::mat4               _projInstanceTransforms [MAX_PROJ_AMOUNT];
 	ui		                _noLeftProjPiercings    [MAX_PROJ_AMOUNT];
@@ -87,18 +85,21 @@ protected:
     void _commonUpdate();
 };
 
-using namespace std::placeholders;
 struct IWeapon
 {
-    IWeapon(Weapon *weaponPtr) : _weaponPtr(weaponPtr) {}
-    IWeapon(IWeapon *iPtr) : _weaponPtr(iPtr->_weaponPtr) {}
+    static inline void Init(Weapon* weaponPtr, const ui weaponNumber)
+    {
+        m_weaponPtrArray[weaponNumber] = weaponPtr;
+        weaponProjHitCbs[weaponNumber] = [weaponNumber](const ui projIndex, const ui enemyIndex)
+            { return IWeapon::m_weaponPtrArray[weaponNumber]->_projHit(projIndex, enemyIndex); };
+    }
 
-    inline const auto &ProjHitCb()              const { return weaponProjHitCb; }
-    inline const auto &ProjInstaceTransorms()   const { return _weaponPtr->_projInstanceTransforms; }
-    inline const auto &NoProjs()                const { return _weaponPtr->_noProjs; }
+    inline static const ui s_noWeapons = Weapons::NO_IMPLEMENTED_WEAPONS;
+
+    static inline const auto &ProjHitCb            (const ui weaponIndex) { return weaponProjHitCbs[weaponIndex]; }
+    static inline const auto &ProjInstaceTransorms (const ui weaponIndex) { return m_weaponPtrArray[weaponIndex]->_projInstanceTransforms; }
+    static inline const auto &NoProjs              (const ui weaponIndex) { return m_weaponPtrArray[weaponIndex]->_noProjs; }
 private:
-    Weapon *_weaponPtr;
-	DECL_INST(weaponProjHitCb, std::bind(&Weapon::_projHit, _weaponPtr, _1, _2));
+    inline static std::array<Weapon*,                                 Weapons::NO_IMPLEMENTED_WEAPONS> m_weaponPtrArray;
+    inline static std::array<std::function<bool(const ui, const ui)>, Weapons::NO_IMPLEMENTED_WEAPONS> weaponProjHitCbs;
 };
-
-using weaponInterfaceArray_t = std::array<IWeapon*, Weapons::NO_IMPLEMENTED_WEAPONS>;

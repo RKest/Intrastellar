@@ -34,10 +34,8 @@ int main()
 	ExpManager expManager			(expParams, expBarParams);
 	PlayerCharacter playerCharacter	(pcParams);
 	WeaponsManager weaponsManager	(weaponIconParams, overlayParams, blasterProjParams, rocketProjParams);
-	EnemyManager enemyManager		(enemyMeshParams, enemyStats, blasterProjParams, playerCharacter.Interface(), weaponsManager.WeaponInterfaces(),
-		expManager.CreateExpParticlesCb());
-	weaponsManager.SetEnemyInterface(enemyManager.Interface());
-	Controler controler				(playerCharacter.Interface()->Transform());
+	EnemyManager enemyManager		(enemyMeshParams, enemyStats, blasterProjParams);
+	Controler controler				(IPlayerCharacter::Transform());
 	CardDeck cardDeck				(overlayParams, cardBorderParams);
 
 	const auto render = [&]
@@ -53,7 +51,7 @@ int main()
 	while (!IDisplay::I.IsClosed())
 	{
 		Timer::RecordFrame();
-		glm::mat4 pcModel = playerCharacter.Interface()->Transform().Model();
+		glm::mat4 pcModel = IPlayerCharacter::Transform().Model();
 		controler.CaptureKeyboardPresses(playerCharacter.IsAlive());
 		controler.CaptureMouseMovement();
 		Camera::Recalc();
@@ -98,8 +96,8 @@ int main()
 				enemyManager.Reset();
 				weaponsManager.Reset();
 				playerCharacter.Reset();
-				playerCharacter.Interface()->Transform().Pos().x = 0;
-				playerCharacter.Interface()->Transform().Pos().y = 0;
+				IPlayerCharacter::Transform().Pos().x = 0;
+				IPlayerCharacter::Transform().Pos().y = 0;
 				Camera::Pos().x = 0;
 				Camera::Pos().y = 0;
 			}

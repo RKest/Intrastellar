@@ -22,6 +22,7 @@
 #include <iterator>
 
 #include "weapon-types.h"
+#include "exp_manager.h"
 
 enum BehavoiurStatus
 {
@@ -154,13 +155,10 @@ private:
 	const ui _maxNoInstances;
 };
 
-using fatalityCallback_t = std::function<void(const glm::mat4&, const ui)>;
-struct EnemyInterface;
 class EnemyManager
 {
 public:
-	EnemyManager(const UntexturedMeshParams &params, EnemyStats &enemyStats, const UntexturedMeshParams &projParams, 
-		IPlayerCharacter *pcInterface, weaponInterfaceArray_t &weaponInterfaces, fatalityCallback_t fatalityCallback);
+	EnemyManager(const UntexturedMeshParams &params, EnemyStats &enemyStats, const UntexturedMeshParams &projParams);
 
 	void Reset();
 	void Draw();
@@ -168,7 +166,6 @@ public:
 	void UpdateBehaviour(const std::vector<glm::vec2> &pcPositions);
 	std::vector<glm::mat4> InstanceTransforms();
 	inline ui NextId() { return _newestEnemyId++; }
-	inline auto Interface() { return m_interfacePtr; }
 
 private:
 	friend class Enemy;
@@ -177,7 +174,7 @@ private:
 	friend class ChaseBehaviour;
 	friend class ShootBehavoiur;
 	friend class OrbiterBehaviour;
-	friend class EnemyInterface;
+	friend class IEnemyManager;
 
 	Shader _enemyShader{"./Shaders/Enemy"};
 	Shader _enemyProjShader{"./Shaders/EnemyProjectile"};
@@ -185,10 +182,7 @@ private:
 	const UntexturedMeshParams _enemyParams;
 	const UntexturedMeshParams _enemyProjParams;
 	IPlayerCharacter _pcInterface;
-	weaponInterfaceArray_t &_weaponInterfaces;
 	Clock<> m_spawnClock;
-	EnemyInterface *m_interfacePtr;
-	fatalityCallback_t m_fatalityCallback;
 
 	glm::mat4 _pcModel;
 	Transform _enemyTransform;
@@ -204,11 +198,15 @@ private:
 };
 
 using namespace std::placeholders;
-struct EnemyInterface
+struct IEnemyManager
 {
-	EnemyInterface(EnemyManager *managerPtr) : m_managerPtr(managerPtr) {}
-	inline auto EnemyHit() { return enemyHit; }
+	static inline void Init(EnemyManager *managerPtr)
+	{
+		m_managerPtr = managerPtr;
+		enemyHit = [](const ui i){ IEnemyManager::m_managerPtr->m_hit(i); };
+	}
+	inline static auto EnemyHit() { return enemyHit; }
 private:
-	EnemyManager *m_managerPtr;
-	DECL_INST(enemyHit, std::bind(&EnemyManager::m_hit, m_managerPtr, _1));
+	inline static EnemyManager *m_managerPtr;
+	inline static std::function<void(const ui)> enemyHit;
 };

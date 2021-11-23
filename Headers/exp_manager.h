@@ -38,7 +38,6 @@ public:
 	void CreateExpParticles(const glm::mat4 &originModel, const ui noParticles);
 	void Reset();
 
-	inline auto CreateExpParticlesCb() { return std::bind(&ExpManager::CreateExpParticles, this, _1, _2); }
 	inline bool HasThereBeenLevelUp()  { return _hasThereBeenLevelUp; }
 	
 protected:
@@ -73,4 +72,17 @@ private:
 			originModel, ExpPartcleBehaviour::ENTROPY
 		}; 
 	}
+};
+
+struct IExpManager
+{
+	static inline void Init(ExpManager *managerPtr)
+	{
+		m_managerPtr = managerPtr;
+		createExpParticles = [](const glm::mat4 &mat, const ui i){ IExpManager::m_managerPtr->CreateExpParticles(mat, i); };
+	}
+	static inline auto CreateExpParicles() { return createExpParticles; }
+private:
+	inline static ExpManager *m_managerPtr;
+	inline static std::function<void(glm::mat4 const&, const ui)> createExpParticles;
 };

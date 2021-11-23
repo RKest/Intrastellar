@@ -3,13 +3,9 @@
 #include <iostream>
 
 PlayerCharacter::PlayerCharacter(const UntexturedMeshParams &pcParams)
-	:  _pcMesh(pcParams), _pcBoundingBox(pcParams), _pcInterface(new IPlayerCharacter(this))
+	:  _pcMesh(pcParams), _pcBoundingBox(pcParams)
 {
-}
-
-PlayerCharacter::~PlayerCharacter()
-{
-	delete _pcInterface;
+	IPlayerCharacter::Init(this);
 }
 
 void PlayerCharacter::Reset()

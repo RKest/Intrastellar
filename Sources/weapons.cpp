@@ -86,7 +86,7 @@ void LaserBehaviour::Update([[maybe_unused]]const std::vector<glm::mat4> &enemyI
 
             const ui hitIndex = decl_cast(hitIndex, std::distance(cbegin(enemyInstanceTransforms), *closestConeEnemyIter));
             alreadyHitIters.push_back(*closestConeEnemyIter);
-            (_weaponPtr->_manager.m_enemyInterfacePtr->EnemyHit())(hitIndex);
+            (IEnemyManager::EnemyHit())(hitIndex);
             const glm::vec2 enemyPos{**closestConeEnemyIter * glm::vec4(0,0,0,1)};
             const ft fireDistance = distance(firePos, enemyPos);
             const ft distanceToControl = fireDistance / 3.0f;
@@ -125,7 +125,7 @@ void LaserBehaviour::Draw()
 }
 
 Weapon::Weapon(WeaponsManager &manager, UntexturedInstancedMesh &projMesh, WeaponBehaviour &behaviour, PlayerStats &weaponStats, Shader &projShader) 
-    : _manager(manager), _projMesh(projMesh), _behaviour(behaviour), _projShader(projShader), _interface(new IWeapon(this))
+    : _manager(manager), _projMesh(projMesh), _behaviour(behaviour), _projShader(projShader)
 {
     _weaponStats += weaponStats;
     _behaviour.Construct(this);
@@ -198,8 +198,8 @@ WeaponsManager::WeaponsManager(const TexturedMeshParams &iconMeshParams, const U
     _weapons[Weapons::BLASTER]          .reset(new Weapon(*this, _blasterProjMesh, _blasterBehaviour, _blasterStatAltarations, _projShader));
     _weapons[Weapons::ROCEKT_LANCHER]   .reset(new Weapon(*this, _rocketProjMesh , _rocketBehaviour , _rocketStatAltarations , _projShader));
     _weapons[Weapons::LASER]            .reset(new Weapon(*this, _laserProjMesh  , _laserBehaviour  , _laserStatAltarations  , _bezierProjShader));
-    for(size_t i = 0; i < Weapons::NO_IMPLEMENTED_WEAPONS; ++i)
-        _weaponInterfaces[i] = _weapons[i]->Interface();
+    for(ui i = 0; i < Weapons::NO_IMPLEMENTED_WEAPONS; ++i)
+        IWeapon::Init(_weapons[i].get(), i);
     _weapons[Weapons::BLASTER]->Init();
 }
 
@@ -253,7 +253,6 @@ void WeaponsManager::Draw()
             _switchWeapons(tempSelectedWeaponIndex);
 
             m_weaponCooldownClock.Init(WEAPONS_COOLDOWN, [this]{
-                LOG("asd");
                 _isThereWeaponCooldown = false;
             });
             _isThereWeaponCooldown = true;
@@ -288,10 +287,6 @@ void WeaponsManager::Reset()
     _isWeaopnsTabVisible    = false;
     _isWeaponsFullyDrawn    = false;
     Timer::SetScalingFactor(1.0);
-}
-void WeaponsManager::SetEnemyInterface(EnemyInterface* interface)
-{
-    m_enemyInterfacePtr = interface; 
 }
 void WeaponsManager::_closeWeaponTab()
 {

@@ -27,41 +27,38 @@ public:
 	void Update();
 	void Draw();
 
-	inline IPlayerCharacter *Interface()  { return _pcInterface; };
-	inline bool &IsAlive() 				  { return _isAlive; 	 }
-
-	~PlayerCharacter();
+	inline bool &IsAlive() { return _isAlive; }
 
 private:
 	friend struct IPlayerCharacter;
-	Shader _pcShader{"Shaders/PC"};
-	UntexturedMesh _pcMesh;
-	TriBoundingBox _pcBoundingBox;
-	Transform _pcTransform;
-	IPlayerCharacter *_pcInterface;
-	ftUni _pcAlphaValue{"alpha", 1.0f};
+	Shader 			_pcShader				{ "Shaders/PC" };
+	UntexturedMesh 	_pcMesh;
+	TriBoundingBox 	_pcBoundingBox;
+	Transform 		_pcTransform;
+	ftUni 			_pcAlphaValue			{ "alpha", 1.0f };
 
-	bool _isAlive{true};
-	bool _isInvincible{false};
-	db _invincibilityDuration{400.0};
+	bool 			_isAlive				{ true };
+	bool 			_isInvincible			{ false };
+	db 				_invincibilityDuration	{ 400.0 };
+	Clock<> 		m_invincibilityClock;
+	ui 				_enemiesShotCounter{};
 
-	Clock<> m_invincibilityClock;
-
-	ui _enemiesShotCounter{};
-
-	void _pcIntersection();
-	constexpr ft _setAlpha(db remainingInvincibilityTime);
+	void 			_pcIntersection();
+	constexpr ft 	_setAlpha(db remainingInvincibilityTime);
 };
 
 struct IPlayerCharacter
 {
-	IPlayerCharacter(PlayerCharacter *pcPtr) : _pcPtr(pcPtr) {};
-	IPlayerCharacter(IPlayerCharacter *iPtr) : _pcPtr(iPtr->_pcPtr) {};
-	auto &HitCb()			{ return pcHitCb;	 						}
-	auto &Transform()		{ return _pcPtr->_pcTransform; 				}
-	auto &BoundingBox()		{ return _pcPtr->_pcBoundingBox;			}
+	static inline void Init(PlayerCharacter *pcPtr)
+	{
+		m_pcPtr = pcPtr;
+		pcHitCb = []{ IPlayerCharacter::m_pcPtr->_pcIntersection(); };
+	}
+	static inline auto &HitCb()			{ return pcHitCb;	 			  }
+	static inline auto &Transform()		{ return m_pcPtr->_pcTransform;   }
+	static inline auto &BoundingBox()	{ return m_pcPtr->_pcBoundingBox; }
 
 private:
-	PlayerCharacter *_pcPtr;
-	DECL_INST(pcHitCb,	   std::bind(&PlayerCharacter::_pcIntersection, _pcPtr));
+	inline static PlayerCharacter *m_pcPtr;
+	inline static std::function<void()> pcHitCb;
 };

@@ -242,11 +242,8 @@ void Enemy::Draw()
 	}
 }
 
-EnemyManager::EnemyManager(const UntexturedMeshParams &params, EnemyStats &enemyStats, const UntexturedMeshParams &projParams, 
-		IPlayerCharacter *pcInterface, weaponInterfaceArray_t &weaponInterfaces, fatalityCallback_t fatalityCallback)
- :  _enemyStats(enemyStats), _enemyParams(params), _enemyProjParams(projParams), _pcInterface(pcInterface), 
- 	_weaponInterfaces(weaponInterfaces), m_spawnClock(ENEMY_SPAWN_DELAY, [this]{ m_spawn(); }), m_interfacePtr(new EnemyInterface(this)),
- 	m_fatalityCallback(fatalityCallback)
+EnemyManager::EnemyManager(const UntexturedMeshParams &params, EnemyStats &enemyStats, const UntexturedMeshParams &projParams)
+ :  _enemyStats(enemyStats), _enemyParams(params), _enemyProjParams(projParams), m_spawnClock(ENEMY_SPAWN_DELAY, [this]{ m_spawn(); })
 {
 	behavoiurPtrVec_t chaserVec;
 	behavoiurPtrVec_t shooterVec;
@@ -259,6 +256,7 @@ EnemyManager::EnemyManager(const UntexturedMeshParams &params, EnemyStats &enemy
 	_enemies.emplace_back(*this, chaserVec,  glm::vec3(0.25f, 0.57f, 0.38f), MAX_NO_ENEMIES);
 	_enemies.emplace_back(*this, shooterVec, glm::vec3(0.63f, 0.16f, 0.16f), MAX_NO_SHOOTER_ENEMIES);
 	_enemies.emplace_back(*this, orbiterVec, glm::vec3(0.94f, 0.90f, .055f), MAX_NO_ORBITER_ENEMIES);
+	IEnemyManager::Init(this);
 }
 
 void EnemyManager::Reset()
@@ -275,7 +273,7 @@ void EnemyManager::Draw()
 
 void EnemyManager::UpdateBehaviour(const std::vector<glm::vec2> &pcPositions)
 {
-	_pcModel = _pcInterface.Transform().Model();
+	_pcModel = IPlayerCharacter::Transform().Model();
 	for(auto &enemy : _enemies)
 	{
 		//Check for contact damage
@@ -283,7 +281,7 @@ void EnemyManager::UpdateBehaviour(const std::vector<glm::vec2> &pcPositions)
 		{
 			if(enemyBoundingBox.IsThereAnIntersection(pcPositions))
 			{
-				(_pcInterface.HitCb())();
+				(IPlayerCharacter::HitCb())();
 				break;
 			}
 		}
@@ -291,16 +289,16 @@ void EnemyManager::UpdateBehaviour(const std::vector<glm::vec2> &pcPositions)
 		ui collisionIndex;
 		for(ui i = 0; i < enemy.data.size; ++i)
 		{
-			for(auto weaponInterface : _weaponInterfaces)
+			for(ui j = 0; j < IWeapon::s_noWeapons; ++j)
 			{
-				if(enemy.data.boundingBoxes[i].IsThereAnIntersection(weaponInterface->ProjInstaceTransorms(), weaponInterface->NoProjs(), collisionIndex))
+				if(enemy.data.boundingBoxes[i].IsThereAnIntersection(IWeapon::ProjInstaceTransorms(j), IWeapon::NoProjs(j), collisionIndex))
 				{
-					if((weaponInterface->ProjHitCb())(collisionIndex, enemy.data.ids[i]))
+					if((IWeapon::ProjHitCb(j))(collisionIndex, enemy.data.ids[i]))
 					{
 						enemy.data.healths[i] -= decl_cast(enemy.data.healths, g_playerStats.actualDamage);
 						if(enemy.data.healths[i] <= 0)
 						{
-							m_fatalityCallback(enemy.data.instanceTransforms[i], 3);
+							(IExpManager::CreateExpParicles())(enemy.data.instanceTransforms[i], 3);
 							enemy.data.Erase(i);
 						}
 					}
@@ -363,7 +361,7 @@ void EnemyManager::m_hit(const ui i)
 	enemy.data.healths[enemyIndexPair.second] -= decl_cast(enemy.data.healths, g_playerStats.actualDamage);
 	if(enemy.data.healths[enemyIndexPair.second] <= 0)
 	{
-		m_fatalityCallback(enemy.data.instanceTransforms[enemyIndexPair.second], 3);
+		(IExpManager::CreateExpParicles())(enemy.data.instanceTransforms[enemyIndexPair.second], 3);
 		enemy.data.Erase(enemyIndexPair.second);
 	}
 }
@@ -373,10 +371,10 @@ void EnemyManager::checkForProjIntersection(std::vector<glm::mat4> &projInstance
 	if(!projInstanceTransforms.empty())
 	{
 		ui intersectionIndex;
-		if(_pcInterface.BoundingBox().IsThereAnIntersection(projInstanceTransforms, intersectionIndex))
+		if(IPlayerCharacter::BoundingBox().IsThereAnIntersection(projInstanceTransforms, intersectionIndex))
 		{
 			projInstanceTransforms.erase(projInstanceTransforms.begin() + intersectionIndex);
-			(_pcInterface.HitCb())();
+			(IPlayerCharacter::HitCb())();
 		}
 	}
 }

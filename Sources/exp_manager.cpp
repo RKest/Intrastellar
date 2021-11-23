@@ -3,6 +3,7 @@
 ExpManager::ExpManager(const UntexturedMeshParams &expMeshParams, const UntexturedMeshParams &expBarMeshParams)
 	: _customRand(CUSTOM_RAND_SEED), _expMesh(expMeshParams, MAX_EXP_PART_NO), _expBarMesh(expBarMeshParams)
 {
+	IExpManager::Init(this);
 }
 
 void ExpManager::UpdateExpParticles(const glm::mat4 &pcModel)
