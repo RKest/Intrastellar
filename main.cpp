@@ -209,4 +209,11 @@ SQL Funkcje agregujące:
 	- MIN
 np. SELECT COUNT(nazwa_kolumny) FROM nazwa_tabeli
 
+https://arkusze.pl/maturalne/informatyka-2021-maj-matura-rozszerzona-2.pdf
+
+6.1 SELECT DISTINCT kraj, COUNT(*) FROM gracze WHERE data_dolaczenia LIKE "2018%" GROUP BY kraj ORDER BY 2 ASC LIMIT 5;
+6.2 SELECT SUM(strzal) FROM klasy WHERE nazwa LIKE "%elf%" GROUP BY nazwa;
+6.3 SELECT id_gracza FROM jednostki WHERE nazwa NOT LIKE "artlerzysta" ORDER BY ASC;
+6.4 SELECT DISTINCT nazwa, COUNT(*) FROM jednostki JOIN klasy ON klasy.nazwa=jednostki.nazwa AND ( ABS(lok_x - 100) + ABS(lok_y - 100) <= szybkosc );
+
 */
